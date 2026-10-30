@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>학교폭력예방 풋살대회 | 스마트 학생 전광판</title>
+  <meta name="description" content="중앙 축구장 그래픽, 5인 프로필, 공(득점)/축구화(어시스트)/옐로(파울)/레드(5파울 퇴장), 3분 주기 점유율 및 경기 종료 최종 결과 전광판">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="scoreboard.css">
+</head>
+<body>
+  <div class="scoreboard-full-wrapper">
+    <!-- 상단 통합 바: [1팀 3분 점유율] - [대회 타이틀 & 15분 전광판 타이머] - [2팀 3분 점유율] -->
+    <header class="top-scoreboard-banner">
+      <!-- 1팀 3분 주기 점유율 -->
+      <div class="team-possession-box team-1-possession">
+        <div class="team-name-title" id="sbTeam1Name">1팀 (블루)</div>
+        <div class="possession-stat-line">
+          <span class="pct-val" id="sbTeam1Pct">50%</span>
+          <span class="possession-sub-tag">3분 주기 점유율</span>
+        </div>
+        <div class="possession-mini-bar">
+          <div class="mini-fill team-1-fill" id="sbTeam1Bar" style="width: 50%;"></div>
+        </div>
+      </div>
+
+      <!-- 중앙 대회 타이틀 & 15분 경기 타이머 & 대형 스코어 -->
+      <div class="center-banner-cluster">
+        <div class="tournament-badge">학교폭력예방 풋살대회</div>
+        <div class="score-clock-display">
+          <span class="big-score team-1-score" id="sbScore1">0</span>
+          
+          <div class="timer-center-core">
+            <div class="scoreboard-clock" id="sbClock">15:00</div>
+            <span class="clock-period-tag" id="sbClockStatus">정규 경기</span>
+          </div>
+
+          <span class="big-score team-2-score" id="sbScore2">0</span>
+        </div>
+      </div>
+
+      <!-- 2팀 3분 주기 점유율 -->
+      <div class="team-possession-box team-2-possession">
+        <div class="team-name-title" id="sbTeam2Name">2팀 (오렌지)</div>
+        <div class="possession-stat-line">
+          <span class="possession-sub-tag">3분 주기 점유율</span>
+          <span class="pct-val" id="sbTeam2Pct">50%</span>
+        </div>
+        <div class="possession-mini-bar">
+          <div class="mini-fill team-2-fill" id="sbTeam2Bar" style="width: 50%;"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 메인 스타디움 레이아웃: [1팀 5명 프로필] - [중앙 풋살 축구장] - [2팀 5명 프로필] -->
+    <main class="stadium-pitch-layout">
+      <!-- 좌측: 1팀 5명 선수 프로필 컬럼 -->
+      <aside class="team-players-sidebar team-1-sidebar">
+        <div class="sidebar-team-label" id="sbSideTeam1Label">1팀 선수 라인업</div>
+        <div class="players-column-list" id="team1ProfileList">
+          <!-- JS 5명 프로필 렌더링 -->
+        </div>
+      </aside>
+
+      <!-- 중앙: 리얼 풋살 축구장 (Green Pitch Graphic) -->
+      <section class="center-pitch-container">
+        <div class="futsal-field">
+          <!-- 축구장 백색 라인 마킹 -->
+          <div class="field-outer-border"></div>
+          <div class="field-halfway-line"></div>
+          <div class="field-center-circle">
+            <div class="field-center-spot"></div>
+          </div>
+          <!-- 좌측 골대 및 페널티 에어리어 -->
+          <div class="field-penalty-area area-left">
+            <div class="field-goal-box goal-left"></div>
+            <div class="penalty-spot spot-left"></div>
+          </div>
+          <!-- 우측 골대 및 페널티 에어리어 -->
+          <div class="field-penalty-area area-right">
+            <div class="field-goal-box goal-right"></div>
+            <div class="penalty-spot spot-right"></div>
+          </div>
+
+          <!-- 축구장 중앙 라이브 브로드캐스트 오버레이 -->
+          <div class="field-overlay-content">
+            <div class="live-status-pill">
+              <span class="live-pulse"></span>
+              <span id="fieldStatusText">LIVE MATCH BROADCAST</span>
+            </div>
+            <div class="field-versus-badge">
+              <span id="fieldTeam1Text">1팀</span>
+              <span class="vs-text">VS</span>
+              <span id="fieldTeam2Text">2팀</span>
+            </div>
+            <div class="field-shots-summary">
+              <span>슈팅: <strong id="sbShots1">0</strong></span>
+              <span class="divider">|</span>
+              <span>슈팅: <strong id="sbShots2">0</strong></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 우측: 2팀 5명 선수 프로필 컬럼 -->
+      <aside class="team-players-sidebar team-2-sidebar">
+        <div class="sidebar-team-label" id="sbSideTeam2Label">2팀 선수 라인업</div>
+        <div class="players-column-list" id="team2ProfileList">
+          <!-- JS 5명 프로필 렌더링 -->
+        </div>
+      </aside>
+    </main>
+
+    <!-- 하단 득점자 실시간 브로드캐스트 바 -->
+    <div class="scorers-ticker-bar">
+      <div class="ticker-title">⚽ 경기 득점자 기록:</div>
+      <div class="ticker-content" id="sbScorersList">
+        현재 등록된 득점이 없습니다.
+      </div>
+    </div>
+
+    <!-- 경기 종료 시 전면에 나타나는 [최종 결과 전광판 모달/오버레이] -->
+    <!-- 요구사항: 팀이름, 점수, 점유율, 슈팅 순서 및 점수 밑에 학번+이름 득점자 표시 -->
+    <div class="match-ended-modal-backdrop hidden" id="matchEndedModal">
+      <div class="ended-scoreboard-dialog">
+        <div class="ended-header">
+          <div class="ended-badge">MATCH FINISHED</div>
+          <h2 class="ended-main-title">학교폭력예방 풋살대회 경기 결과</h2>
+        </div>
+
+        <!-- 1. 팀이름 & 2. 점수 & 득점자 (학번+이름) -->
+        <div class="final-score-showcase">
+          <!-- 1팀 -->
+          <div class="final-team-card">
+            <h3 class="final-team-name" id="modalTeam1Name">1팀 (블루)</h3>
+            <div class="final-team-score" id="modalTeam1Score">0</div>
+            <!-- 점수 밑 득점자 (학번 + 이름) -->
+            <div class="final-scorers-box">
+              <div class="scorers-header-sub">⚽ 득점자 명단</div>
+              <ul class="scorers-ul" id="modalTeam1Scorers">
+                <li class="no-goal">득점 없음</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="final-vs-divider">FINAL</div>
+
+          <!-- 2팀 -->
+          <div class="final-team-card">
+            <h3 class="final-team-name" id="modalTeam2Name">2팀 (오렌지)</h3>
+            <div class="final-team-score" id="modalTeam2Score">0</div>
+            <!-- 점수 밑 득점자 (학번 + 이름) -->
+            <div class="final-scorers-box">
+              <div class="scorers-header-sub">⚽ 득점자 명단</div>
+              <ul class="scorers-ul" id="modalTeam2Scorers">
+                <li class="no-goal">득점 없음</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 점유율 & 4. 슈팅 (순서: 팀이름 -> 점수 -> 점유율 -> 슈팅) -->
+        <div class="final-stats-comparison-table">
+          <table class="final-stat-table">
+            <thead>
+              <tr>
+                <th style="width:35%; text-align:right;" id="tableT1Head">1팀</th>
+                <th style="width:30%; text-align:center;">비교 항목</th>
+                <th style="width:35%; text-align:left;" id="tableT2Head">2팀</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 3. 점유율 -->
+              <tr>
+                <td class="stat-cell-l" id="finalPossession1">50%</td>
+                <td class="stat-cell-mid"><strong>볼 점유율</strong></td>
+                <td class="stat-cell-r" id="finalPossession2">50%</td>
+              </tr>
+              <!-- 4. 슈팅 -->
+              <tr>
+                <td class="stat-cell-l" id="finalShots1">0회</td>
+                <td class="stat-cell-mid"><strong>총 슈팅 수</strong></td>
+                <td class="stat-cell-r" id="finalShots2">0회</td>
+              </tr>
+              <!-- 파울 / 퇴장 -->
+              <tr>
+                <td class="stat-cell-l" id="finalFouls1">0회</td>
+                <td class="stat-cell-mid">팀 파울</td>
+                <td class="stat-cell-r" id="finalFouls2">0회</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ended-footer-actions">
+          <button class="btn-close-modal" id="closeEndedModalBtn">전광판 계속 보기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="scoreboard.js"></script>
+</body>
+</html>

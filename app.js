@@ -1,137 +1,103 @@
 /**
- * 학교폭력예방 풋살대회 경기 기록 시스템
- * 핵심 기능 모듈:
- * - Module 1: 1팀(왼쪽) vs 2팀(오른쪽) 2단 레이아웃 & 상단 중앙 스코어보드
- * - Module 2: 15분 정밀 경기 타이머 (Date.now 보정)
- * - Module 3: 실시간 자동 저장 및 세션 관리 (영속화)
- * - Module 4: 교사 관리자 모드 (전체 세션 이력, 백업/삭제)
- * - Module 5: 정책 문서 모달
+ * 학교폭력예방 풋살대회 경기 기록 운영 시스템 (app.js)
+ * 신규 요구사항 구현:
+ * 1. 파울 5개 누적 시 자동으로 퇴장(레드카드 1개) 및 '출전 불가' 자동 전환
+ * 2. 수동 퇴장/출전 불가 제어 버튼 지원
+ * 3. 학번(studentNumber) 필드 지원 (전광판 득점자 표시용)
+ * 4. 팀별 슈팅 수(shots) 카운터 제어
+ * 5. 경기 종료(endMatch) 플래그 지원 -> 전광판 결과 화면 트리거
+ * 6. LocalStorage를 통한 학생 전광판(scoreboard.html) 실시간 동기화
  */
 
 (function () {
   'use strict';
 
-  // 초기 풋살 5 vs 5 라인업
+  // 초기 5 vs 5 라인업 (학번 및 퇴장/출전불가 상태 포함)
   const INITIAL_PLAYERS = [
-    { id: "p1", name: "선수 1", number: 1, team: "1", goals: 0, assists: 0, fouls: 0 },
-    { id: "p2", name: "선수 2", number: 7, team: "1", goals: 0, assists: 0, fouls: 0 },
-    { id: "p3", name: "선수 3", number: 9, team: "1", goals: 0, assists: 0, fouls: 0 },
-    { id: "p4", name: "선수 4", number: 10, team: "1", goals: 0, assists: 0, fouls: 0 },
-    { id: "p5", name: "선수 5", number: 11, team: "1", goals: 0, assists: 0, fouls: 0 },
-    { id: "p6", name: "선수 6", number: 1, team: "2", goals: 0, assists: 0, fouls: 0 },
-    { id: "p7", name: "선수 7", number: 7, team: "2", goals: 0, assists: 0, fouls: 0 },
-    { id: "p8", name: "선수 8", number: 8, team: "2", goals: 0, assists: 0, fouls: 0 },
-    { id: "p9", name: "선수 9", number: 10, team: "2", goals: 0, assists: 0, fouls: 0 },
-    { id: "p10", name: "선수 10", number: 18, team: "2", goals: 0, assists: 0, fouls: 0 }
+    { id: "p1", name: "김민준", studentNum: "10101", number: 1, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p2", name: "이서준", studentNum: "10102", number: 7, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p3", name: "박도윤", studentNum: "10103", number: 9, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p4", name: "정예준", studentNum: "10104", number: 10, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p5", name: "최시우", studentNum: "10105", number: 11, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    
+    { id: "p6", name: "강하준", studentNum: "10201", number: 1, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p7", name: "조은우", studentNum: "10202", number: 7, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p8", name: "윤지호", studentNum: "10203", number: 8, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p9", name: "장유준", studentNum: "10204", number: 10, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p10", name: "임선우", studentNum: "10205", number: 18, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false }
   ];
 
-  // =========================================================================
-  // 스토리지 엔진
-  // =========================================================================
-  const StorageModule = {
-    KEYS: {
-      CURRENT_SESSION_ID: 'futsal_current_session_id',
-      SESSIONS_INDEX: 'futsal_sessions_index',
-      SESSION_PREFIX: 'futsal_session_'
-    },
+  const STORAGE_KEY = 'futsal_shared_match_state';
 
-    saveSession(sessionData) {
-      if (!sessionData || !sessionData.sessionId) return false;
-      try {
-        localStorage.setItem(this.KEYS.SESSION_PREFIX + sessionData.sessionId, JSON.stringify(sessionData));
-        let index = this.getAllSessionIds();
-        if (!index.includes(sessionData.sessionId)) {
-          index.unshift(sessionData.sessionId);
-          localStorage.setItem(this.KEYS.SESSIONS_INDEX, JSON.stringify(index));
-        }
-        localStorage.setItem(this.KEYS.CURRENT_SESSION_ID, sessionData.sessionId);
-        return true;
-      } catch (err) {
-        console.error("저장 오류:", err);
-        return false;
-      }
-    },
-
-    loadSession(sessionId) {
-      try {
-        const raw = localStorage.getItem(this.KEYS.SESSION_PREFIX + sessionId);
-        return raw ? JSON.parse(raw) : null;
-      } catch (e) {
-        return null;
-      }
-    },
-
-    getAllSessionIds() {
-      try {
-        const raw = localStorage.getItem(this.KEYS.SESSIONS_INDEX);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
-      }
-    },
-
-    getAllSessions() {
-      const ids = this.getAllSessionIds();
-      return ids.map(id => this.loadSession(id)).filter(Boolean);
-    },
-
-    getCurrentSessionId() {
-      return localStorage.getItem(this.KEYS.CURRENT_SESSION_ID);
-    },
-
-    deleteSession(sessionId) {
-      localStorage.removeItem(this.KEYS.SESSION_PREFIX + sessionId);
-      let index = this.getAllSessionIds().filter(id => id !== sessionId);
-      localStorage.setItem(this.KEYS.SESSIONS_INDEX, JSON.stringify(index));
-    },
-
-    clearAll() {
-      const ids = this.getAllSessionIds();
-      ids.forEach(id => localStorage.removeItem(this.KEYS.SESSION_PREFIX + id));
-      localStorage.removeItem(this.KEYS.SESSIONS_INDEX);
-      localStorage.removeItem(this.KEYS.CURRENT_SESSION_ID);
-    }
-  };
-
-  // =========================================================================
-  // 앱 전역 상태
-  // =========================================================================
+  // 전역 상태
   const State = {
-    currentSession: null,
-    saveTimerId: null,
+    sessionId: 'match_' + Date.now(),
+    team1Name: "1팀 (블루)",
+    team2Name: "2팀 (오렌지)",
+    team1Shots: 0,
+    team2Shots: 0,
+    isMatchEnded: false,
+    timer: {
+      durationSeconds: 15 * 60,
+      remainingSeconds: 15 * 60,
+      isRunning: false,
+      startedAt: null
+    },
+    players: JSON.parse(JSON.stringify(INITIAL_PLAYERS)),
 
-    initSession(existingSession = null) {
-      if (existingSession) {
-        if (!existingSession.team1Name) existingSession.team1Name = "1팀 (블루)";
-        if (!existingSession.team2Name) existingSession.team2Name = "2팀 (오렌지)";
-        if (existingSession.players) {
-          existingSession.players.forEach(p => {
-            if (p.team === 'A') p.team = '1';
-            if (p.team === 'B') p.team = '2';
-          });
-        }
-        this.currentSession = existingSession;
-      } else {
-        const newId = 'match_' + Date.now();
-        this.currentSession = {
-          sessionId: newId,
-          createdAt: new Date().toISOString(),
-          team1Name: "1팀 (블루)",
-          team2Name: "2팀 (오렌지)",
-          timer: {
-            durationSeconds: 15 * 60,
-            remainingSeconds: 15 * 60,
-            isRunning: false,
-            startedAt: null
-          },
-          players: JSON.parse(JSON.stringify(INITIAL_PLAYERS))
-        };
+    initSession(existing = null) {
+      if (existing) {
+        Object.assign(this, existing);
+        // 플레이어 필드 호환성 보정
+        this.players.forEach(p => {
+          if (p.team === 'A') p.team = '1';
+          if (p.team === 'B') p.team = '2';
+          if (typeof p.redCards !== 'number') p.redCards = 0;
+          if (typeof p.isBanned !== 'boolean') p.isBanned = false;
+          if (!p.studentNum) p.studentNum = '101' + String(p.number).padStart(2, '0');
+        });
+        if (typeof this.team1Shots !== 'number') this.team1Shots = 0;
+        if (typeof this.team2Shots !== 'number') this.team2Shots = 0;
+        if (typeof this.isMatchEnded !== 'boolean') this.isMatchEnded = false;
       }
     }
   };
 
+  // 스토리지 저장 & 실시간 동기화
+  function saveState() {
+    try {
+      const data = {
+        sessionId: State.sessionId,
+        team1Name: State.team1Name,
+        team2Name: State.team2Name,
+        team1Shots: State.team1Shots,
+        team2Shots: State.team2Shots,
+        isMatchEnded: State.isMatchEnded,
+        timer: State.timer,
+        players: State.players,
+        updatedAt: Date.now()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      // 과거 세션 호환
+      localStorage.setItem('futsal_session_' + State.sessionId, JSON.stringify(data));
+      localStorage.setItem('futsal_current_session_id', State.sessionId);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  }
+
   // =========================================================================
-  // 15분 정밀 타이머
+  // 15분 타이머 모듈
   // =========================================================================
   const TimerModule = {
     intervalId: null,
@@ -153,7 +119,7 @@
       this.colonElem = document.querySelector('.time-colon');
 
       this.bindEvents();
-      this.syncTimerState();
+      this.sync();
     },
 
     bindEvents() {
@@ -164,35 +130,32 @@
       document.getElementById('add1MinBtn').addEventListener('click', () => this.addTime(60));
       document.getElementById('add5MinBtn').addEventListener('click', () => this.addTime(300));
       document.getElementById('newMatchSessionBtn').addEventListener('click', () => {
-        if (confirm("새로운 경기 세션을 시작하시겠습니까?\n현재 기록은 보관되며 새 전광판이 시작됩니다.")) {
-          App.createNewSession();
+        if (confirm("새로운 경기를 시작하시겠습니까?\n모든 기록과 상태가 초기화됩니다.")) {
+          localStorage.removeItem(STORAGE_KEY);
+          location.reload();
         }
       });
     },
 
-    syncTimerState() {
-      const timer = State.currentSession.timer;
+    sync() {
+      const timer = State.timer;
       if (timer.isRunning && timer.startedAt) {
         const elapsed = Math.floor((Date.now() - timer.startedAt) / 1000);
         timer.remainingSeconds = Math.max(0, timer.durationSeconds - elapsed);
-        if (timer.remainingSeconds > 0) {
-          this.start(true);
-        } else {
-          this.onTimerEnd();
-        }
+        if (timer.remainingSeconds > 0) this.start(true);
+        else this.onEnd();
       }
       this.render();
     },
 
-    start(isResume = false) {
-      const timer = State.currentSession.timer;
+    start(resume = false) {
+      const timer = State.timer;
       if (timer.remainingSeconds <= 0) {
         timer.remainingSeconds = 15 * 60;
         timer.durationSeconds = 15 * 60;
       }
-
       timer.isRunning = true;
-      if (!isResume) {
+      if (!resume) {
         timer.startedAt = Date.now() - (timer.durationSeconds - timer.remainingSeconds) * 1000;
       }
 
@@ -205,131 +168,100 @@
         const elapsed = Math.floor((Date.now() - timer.startedAt) / 1000);
         timer.remainingSeconds = Math.max(0, timer.durationSeconds - elapsed);
         this.render();
+        saveState();
 
         if (timer.remainingSeconds <= 0) {
-          this.onTimerEnd();
+          this.onEnd();
         }
       }, 500);
 
-      App.scheduleAutoSave();
+      saveState();
     },
 
     pause() {
-      const timer = State.currentSession.timer;
+      const timer = State.timer;
       timer.isRunning = false;
       clearInterval(this.intervalId);
-
       this.startBtn.disabled = false;
       this.pauseBtn.disabled = true;
       if (this.colonElem) this.colonElem.classList.add('paused');
-
-      App.scheduleAutoSave();
+      saveState();
     },
 
-    reset(seconds = 15 * 60) {
-      const timer = State.currentSession.timer;
+    reset(sec = 15 * 60) {
       this.pause();
-      timer.durationSeconds = seconds;
-      timer.remainingSeconds = seconds;
-      timer.startedAt = null;
+      State.timer.durationSeconds = sec;
+      State.timer.remainingSeconds = sec;
+      State.timer.startedAt = null;
       this.render();
-      App.scheduleAutoSave();
+      saveState();
     },
 
-    addTime(extraSec) {
-      const timer = State.currentSession.timer;
-      timer.durationSeconds += extraSec;
-      timer.remainingSeconds += extraSec;
-      if (timer.isRunning) {
-        timer.startedAt += extraSec * 1000;
+    addTime(extra) {
+      State.timer.durationSeconds += extra;
+      State.timer.remainingSeconds += extra;
+      if (State.timer.isRunning) {
+        State.timer.startedAt += extra * 1000;
       }
       this.render();
-      App.scheduleAutoSave();
+      saveState();
     },
 
-    onTimerEnd() {
+    onEnd() {
       this.pause();
-      const timer = State.currentSession.timer;
-      timer.remainingSeconds = 0;
+      State.timer.remainingSeconds = 0;
       this.render();
-      alert("15분 경기 시간이 종료되었습니다!");
-      App.scheduleAutoSave();
+      alert("15분 정규 경기 시간이 종료되었습니다!");
+      saveState();
     },
 
     render() {
-      const timer = State.currentSession.timer;
-      const totalSec = Math.max(0, timer.remainingSeconds);
-      const m = Math.floor(totalSec / 60);
-      const s = totalSec % 60;
-
+      const sec = Math.max(0, State.timer.remainingSeconds);
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
       this.minutesElem.textContent = String(m).padStart(2, '0');
       this.secondsElem.textContent = String(s).padStart(2, '0');
 
-      const pct = timer.durationSeconds > 0 ? (totalSec / timer.durationSeconds) * 100 : 0;
+      const pct = State.timer.durationSeconds > 0 ? (sec / State.timer.durationSeconds) * 100 : 0;
       this.progressBar.style.width = `${pct}%`;
     }
   };
 
   // =========================================================================
-  // 1팀(왼쪽)과 2팀(오른쪽) 2단 레이아웃 & 스코어보드 렌더러
+  // 경기 기록 운영원 매니저
   // =========================================================================
-  const MatchRecordModule = {
-    team1ListElem: null,
-    team2ListElem: null,
-    team1ScoreElem: null,
-    team2ScoreElem: null,
-    team1FoulsElem: null,
-    team2FoulsElem: null,
-    team1NameInput: null,
-    team2NameInput: null,
-    team1TitleDisplay: null,
-    team2TitleDisplay: null,
-    team1CountBadge: null,
-    team2CountBadge: null,
-
+  const OperatorManager = {
     init() {
-      this.team1ListElem = document.getElementById('team1PlayersList');
-      this.team2ListElem = document.getElementById('team2PlayersList');
-      this.team1ScoreElem = document.getElementById('team1Score');
-      this.team2ScoreElem = document.getElementById('team2Score');
-      this.team1FoulsElem = document.getElementById('team1TotalFouls');
-      this.team2FoulsElem = document.getElementById('team2TotalFouls');
-
-      this.team1NameInput = document.getElementById('team1NameInput');
-      this.team2NameInput = document.getElementById('team2NameInput');
-      this.team1TitleDisplay = document.getElementById('team1TitleDisplay');
-      this.team2TitleDisplay = document.getElementById('team2TitleDisplay');
-      this.team1CountBadge = document.getElementById('team1CountBadge');
-      this.team2CountBadge = document.getElementById('team2CountBadge');
-
-      this.bindEvents();
+      this.bindInputs();
+      this.bindEndMatch();
+      this.bindShots();
       this.render();
     },
 
-    bindEvents() {
-      this.team1NameInput.addEventListener('input', (e) => {
-        const val = e.target.value.trim() || "1팀";
-        State.currentSession.team1Name = val;
-        this.team1TitleDisplay.textContent = val;
-        App.scheduleAutoSave();
+    bindInputs() {
+      // 1팀 / 2팀 이름 실시간 편집
+      document.getElementById('team1NameInput').addEventListener('input', (e) => {
+        State.team1Name = e.target.value.trim() || '1팀';
+        document.getElementById('team1TitleDisplay').textContent = State.team1Name;
+        saveState();
       });
 
-      this.team2NameInput.addEventListener('input', (e) => {
-        const val = e.target.value.trim() || "2팀";
-        State.currentSession.team2Name = val;
-        this.team2TitleDisplay.textContent = val;
-        App.scheduleAutoSave();
+      document.getElementById('team2NameInput').addEventListener('input', (e) => {
+        State.team2Name = e.target.value.trim() || '2팀';
+        document.getElementById('team2TitleDisplay').textContent = State.team2Name;
+        saveState();
       });
 
+      // 선수 추가 모달
       document.getElementById('addPlayer1Btn').addEventListener('click', () => {
         document.getElementById('newPlayerTeamSelect').value = "1";
-        document.getElementById('addPlayerModalTitle').textContent = `${State.currentSession.team1Name} 새 선수 등록`;
+        document.getElementById('addPlayerModalTitle').textContent = `${State.team1Name} 선수 추가`;
         document.getElementById('addPlayerModal').classList.remove('hidden');
       });
 
       document.getElementById('addPlayer2Btn').addEventListener('click', () => {
         document.getElementById('newPlayerTeamSelect').value = "2";
-        document.getElementById('addPlayerModalTitle').textContent = `${State.currentSession.team2Name} 새 선수 등록`;
+        document.getElementById('addPlayerModalTitle').textContent = `${State.team2Name} 선수 추가`;
         document.getElementById('addPlayerModal').classList.remove('hidden');
       });
 
@@ -344,427 +276,268 @@
         this.addNewPlayer();
       });
 
-      const handleStatClick = (e) => {
-        const btn = e.target.closest('.btn-ctrl');
+      // 스탯 조작 이벤트 위임
+      const handleAction = (e) => {
+        const btn = e.target.closest('button');
         if (!btn) return;
-        const playerId = btn.getAttribute('data-player-id');
-        const statType = btn.getAttribute('data-stat');
-        const change = parseInt(btn.getAttribute('data-change'), 10);
-        this.updatePlayerStat(playerId, statType, change, btn);
+
+        const pid = btn.getAttribute('data-pid');
+        if (!pid) return;
+
+        const player = State.players.find(p => p.id === pid);
+        if (!player) return;
+
+        const action = btn.getAttribute('data-act');
+        const delta = parseInt(btn.getAttribute('data-delta') || 0, 10);
+
+        if (action === 'goals') {
+          player.goals = Math.max(0, (player.goals || 0) + delta);
+        } else if (action === 'assists') {
+          player.assists = Math.max(0, (player.assists || 0) + delta);
+        } else if (action === 'fouls') {
+          player.fouls = Math.max(0, (player.fouls || 0) + delta);
+          // ★ 파울 5개 누적 시 자동으로 퇴장(레드카드 1개) 및 출전 불가 자동 전환
+          if (player.fouls >= 5) {
+            player.redCards = 1;
+            player.isBanned = true;
+          }
+        } else if (action === 'redCards') {
+          player.redCards = Math.max(0, (player.redCards || 0) + delta);
+          if (player.redCards > 0) player.isBanned = true;
+        } else if (action === 'toggleBan') {
+          player.isBanned = !player.isBanned;
+        }
+
+        saveState();
+        this.render();
       };
 
-      this.team1ListElem.addEventListener('click', handleStatClick);
-      this.team2ListElem.addEventListener('click', handleStatClick);
+      document.getElementById('team1PlayersList').addEventListener('click', handleAction);
+      document.getElementById('team2PlayersList').addEventListener('click', handleAction);
     },
 
-    updatePlayerStat(playerId, statType, change, triggerBtn) {
-      const player = State.currentSession.players.find(p => p.id === playerId);
-      if (!player) return;
-
-      const currentVal = player[statType] || 0;
-      const newVal = Math.max(0, currentVal + change);
-      if (newVal === currentVal) return;
-
-      player[statType] = newVal;
-
-      const statUnit = triggerBtn.closest('.stat-unit');
-      if (statUnit) {
-        const valElem = statUnit.querySelector('.stat-num-val');
-        if (valElem) {
-          valElem.textContent = newVal;
-          valElem.classList.add('pop');
-          setTimeout(() => valElem.classList.remove('pop'), 180);
-        }
-      }
-
-      this.updateScoreboardTotals();
-      App.scheduleAutoSave();
-    },
-
-    updateScoreboardTotals() {
-      let score1 = 0, fouls1 = 0;
-      let score2 = 0, fouls2 = 0;
-
-      State.currentSession.players.forEach(p => {
-        const isTeam1 = (p.team === '1' || p.team === 'A');
-        if (isTeam1) {
-          score1 += (p.goals || 0);
-          fouls1 += (p.fouls || 0);
-        } else {
-          score2 += (p.goals || 0);
-          fouls2 += (p.fouls || 0);
-        }
+    bindShots() {
+      document.getElementById('team1ShotPlus').addEventListener('click', () => {
+        State.team1Shots = (State.team1Shots || 0) + 1;
+        saveState();
+        this.render();
+      });
+      document.getElementById('team1ShotMinus').addEventListener('click', () => {
+        State.team1Shots = Math.max(0, (State.team1Shots || 0) - 1);
+        saveState();
+        this.render();
       });
 
-      this.team1ScoreElem.textContent = score1;
-      this.team2ScoreElem.textContent = score2;
-      this.team1FoulsElem.textContent = fouls1;
-      this.team2FoulsElem.textContent = fouls2;
+      document.getElementById('team2ShotPlus').addEventListener('click', () => {
+        State.team2Shots = (State.team2Shots || 0) + 1;
+        saveState();
+        this.render();
+      });
+      document.getElementById('team2ShotMinus').addEventListener('click', () => {
+        State.team2Shots = Math.max(0, (State.team2Shots || 0) - 1);
+        saveState();
+        this.render();
+      });
+    },
+
+    bindEndMatch() {
+      const endBtn = document.getElementById('endMatchBtn');
+      const badge = document.getElementById('gameStatusBadge');
+
+      endBtn.addEventListener('click', () => {
+        if (!State.isMatchEnded) {
+          if (confirm("경기를 정식 종료하시겠습니까?\n학생 전광판 화면에 최종 결과(스코어, 점유율, 슈팅, 득점자)가 즉시 띄워집니다.")) {
+            State.isMatchEnded = true;
+            TimerModule.pause();
+            saveState();
+            this.render();
+            alert("경기가 종료되었습니다. 학생 전광판에서 최종 결과를 확인하실 수 있습니다.");
+          }
+        } else {
+          if (confirm("경기 종료 상태를 해제하고 다시 경기 진행 모드로 전환하시겠습니까?")) {
+            State.isMatchEnded = false;
+            saveState();
+            this.render();
+          }
+        }
+      });
     },
 
     addNewPlayer() {
       const name = document.getElementById('newPlayerName').value.trim();
+      const studentNum = document.getElementById('newPlayerStudentNum').value.trim() || '10100';
       const num = parseInt(document.getElementById('newPlayerNumber').value, 10);
       const team = document.getElementById('newPlayerTeamSelect').value;
 
-      if (!name) {
-        alert("선수 이름을 입력해 주세요.");
-        return;
-      }
-      if (isNaN(num) || num < 1 || num > 99) {
-        alert("등번호는 1~99 사이의 숫자로 입력해 주세요.");
+      if (!name || isNaN(num)) {
+        alert("선수 이름과 등번호를 올바르게 입력해 주세요.");
         return;
       }
 
-      const newPlayer = {
+      State.players.push({
         id: 'p_' + Date.now(),
         name,
+        studentNum,
         number: num,
         team,
         goals: 0,
         assists: 0,
-        fouls: 0
-      };
+        fouls: 0,
+        redCards: 0,
+        isBanned: false
+      });
 
-      State.currentSession.players.push(newPlayer);
       document.getElementById('addPlayerModal').classList.add('hidden');
       document.getElementById('newPlayerName').value = '';
+      document.getElementById('newPlayerStudentNum').value = '';
       document.getElementById('newPlayerNumber').value = '';
 
+      saveState();
       this.render();
-      App.scheduleAutoSave();
     },
 
-    createPlayerCardHtml(player) {
+    createPlayerRowHtml(p) {
+      const isBanned = p.isBanned || p.fouls >= 5 || p.redCards > 0;
+      const statusBadge = isBanned
+        ? `<span class="player-status-tag status-suspended">출전불가 (퇴장)</span>`
+        : `<span class="player-status-tag status-active">출전 가능</span>`;
+
       return `
-        <div class="player-card">
+        <div class="player-card ${isBanned ? 'banned-card' : ''}" style="${isBanned ? 'background:#fff5f5; border-color:#fca5a5;' : ''}">
           <div class="player-identity">
-            <span class="player-num">#${player.number}</span>
-            <span class="player-name-text" title="${player.name}">${player.name}</span>
+            <span class="player-num">#${p.number}</span>
+            <div>
+              <div class="player-name-text">${p.name} <small style="font-size:11px; color:#8e8e8e;">(${p.studentNum})</small></div>
+              <div style="margin-top:2px;">${statusBadge}</div>
+            </div>
           </div>
 
           <div class="player-actions-row">
             <!-- 득점 -->
             <div class="stat-unit" title="득점">
-              <span class="stat-label-icon">득점</span>
-              <span class="stat-num-val">${player.goals}</span>
+              <span class="stat-label-icon">⚽ 득점</span>
+              <span class="stat-num-val">${p.goals}</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="goals" data-change="-1" title="득점 -1">-</button>
-                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="goals" data-change="1" title="득점 +1">+</button>
+                <button class="btn-ctrl" data-pid="${p.id}" data-act="goals" data-delta="-1">-</button>
+                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="goals" data-delta="1">+</button>
               </div>
             </div>
 
             <!-- 도움 -->
             <div class="stat-unit" title="도움">
-              <span class="stat-label-icon">도움</span>
-              <span class="stat-num-val">${player.assists}</span>
+              <span class="stat-label-icon">👟 도움</span>
+              <span class="stat-num-val">${p.assists}</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="assists" data-change="-1" title="도움 -1">-</button>
-                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="assists" data-change="1" title="도움 +1">+</button>
+                <button class="btn-ctrl" data-pid="${p.id}" data-act="assists" data-delta="-1">-</button>
+                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="assists" data-delta="1">+</button>
               </div>
             </div>
 
-            <!-- 파울 -->
-            <div class="stat-unit" title="파울">
-              <span class="stat-label-icon">파울</span>
-              <span class="stat-num-val">${player.fouls}</span>
+            <!-- 파울 (5개 시 자동 퇴장) -->
+            <div class="stat-unit" title="파울 (5개 시 자동 퇴장)" style="${p.fouls >= 5 ? 'border-color:#f59e0b;' : ''}">
+              <span class="stat-label-icon" style="color:#d97706;">🟨 파울</span>
+              <span class="stat-num-val">${p.fouls}/5</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="fouls" data-change="-1" title="파울 -1">-</button>
-                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="fouls" data-change="1" title="파울 +1">+</button>
+                <button class="btn-ctrl" data-pid="${p.id}" data-act="fouls" data-delta="-1">-</button>
+                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="fouls" data-delta="1">+</button>
               </div>
             </div>
+
+            <!-- 퇴장 -->
+            <div class="stat-unit" title="퇴장 (레드카드)">
+              <span class="stat-label-icon" style="color:#dc2626;">🟥 퇴장</span>
+              <span class="stat-num-val" style="color:#dc2626;">${p.redCards}</span>
+              <div class="stat-btns-pair">
+                <button class="btn-ctrl" data-pid="${p.id}" data-act="redCards" data-delta="-1">-</button>
+                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="redCards" data-delta="1">+</button>
+              </div>
+            </div>
+
+            <!-- 출전 불가 토글 -->
+            <button class="btn-outline-sm" data-pid="${p.id}" data-act="toggleBan" style="font-size:11px; padding:3px 6px; ${p.isBanned ? 'background:#fee2e2; color:#b91c1c;' : ''}">
+              ${p.isBanned ? '출전금지 해제' : '출전불가 설정'}
+            </button>
           </div>
         </div>
       `;
     },
 
     render() {
-      const t1Name = State.currentSession.team1Name || "1팀 (블루)";
-      const t2Name = State.currentSession.team2Name || "2팀 (오렌지)";
-
-      this.team1NameInput.value = t1Name;
-      this.team2NameInput.value = t2Name;
-      this.team1TitleDisplay.textContent = t1Name;
-      this.team2TitleDisplay.textContent = t2Name;
-
-      const team1Players = State.currentSession.players.filter(p => p.team === '1' || p.team === 'A');
-      const team2Players = State.currentSession.players.filter(p => p.team === '2' || p.team === 'B');
-
-      this.team1CountBadge.textContent = `${team1Players.length}명`;
-      this.team2CountBadge.textContent = `${team2Players.length}명`;
-
-      this.team1ListElem.innerHTML = team1Players.map(p => this.createPlayerCardHtml(p)).join('');
-      this.team2ListElem.innerHTML = team2Players.map(p => this.createPlayerCardHtml(p)).join('');
-
-      this.updateScoreboardTotals();
-    }
-  };
-
-  // =========================================================================
-  // 교사 관리 모드 (조회, 백업, 영구 삭제)
-  // =========================================================================
-  const TeacherModule = {
-    dashboardElem: null,
-    tableBody: null,
-    isTeacherMode: false,
-
-    init() {
-      this.dashboardElem = document.getElementById('teacherDashboard');
-      this.tableBody = document.getElementById('sessionTableBody');
-
-      document.getElementById('toggleTeacherModeBtn').addEventListener('click', () => {
-        this.toggleMode();
-      });
-
-      document.getElementById('exportJsonBtn').addEventListener('click', () => {
-        this.exportAllData();
-      });
-
-      document.getElementById('importJsonInput').addEventListener('change', (e) => {
-        this.importData(e);
-      });
-
-      document.getElementById('clearAllDataBtn').addEventListener('click', () => {
-        if (confirm("경고: 저장된 모든 경기 기록이 영구 파기됩니다.\n정말 초기화하시겠습니까?")) {
-          StorageModule.clearAll();
-          App.createNewSession();
-          this.renderSessionsList();
-          alert("전체 데이터가 영구 파기되었습니다.");
-        }
-      });
-    },
-
-    toggleMode() {
-      this.isTeacherMode = !this.isTeacherMode;
-      const textElem = document.getElementById('teacherBtnText');
-      if (this.isTeacherMode) {
-        this.dashboardElem.classList.remove('hidden');
-        textElem.textContent = "경기 기록 화면으로 복귀";
-        this.renderSessionsList();
+      // 1. 헤더 및 경기 상태 동기화
+      const badge = document.getElementById('gameStatusBadge');
+      const endBtn = document.getElementById('endMatchBtn');
+      if (State.isMatchEnded) {
+        badge.textContent = "🏁 경기 종료됨";
+        badge.classList.add('ended');
+        endBtn.textContent = "재경기 / 진행 모드로 복귀";
       } else {
-        this.dashboardElem.classList.add('hidden');
-        textElem.textContent = "교사 관리 모드";
-      }
-    },
-
-    renderSessionsList() {
-      this.tableBody.innerHTML = '';
-      const sessions = StorageModule.getAllSessions();
-
-      if (sessions.length === 0) {
-        this.tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#8e8e8e; padding: 2rem;">저장된 경기 기록이 없습니다.</td></tr>`;
-        return;
+        badge.textContent = "⚽ 경기 진행 중";
+        badge.classList.remove('ended');
+        endBtn.textContent = "🏁 경기 종료 확정";
       }
 
-      sessions.forEach(s => {
-        let score1 = 0, score2 = 0, totalFouls = 0;
-        if (s.players) {
-          s.players.forEach(p => {
-            if (p.team === '1' || p.team === 'A') score1 += (p.goals || 0);
-            else score2 += (p.goals || 0);
-            totalFouls += (p.fouls || 0);
-          });
-        }
+      // 2. 팀 정보
+      document.getElementById('team1NameInput').value = State.team1Name;
+      document.getElementById('team2NameInput').value = State.team2Name;
+      document.getElementById('team1TitleDisplay').textContent = State.team1Name;
+      document.getElementById('team2TitleDisplay').textContent = State.team2Name;
 
-        const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleString('ko-KR') : '-';
-        const t1 = s.team1Name || '1팀';
-        const t2 = s.team2Name || '2팀';
+      // 3. 점수, 파울, 퇴장 합산
+      let score1 = 0, fouls1 = 0, red1 = 0;
+      let score2 = 0, fouls2 = 0, red2 = 0;
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><code>${s.sessionId}</code></td>
-          <td>${dateStr}</td>
-          <td><strong>${t1} ${score1} : ${score2} ${t2}</strong></td>
-          <td>${totalFouls}회</td>
-          <td>
-            <button class="btn-primary btn-sm load-session-btn" data-id="${s.sessionId}">불러오기</button>
-            <button class="btn-danger btn-sm del-session-btn" data-id="${s.sessionId}" style="padding:4px 8px; margin-left:4px;">삭제</button>
-          </td>
-        `;
-        this.tableBody.appendChild(tr);
-      });
-
-      this.tableBody.querySelectorAll('.load-session-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const id = e.target.getAttribute('data-id');
-          App.loadExistingSession(id);
-        });
-      });
-
-      this.tableBody.querySelectorAll('.del-session-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const id = e.target.getAttribute('data-id');
-          if (confirm("해당 경기 세션을 삭제하시겠습니까?")) {
-            StorageModule.deleteSession(id);
-            this.renderSessionsList();
-          }
-        });
-      });
-    },
-
-    exportAllData() {
-      const data = {
-        exportedAt: new Date().toISOString(),
-        appName: "학교폭력예방 풋살대회",
-        sessions: StorageModule.getAllSessions()
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `futsal_tournament_records_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    },
-
-    importData(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const parsed = JSON.parse(event.target.result);
-          if (parsed && Array.isArray(parsed.sessions)) {
-            parsed.sessions.forEach(s => StorageModule.saveSession(s));
-            alert(`총 ${parsed.sessions.length}개의 경기 기록이 성공적으로 복원되었습니다.`);
-            this.renderSessionsList();
-          } else {
-            alert("유효한 백업 JSON 파일이 아닙니다.");
-          }
-        } catch (err) {
-          alert("파일 읽기 오류: " + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  // =========================================================================
-  // 정책 모달 로더
-  // =========================================================================
-  const PolicyModalModule = {
-    init() {
-      this.bindModal('openPrivacyModalBtn', 'privacyModal', 'closePrivacyModalBtn', 'confirmPrivacyModalBtn', 'PRIVACY_POLICY.md', 'privacyModalContent');
-      this.bindModal('openTermsModalBtn', 'termsModal', 'closeTermsModalBtn', 'confirmTermsModalBtn', 'TERMS_OF_SERVICE.md', 'termsModalContent');
-
-      const secModal = document.getElementById('securityGuideModal');
-      document.getElementById('openSecurityGuideModalBtn').addEventListener('click', () => secModal.classList.remove('hidden'));
-      document.getElementById('closeSecurityGuideModalBtn').addEventListener('click', () => secModal.classList.add('hidden'));
-      document.getElementById('confirmSecurityGuideBtn').addEventListener('click', () => secModal.classList.add('hidden'));
-    },
-
-    bindModal(openBtnId, modalId, closeBtnId, confirmBtnId, docPath, contentTargetId) {
-      const openBtn = document.getElementById(openBtnId);
-      const modal = document.getElementById(modalId);
-      const closeBtn = document.getElementById(closeBtnId);
-      const confirmBtn = document.getElementById(confirmBtnId);
-      const contentElem = document.getElementById(contentTargetId);
-
-      openBtn.addEventListener('click', () => {
-        modal.classList.remove('hidden');
-        if (contentElem && !contentElem.dataset.loaded) {
-          fetch(docPath)
-            .then(res => res.text())
-            .then(md => {
-              contentElem.innerHTML = this.markdownToHtml(md);
-              contentElem.dataset.loaded = "true";
-            })
-            .catch(() => {
-              contentElem.innerHTML = "<p>문서를 불러오는 중 오류가 발생했습니다.</p>";
-            });
-        }
-      });
-
-      const closeModal = () => modal.classList.add('hidden');
-      closeBtn.addEventListener('click', closeModal);
-      confirmBtn.addEventListener('click', closeModal);
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-      });
-    },
-
-    markdownToHtml(md) {
-      return md
-        .replace(/^### (.*$)/gim, '<h4>$1</h4>')
-        .replace(/^## (.*$)/gim, '<h3>$1</h3>')
-        .replace(/^# (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-        .replace(/`([^`]+)`/gim, '<code>$1</code>')
-        .replace(/\n\n/gim, '<br><br>');
-    }
-  };
-
-  // =========================================================================
-  // App 메인 컨트롤러
-  // =========================================================================
-  const App = {
-    init() {
-      const lastSessionId = StorageModule.getCurrentSessionId();
-      let restoredSession = null;
-      if (lastSessionId) {
-        restoredSession = StorageModule.loadSession(lastSessionId);
-      }
-
-      State.initSession(restoredSession);
-
-      TimerModule.init();
-      MatchRecordModule.init();
-      TeacherModule.init();
-      PolicyModalModule.init();
-
-      this.restoreUI();
-      this.updateSaveStatusUI('자동 저장 준비 완료');
-    },
-
-    restoreUI() {
-      document.getElementById('sessionBadge').textContent = `세션: ${State.currentSession.sessionId.slice(-8)}`;
-      MatchRecordModule.render();
-      TimerModule.render();
-    },
-
-    scheduleAutoSave() {
-      const dot = document.getElementById('saveStatusDot');
-      const text = document.getElementById('saveStatusText');
-      dot.classList.add('saving');
-      text.textContent = '자동 저장 중...';
-
-      clearTimeout(State.saveTimerId);
-      State.saveTimerId = setTimeout(() => {
-        const ok = StorageModule.saveSession(State.currentSession);
-        dot.classList.remove('saving');
-        if (ok) {
-          const nowStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          text.textContent = `기록 저장됨 (${nowStr})`;
+      State.players.forEach(p => {
+        if (p.team === '1') {
+          score1 += (p.goals || 0);
+          fouls1 += (p.fouls || 0);
+          red1 += (p.redCards || 0);
         } else {
-          text.textContent = '저장 실패';
+          score2 += (p.goals || 0);
+          fouls2 += (p.fouls || 0);
+          red2 += (p.redCards || 0);
         }
-      }, 250);
-    },
+      });
 
-    updateSaveStatusUI(msg) {
-      document.getElementById('saveStatusText').textContent = msg;
-    },
+      document.getElementById('team1Score').textContent = score1;
+      document.getElementById('team2Score').textContent = score2;
+      document.getElementById('team1TotalFouls').textContent = fouls1;
+      document.getElementById('team2TotalFouls').textContent = fouls2;
+      document.getElementById('team1TotalRed').textContent = red1;
+      document.getElementById('team2TotalRed').textContent = red2;
 
-    createNewSession() {
-      State.initSession();
-      TimerModule.reset(15 * 60);
-      MatchRecordModule.render();
-      document.getElementById('sessionBadge').textContent = `세션: ${State.currentSession.sessionId.slice(-8)}`;
-      this.scheduleAutoSave();
-    },
+      document.getElementById('team1ShotsDisplay').textContent = State.team1Shots || 0;
+      document.getElementById('team2ShotsDisplay').textContent = State.team2Shots || 0;
 
-    loadExistingSession(sessionId) {
-      const session = StorageModule.loadSession(sessionId);
-      if (!session) return;
-      State.initSession(session);
-      this.restoreUI();
-      TeacherModule.toggleMode();
-      alert(`경기 세션(${sessionId})을 불러왔습니다.`);
+      // 4. 선수 명단 렌더링
+      const team1Players = State.players.filter(p => p.team === '1');
+      const team2Players = State.players.filter(p => p.team === '2');
+
+      document.getElementById('team1CountBadge').textContent = `${team1Players.length}명`;
+      document.getElementById('team2CountBadge').textContent = `${team2Players.length}명`;
+
+      document.getElementById('team1PlayersList').innerHTML = team1Players.map(p => this.createPlayerRowHtml(p)).join('');
+      document.getElementById('team2PlayersList').innerHTML = team2Players.map(p => this.createPlayerRowHtml(p)).join('');
     }
   };
 
+  // 초기 로드
   document.addEventListener('DOMContentLoaded', () => {
-    App.init();
+    const existing = loadState();
+    State.initSession(existing);
+
+    TimerModule.init();
+    OperatorManager.init();
+
+    // 타 창(전광판, 분석원)에서의 변경 실시간 리스너
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY) {
+        const updated = loadState();
+        if (updated) {
+          State.initSession(updated);
+          OperatorManager.render();
+          TimerModule.render();
+        }
+      }
+    });
   });
 })();

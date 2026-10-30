@@ -1,0 +1,746 @@
+/* ==========================================================================
+   학교폭력예방 풋살대회 학생 전광판 (scoreboard.css)
+   Design System: Tesla Subtraction meets Professional Stadium Scoreboard
+   - Top: 3-Minute Interval Possession + 15-Minute Clock + Huge Scores
+   - Center: Realistic Futsal Field (축구장 마킹)
+   - Left / Right: 5 Players Profile (사진 자리, 이름, 등번호, 공/축구화/옐로/레드카드)
+   - Final Result Modal: 팀이름 -> 점수 -> 점유율 -> 슈팅 + 학번/이름 득점자
+   ========================================================================== */
+
+:root {
+  --bg-dark: #0a0e17;
+  --panel-bg: rgba(17, 24, 39, 0.85);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+
+  --tesla-blue: #3e6ae1;
+  --tesla-carbon: #171a20;
+
+  --team-1-blue: #38bdf8;
+  --team-2-orange: #fb923c;
+
+  --futsal-green: #15803d;
+  --futsal-grass-stripe: #166534;
+  --field-line: rgba(255, 255, 255, 0.7);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-btn: 4px;
+  --radius-panel: 12px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-dark);
+  color: #f8fafc;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.scoreboard-full-wrapper {
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   1. 상단 통합 배너 (3분 점유율 + 시계 + 스코어)
+   ========================================================================== */
+.top-scoreboard-banner {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  align-items: center;
+  gap: 1rem;
+  background: #060911;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  padding: 0.85rem 1.5rem;
+}
+
+@media (max-width: 980px) {
+  .top-scoreboard-banner {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+.team-possession-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-btn);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.team-1-possession { border-left: 3px solid var(--team-1-blue); }
+.team-2-possession { border-right: 3px solid var(--team-2-orange); text-align: right; }
+
+.team-name-title {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-1-possession .team-name-title { color: var(--team-1-blue); }
+.team-2-possession .team-name-title { color: var(--team-2-orange); }
+
+.possession-stat-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.team-2-possession .possession-stat-line { justify-content: flex-end; }
+
+.pct-val {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.possession-sub-tag {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.possession-mini-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.mini-fill { height: 100%; transition: width 0.3s ease; }
+.team-1-fill { background: var(--team-1-blue); }
+.team-2-fill { background: var(--team-2-orange); margin-left: auto; }
+
+/* 중앙 스코어 & 시계 클러스터 */
+.center-banner-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tournament-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.score-clock-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.big-score {
+  font-family: var(--font-mono);
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.team-1-score { color: var(--team-1-blue); text-shadow: 0 0 20px rgba(56, 189, 248, 0.3); }
+.team-2-score { color: var(--team-2-orange); text-shadow: 0 0 20px rgba(251, 146, 60, 0.3); }
+
+.timer-center-core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 150px;
+}
+
+.scoreboard-clock {
+  font-family: var(--font-mono);
+  font-size: 42px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.clock-period-tag {
+  font-size: 11px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   2. 메인 스타디움 레이아웃 (좌측 5인 - 중앙 축구장 - 우측 5인)
+   ========================================================================== */
+.stadium-pitch-layout {
+  display: grid;
+  grid-template-columns: 290px 1fr 290px;
+  gap: 1rem;
+  align-items: stretch;
+  flex: 1;
+}
+
+@media (max-width: 1180px) {
+  .stadium-pitch-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 양 사이드 선수 라인업 */
+.team-players-sidebar {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sidebar-team-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.team-1-sidebar .sidebar-team-label { color: var(--team-1-blue); }
+.team-2-sidebar .sidebar-team-label { color: var(--team-2-orange); text-align: right; }
+
+.players-column-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: space-between;
+  flex: 1;
+}
+
+/* ==========================================================================
+   선수 프로필 카드 (사람 실루엣, 등번호, 이름, 아이콘 배지)
+   ========================================================================== */
+.player-profile-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-btn);
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.player-profile-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 퇴장(5파울 or 레드)된 선수 비활성화 스타일 */
+.player-profile-card.card-ejected {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.4);
+  opacity: 0.75;
+}
+
+/* 프로필 아바타 (사람 실루엣 / 추후 사진 교체 슬롯) */
+.avatar-photo-slot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-silhouette {
+  width: 26px;
+  height: 26px;
+  fill: #94a3b8;
+}
+
+.shirt-number-tag {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  background: #000000;
+  color: #ffffff;
+  padding: 1px 3px;
+  border-radius: 2px;
+  line-height: 1;
+}
+
+.player-meta-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.player-name-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.profile-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-snum {
+  font-size: 10.5px;
+  color: #64748b;
+  font-family: var(--font-mono);
+}
+
+/* 스탯 아이콘 라인 (공 ⚽, 축구화 👟, 옐로카드 🟨, 레드카드 🟥) */
+.profile-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* 득점: 공 모양 */
+.badge-goals { color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.2); }
+/* 어시스트: 축구화 모양 */
+.badge-assists { color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+/* 파울: 노란색 카드 모양 */
+.badge-fouls {
+  background: #fef08a;
+  color: #713f12;
+  border: 1px solid #eab308;
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+/* 퇴장(5파울 또는 직접 레드): 빨간색 카드 모양 */
+.badge-ejected {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #dc2626;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 2px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.9; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0.9; }
+}
+
+/* ==========================================================================
+   3. 중앙 리얼 풋살 축구장 (Futsal Pitch Graphic)
+   ========================================================================== */
+.center-pitch-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 460px;
+}
+
+.futsal-field {
+  width: 100%;
+  height: 100%;
+  min-height: 460px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--futsal-green) 0px,
+    var(--futsal-green) 40px,
+    var(--futsal-grass-stripe) 40px,
+    var(--futsal-grass-stripe) 80px
+  );
+  border: 4px solid var(--field-line);
+  border-radius: var(--radius-panel);
+  position: relative;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 축구장 백색 마킹 라인 */
+.field-halfway-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  background: var(--field-line);
+  transform: translateX(-50%);
+}
+
+.field-center-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 130px;
+  height: 130px;
+  border: 3px solid var(--field-line);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.field-center-spot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--field-line);
+}
+
+.field-penalty-area {
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  width: 120px;
+  border: 3px solid var(--field-line);
+}
+
+.area-left {
+  left: 0;
+  border-left: none;
+  border-radius: 0 50px 50px 0;
+}
+
+.area-right {
+  right: 0;
+  border-right: none;
+  border-radius: 50px 0 0 50px;
+}
+
+.field-goal-box {
+  position: absolute;
+  top: 35%;
+  bottom: 35%;
+  width: 40px;
+  border: 3px solid var(--field-line);
+}
+
+.goal-left { left: 0; border-left: none; }
+.goal-right { right: 0; border-right: none; }
+
+/* 축구장 중앙 라이브 오버레이 카드 */
+.field-overlay-content {
+  position: relative;
+  z-index: 10;
+  background: rgba(10, 14, 23, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-panel);
+  padding: 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+}
+
+.live-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #10b981;
+}
+
+.live-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.field-versus-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.vs-text {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.field-shots-summary {
+  font-size: 12px;
+  color: #94a3b8;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.field-shots-summary strong {
+  color: #ffffff;
+  font-family: var(--font-mono);
+}
+
+/* ==========================================================================
+   4. 하단 득점자 실시간 브로드캐스트 바
+   ========================================================================== */
+.scorers-ticker-bar {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  padding: 0.6rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 13px;
+}
+
+.ticker-title {
+  color: #38bdf8;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ticker-content {
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   5. 경기 종료 시 최종 결과 전광판 모달 (Final Scoreboard)
+   - 순서: 팀이름 -> 점수 -> 점유율 -> 슈팅
+   - 점수 밑: 학번 + 이름 득점자 명단
+   ========================================================================== */
+.match-ended-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(6, 9, 17, 0.92);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1.5rem;
+}
+
+.ended-scoreboard-dialog {
+  width: 100%;
+  max-width: 820px;
+  background: #0d131f;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-panel);
+  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+}
+
+.ended-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ended-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.ended-main-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+/* 1. 팀이름 & 2. 점수 & 점수 밑 득점자(학번+이름) */
+.final-score-showcase {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.final-team-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.final-team-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.final-team-score {
+  font-family: var(--font-mono);
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.final-team-card:first-child .final-team-score { color: var(--team-1-blue); }
+.final-team-card:last-child .final-team-score { color: var(--team-2-orange); }
+
+.final-vs-divider {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 800;
+  color: #64748b;
+  margin-top: 1.5rem;
+}
+
+/* 점수 밑 득점자 박스 */
+.final-scorers-box {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-btn);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.scorers-header-sub {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.scorers-ul {
+  list-style: none;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.scorers-ul li {
+  color: #f8fafc;
+}
+
+.scorers-ul li.no-goal {
+  color: #64748b;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* 3. 점유율 & 4. 슈팅 비교 표 */
+.final-stats-comparison-table {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  overflow: hidden;
+}
+
+.final-stat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.final-stat-table th,
+.final-stat-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.final-stat-table th {
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.stat-cell-l { text-align: right; font-family: var(--font-mono); font-weight: 700; color: var(--team-1-blue); }
+.stat-cell-mid { text-align: center; color: #cbd5e1; }
+.stat-cell-r { text-align: left; font-family: var(--font-mono); font-weight: 700; color: var(--team-2-orange); }
+
+.ended-footer-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-close-modal {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 8px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-close-modal:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hidden {
+  display: none !important;
+}

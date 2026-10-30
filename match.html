@@ -4,11 +4,81 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>경기 기록 운영원 | 학교폭력예방 풋살대회</title>
-  <meta name="description" content="학교폭력예방 풋살대회 경기 기록 운영원 전용 앱 - 15분 정밀 타이머 및 1팀/2팀 실시간 스코어보드">
+  <meta name="description" content="학교폭력예방 풋살대회 경기 기록 운영원 전용 앱 - 득점, 도움, 파울(5회 시 자동 퇴장), 출전 불가 및 경기 종료">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* 운영판 추가 확장 스타일 (Tesla Design System 규격) */
+    .game-status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--tesla-light-ash);
+      color: var(--tesla-pewter);
+      border: 1px solid var(--tesla-cloud-gray);
+    }
+    .game-status-badge.ended {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fca5a5;
+    }
+    .btn-end-match {
+      background: #171a20;
+      color: #ffffff;
+      border: 1px solid #171a20;
+    }
+    .btn-end-match:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+    .player-status-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-active {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .status-suspended {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .status-disqualified {
+      background: #f3f4f6;
+      color: #4b5563;
+      border: 1px solid #d1d5db;
+    }
+    /* 슈팅 컨트롤 유닛 */
+    .team-shots-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 11px;
+      color: var(--tesla-pewter);
+      background: var(--tesla-white);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--tesla-cloud-gray);
+    }
+    .btn-shot-mini {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      border: 1px solid var(--tesla-pale-silver);
+      background: var(--tesla-light-ash);
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+    }
+  </style>
 </head>
 <body>
   <div class="app-container">
@@ -17,42 +87,40 @@
       <div class="header-left">
         <div class="brand-badge">
           <span class="live-dot"></span>
-          <span class="brand-sub">OPERATOR APP</span>
+          <span class="brand-sub">OPERATOR CONSOLE</span>
         </div>
-        <h1 class="main-title">학교폭력예방 풋살대회 (경기 기록)</h1>
+        <h1 class="main-title">학교폭력예방 풋살대회 (경기 기록 운영)</h1>
       </div>
 
       <div class="header-right">
-        <!-- 실시간 자동 저장 상태 -->
-        <div class="save-status-inline">
-          <span class="status-indicator-dot" id="saveStatusDot"></span>
-          <span class="status-text" id="saveStatusText">자동 저장 준비</span>
-          <span class="session-badge" id="sessionBadge">세션: 로딩 중...</span>
-        </div>
+        <span class="game-status-badge" id="gameStatusBadge">경기 진행 중</span>
 
-        <!-- 교사 관리 모드 토글 -->
-        <button id="toggleTeacherModeBtn" class="btn-secondary teacher-btn" title="교사 관리 모드">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          <span id="teacherBtnText">교사 모드</span>
+        <button id="endMatchBtn" class="btn-primary btn-end-match" title="경기 종료 시 학생 전광판에 최종 결과 표시">
+          🏁 경기 종료 확정
         </button>
+
+        <a href="scoreboard.html" target="_blank" class="btn-secondary" title="학생들이 보는 전광판 새 창 열기">
+          🖥️ 학생 전광판 보기 ↗
+        </a>
       </div>
     </header>
 
-    <!-- 2. 상단 중앙 전광판: [1팀 점수] - [15분 타이머] - [2팀 점수] -->
+    <!-- 2. 상단 중앙 타이머 및 스코어보드 -->
     <section class="top-center-scoreboard glass-card">
-      <!-- 1팀 요약 (왼쪽) -->
+      <!-- 1팀 요약 -->
       <div class="team-summary team-summary-1">
         <div class="team-name-editable-wrap">
           <input type="text" id="team1NameInput" class="team-name-input" value="1팀 (블루)" title="1팀 이름을 변경할 수 있습니다">
           <span class="team-sub-badge">TEAM 1</span>
         </div>
         <div class="team-big-score" id="team1Score">0</div>
-        <div class="team-fouls-summary">팀 파울: <strong id="team1TotalFouls">0</strong>회</div>
+        <div class="team-fouls-summary">팀 파울: <strong id="team1TotalFouls">0</strong>회 | 퇴장: <strong id="team1TotalRed">0</strong>명</div>
+        <!-- 슈팅 카운트 -->
+        <div class="team-shots-ctrl" title="1팀 총 슈팅 수 조작">
+          <span>🎯 슈팅: <strong id="team1ShotsDisplay">0</strong></span>
+          <button class="btn-shot-mini" id="team1ShotMinus">-</button>
+          <button class="btn-shot-mini" id="team1ShotPlus">+</button>
+        </div>
       </div>
 
       <!-- 중앙 15분 정밀 타이머 -->
@@ -102,20 +170,26 @@
         </div>
       </div>
 
-      <!-- 2팀 요약 (오른쪽) -->
+      <!-- 2팀 요약 -->
       <div class="team-summary team-summary-2">
         <div class="team-name-editable-wrap">
           <input type="text" id="team2NameInput" class="team-name-input" value="2팀 (오렌지)" title="2팀 이름을 변경할 수 있습니다">
           <span class="team-sub-badge">TEAM 2</span>
         </div>
         <div class="team-big-score" id="team2Score">0</div>
-        <div class="team-fouls-summary">팀 파울: <strong id="team2TotalFouls">0</strong>회</div>
+        <div class="team-fouls-summary">팀 파울: <strong id="team2TotalFouls">0</strong>회 | 퇴장: <strong id="team2TotalRed">0</strong>명</div>
+        <!-- 슈팅 카운트 -->
+        <div class="team-shots-ctrl" title="2팀 총 슈팅 수 조작">
+          <span>🎯 슈팅: <strong id="team2ShotsDisplay">0</strong></span>
+          <button class="btn-shot-mini" id="team2ShotMinus">-</button>
+          <button class="btn-shot-mini" id="team2ShotPlus">+</button>
+        </div>
       </div>
     </section>
 
-    <!-- 3. 본문: 1팀(왼쪽)과 2팀(오른쪽) 2단 반응형 그리드 -->
+    <!-- 3. 본문: 1팀(왼쪽)과 2팀(오른쪽) 2단 선수 기록 패널 -->
     <main class="teams-two-column-layout">
-      <!-- 왼쪽: 1팀 선수 기록 영역 -->
+      <!-- 1팀 -->
       <section class="team-column team-1-column glass-card">
         <div class="team-column-header team-1-header">
           <div class="team-title-wrap">
@@ -125,12 +199,10 @@
           </div>
           <button class="btn-outline-sm" id="addPlayer1Btn">+ 1팀 선수 추가</button>
         </div>
-
-        <!-- 1팀 선수 카드 리스트 -->
         <div class="players-stack" id="team1PlayersList"></div>
       </section>
 
-      <!-- 오른쪽: 2팀 선수 기록 영역 -->
+      <!-- 2팀 -->
       <section class="team-column team-2-column glass-card">
         <div class="team-column-header team-2-header">
           <div class="team-title-wrap">
@@ -140,65 +212,17 @@
           </div>
           <button class="btn-outline-sm" id="addPlayer2Btn">+ 2팀 선수 추가</button>
         </div>
-
-        <!-- 2팀 선수 카드 리스트 -->
         <div class="players-stack" id="team2PlayersList"></div>
       </section>
     </main>
 
-    <!-- 4. 교사 관리자 모드 뷰 (기본 숨김) -->
-    <section class="teacher-dashboard glass-card hidden" id="teacherDashboard">
-      <div class="teacher-header">
-        <div>
-          <h2 class="section-title">교사 관리자 및 수업 경기 기록 조회</h2>
-          <p class="section-subtitle">수업 종료 후에도 누적 보관된 세션별 경기 기록을 확인하고 데이터를 백업하거나 관리합니다.</p>
-        </div>
-        <div class="teacher-actions">
-          <button id="exportJsonBtn" class="btn-secondary">
-            📥 전체 데이터 백업 (JSON)
-          </button>
-          <label class="btn-secondary file-upload-label">
-            📤 데이터 복원
-            <input type="file" id="importJsonInput" accept=".json" class="sr-only">
-          </label>
-          <button id="clearAllDataBtn" class="btn-danger">
-            🗑️ 전체 데이터 영구 삭제
-          </button>
-        </div>
-      </div>
-
-      <div class="session-list-container">
-        <h3>저장된 경기 세션 목록</h3>
-        <div class="table-responsive">
-          <table class="session-table" id="sessionTable">
-            <thead>
-              <tr>
-                <th>세션 ID</th>
-                <th>경기 일시</th>
-                <th>스코어 (1팀 : 2팀)</th>
-                <th>총 파울</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody id="sessionTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. 푸터 -->
+    <!-- 4. 푸터 -->
     <footer class="app-footer">
       <div class="footer-content">
         <div class="footer-meta">
-          <span class="meta-item"><strong>행사명:</strong> 학교폭력예방 풋살대회</span>
-          <span class="meta-item"><strong>역할:</strong> 경기 기록 운영원 전용 앱</span>
+          <span>※ 파울이 5개가 되면 자동으로 퇴장(레드카드 1개) 및 '출전 불가' 처리됩니다.</span>
+          <span>전광판 연동: LocalStorage 실시간 동기화 지원</span>
         </div>
-
-        <nav class="footer-links" aria-label="정책 링크">
-          <button type="button" class="footer-link-btn" id="openPrivacyModalBtn">개인정보 처리방침 (초안)</button>
-          <span class="divider">|</span>
-          <button type="button" class="footer-link-btn" id="openTermsModalBtn">서비스 이용약관 (초안)</button>
-        </nav>
       </div>
     </footer>
   </div>
@@ -212,8 +236,12 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="newPlayerName">선수 이름 또는 번호</label>
-          <input type="text" id="newPlayerName" placeholder="예: 박지성 or 선수 6" required>
+          <label for="newPlayerName">선수 이름</label>
+          <input type="text" id="newPlayerName" placeholder="예: 박지성" required>
+        </div>
+        <div class="form-group">
+          <label for="newPlayerStudentNum">학번 (득점자 전광판 표시용)</label>
+          <input type="text" id="newPlayerStudentNum" placeholder="예: 10101" required>
         </div>
         <div class="form-group">
           <label for="newPlayerNumber">등번호</label>
@@ -230,34 +258,6 @@
       <div class="modal-footer">
         <button class="btn-secondary" id="cancelAddPlayerBtn">취소</button>
         <button class="btn-primary" id="saveNewPlayerBtn">선수 추가</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 개인정보 처리방침 모달 -->
-  <div class="modal-backdrop hidden" id="privacyModal">
-    <div class="modal-dialog modal-lg glass-card">
-      <div class="modal-header">
-        <h3>개인정보 처리방침 (초안)</h3>
-        <button class="modal-close" id="closePrivacyModalBtn">&times;</button>
-      </div>
-      <div class="modal-body modal-scroll-body" id="privacyModalContent"></div>
-      <div class="modal-footer">
-        <button class="btn-primary" id="confirmPrivacyModalBtn">확인 완료</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 이용약관 모달 -->
-  <div class="modal-backdrop hidden" id="termsModal">
-    <div class="modal-dialog modal-lg glass-card">
-      <div class="modal-header">
-        <h3>서비스 이용약관 (초안)</h3>
-        <button class="modal-close" id="closeTermsModalBtn">&times;</button>
-      </div>
-      <div class="modal-body modal-scroll-body" id="termsModalContent"></div>
-      <div class="modal-footer">
-        <button class="btn-primary" id="confirmTermsModalBtn">확인 완료</button>
       </div>
     </div>
   </div>
