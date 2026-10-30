@@ -19,6 +19,27 @@
   const MATCH_STORAGE_KEY = 'futsal_shared_match_state';
   const POSSESSION_STORAGE_KEY = 'futsal_possession_data';
 
+  // 초고속 실시간 브로드캐스트 채널 버스 (0ms 딜레이 즉시 연동)
+  const SyncBus = {
+    channel: typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('futsal_sync_bus') : null,
+    post(type, data = {}) {
+      if (this.channel) {
+        try {
+          this.channel.postMessage({ type, data, timestamp: Date.now() });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    },
+    listen(handler) {
+      if (this.channel) {
+        this.channel.onmessage = (event) => {
+          if (event && event.data) handler(event.data);
+        };
+      }
+    }
+  };
+
   // 기본 사람 실루엣 SVG (추후 사진으로 교체 가능)
   const PERSON_SILHOUETTE_SVG = `
     <svg class="avatar-silhouette" viewBox="0 0 24 24" fill="currentColor">
@@ -29,34 +50,33 @@
   // 전광판 내부 상태
   const ScoreboardState = {
     matchData: null,
-    possessionHistory: [], // 3분 주기 점유율 스냅샷 히스토리
-    last3MinBucket: 0
+    possessionHistory: [] // 1분 주기 점유율 스냅샷 히스토리
   };
 
   // =========================================================================
-  // 3분 주기 점유율 계산 알고리즘
+  // 1분(60초) 주기 점유율 계산 알고리즘
   // =========================================================================
-  function calculate3MinPossession(timerSec, possData) {
-    if (!possData) return { pct1: 50, pct2: 50 };
+  function calculate1MinPossession(timerSec, possData) {
+    if (!possData) return { pct1: 50, pct2: 50, bucket: 1 };
 
     const t1 = possData.team1Ms || 0;
     const t2 = possData.team2Ms || 0;
     const sum = t1 + t2;
 
-    if (sum === 0) return { pct1: 50, pct2: 50 };
+    if (sum === 0) return { pct1: 50, pct2: 50, bucket: 1 };
 
-    // 15분 경기 기준 3분(180초)마다 측정값 분기
+    // 15분 경기 기준 1분(60초)마다 측정값 분기 (1~15분 구간)
     const elapsed = Math.max(0, 900 - timerSec);
-    const bucket = Math.floor(elapsed / 180); // 0분~3분, 3분~6분, 6분~9분, 9분~12분, 12분~15분
+    const bucket = Math.min(15, Math.floor(elapsed / 60) + 1);
 
-    // 실시간 점유율 기반 3분 가중치 스무딩
+    // 실시간 점유율
     const realPct1 = (t1 / sum) * 100;
     const realPct2 = 100 - realPct1;
 
     return {
       pct1: Math.round(realPct1),
       pct2: Math.round(realPct2),
-      bucket: bucket + 1
+      bucket: bucket
     };
   }
 
@@ -126,8 +146,8 @@
       document.getElementById('fieldStatusText').textContent = "LIVE MATCH BROADCAST";
     }
 
-    // 4. 3분 주기 점유율 렌더링
-    const possResult = calculate3MinPossession(rem, poss);
+    // 4. 1분 주기 점유율 렌더링 (실시간 0ms 연동)
+    const possResult = calculate1MinPossession(rem, poss);
     document.getElementById('sbTeam1Pct').textContent = `${possResult.pct1}%`;
     document.getElementById('sbTeam2Pct').textContent = `${possResult.pct2}%`;
     document.getElementById('sbTeam1Bar').style.width = `${possResult.pct1}%`;
@@ -274,18 +294,23 @@
   }
 
   // =========================================================================
-  // 초기화 및 실시간 동기화 루프
+  // 초기화 및 실시간 동기화 루프 (초고속 0ms 브로드캐스트 + 스토리지 감지)
   // =========================================================================
   document.addEventListener('DOMContentLoaded', () => {
     renderScoreboard();
 
-    // 1. 스토리지 변경 이벤트 즉각 감지
+    // 1. 브로드캐스트 버스로 운영판 & 분석원 데이터 즉시 수신 (0ms 지연)
+    SyncBus.listen((msg) => {
+      renderScoreboard();
+    });
+
+    // 2. 스토리지 변경 이벤트 즉각 감지
     window.addEventListener('storage', () => {
       renderScoreboard();
     });
 
-    // 2. 0.5초 주기 폴링 (동일 창/타이머/점유율 실시간 부드러운 반영)
-    setInterval(renderScoreboard, 500);
+    // 3. 200ms 주기 고속 인터벌 (시계 및 1분 점유율 부드러운 반영)
+    setInterval(renderScoreboard, 200);
 
     // 모달 닫기 버튼
     document.getElementById('closeEndedModalBtn').addEventListener('click', () => {

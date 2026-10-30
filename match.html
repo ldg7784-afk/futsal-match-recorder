@@ -187,6 +187,25 @@
       </div>
     </section>
 
+    <!-- 실시간 볼 점유율 1분 주기 연동 바 (운영판) -->
+    <section class="match-possession-section glass-card">
+      <div class="match-possession-header">
+        <div class="poss-title-left">
+          <span class="pulse-dot"></span>
+          <span class="match-poss-title">볼 점유율 분석원 연동 (1분 주기)</span>
+        </div>
+        <div class="match-poss-readout">
+          <span id="matchPossTeam1Val" class="poss-team1-badge">1팀 50%</span>
+          <span class="poss-vs-label">VS</span>
+          <span id="matchPossTeam2Val" class="poss-team2-badge">50% 2팀</span>
+        </div>
+      </div>
+      <div class="match-poss-dual-bar">
+        <div id="matchPossTeam1Bar" class="match-poss-bar-team1" style="width: 50%;"></div>
+        <div id="matchPossTeam2Bar" class="match-poss-bar-team2" style="width: 50%;"></div>
+      </div>
+    </section>
+
     <!-- 3. 본문: 1팀(왼쪽)과 2팀(오른쪽) 2단 선수 기록 패널 -->
     <main class="teams-two-column-layout">
       <!-- 1팀 -->

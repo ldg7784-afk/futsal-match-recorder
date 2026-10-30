@@ -14,6 +14,28 @@
 
   // 로컬 스토리지 키
   const STORAGE_KEY = 'futsal_possession_data';
+  const MATCH_STORAGE_KEY = 'futsal_shared_match_state';
+
+  // 초고속 실시간 브로드캐스트 채널 버스 (0ms 딜레이 동기화)
+  const SyncBus = {
+    channel: typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('futsal_sync_bus') : null,
+    post(type, data = {}) {
+      if (this.channel) {
+        try {
+          this.channel.postMessage({ type, data, timestamp: Date.now() });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    },
+    listen(handler) {
+      if (this.channel) {
+        this.channel.onmessage = (event) => {
+          if (event && event.data) handler(event.data);
+        };
+      }
+    }
+  };
 
   // 상태 관리 객체
   const PossessionState = {
@@ -23,7 +45,10 @@
     team2Ms: 0, // 2팀 점유 시간 (밀리초)
     activeTeam: null, // 현재 누르고 있는 팀 ('1' | '2' | null)
     lastTimestamp: null,
-    animationFrameId: null
+    animationFrameId: null,
+    lastSavedAt: 0, // 100ms 고주기 실시간 스트리밍 저장용
+    matchTimerSeconds: 900,
+    isMatchEnded: false
   };
 
   // DOM 요소 캐시
@@ -71,7 +96,7 @@
   }
 
   // =========================================================================
-  // 실시간 루프 (requestAnimationFrame 기반 정밀 타이밍)
+  // 실시간 루프 (requestAnimationFrame 기반 정밀 타이밍 + 고속 실시간 브로드캐스트)
   // =========================================================================
   function updateLoop(now) {
     if (PossessionState.activeTeam && PossessionState.lastTimestamp) {
@@ -83,6 +108,18 @@
       }
       PossessionState.lastTimestamp = now;
       renderDisplays();
+
+      // ★ 누르고 있는 동안에도 매 100ms마다 실시간 저장 및 3개 앱 전파 (바로바로 연동)
+      if (now - PossessionState.lastSavedAt >= 100) {
+        PossessionState.lastSavedAt = now;
+        saveToStorage();
+        SyncBus.post('POSSESSION_UPDATE', {
+          team1Ms: PossessionState.team1Ms,
+          team2Ms: PossessionState.team2Ms,
+          activeTeam: PossessionState.activeTeam
+        });
+      }
+
       PossessionState.animationFrameId = requestAnimationFrame(updateLoop);
     }
   }
@@ -91,13 +128,13 @@
   // 꾹 누르기 시작 (Pointer Down)
   // =========================================================================
   function startPressing(team) {
-    // 이미 누르고 있는 팀이 있다면 정지 후 전환
     if (PossessionState.activeTeam) {
       stopPressing();
     }
 
     PossessionState.activeTeam = team;
     PossessionState.lastTimestamp = performance.now();
+    PossessionState.lastSavedAt = performance.now();
 
     const activeTeamName = team === '1' ? PossessionState.team1Name : PossessionState.team2Name;
 
@@ -120,6 +157,13 @@
       DOM.team1TouchCard.classList.remove('pressing');
       DOM.team1StateBadge.textContent = '대기 중';
     }
+
+    saveToStorage();
+    SyncBus.post('POSSESSION_UPDATE', {
+      team1Ms: PossessionState.team1Ms,
+      team2Ms: PossessionState.team2Ms,
+      activeTeam: PossessionState.activeTeam
+    });
 
     cancelAnimationFrame(PossessionState.animationFrameId);
     PossessionState.animationFrameId = requestAnimationFrame(updateLoop);
@@ -149,10 +193,15 @@
 
     renderDisplays();
     saveToStorage();
+    SyncBus.post('POSSESSION_UPDATE', {
+      team1Ms: PossessionState.team1Ms,
+      team2Ms: PossessionState.team2Ms,
+      activeTeam: null
+    });
   }
 
   // =========================================================================
-  // 화면 렌더링 (시간 및 실시간 점유율 계산)
+  // 화면 렌더링 (시간 및 실시간 1분 주기 점유율 계산)
   // =========================================================================
   function renderDisplays() {
     // 1. 시간 표시
@@ -185,15 +234,26 @@
   }
 
   // =========================================================================
-  // 로컬 스토리지 동기화
+  // 로컬 스토리지 동기화 및 1분 주기 점유율 통계 저장
   // =========================================================================
   function saveToStorage() {
     try {
+      const totalMs = PossessionState.team1Ms + PossessionState.team2Ms;
+      const pct1 = totalMs > 0 ? Math.round((PossessionState.team1Ms / totalMs) * 100) : 50;
+      const pct2 = 100 - pct1;
+
+      // 15분 경기 기준 1분(60초) 단위 버킷 인덱스
+      const elapsedSec = Math.max(0, 900 - (PossessionState.matchTimerSeconds || 900));
+      const current1MinBucket = Math.min(15, Math.floor(elapsedSec / 60) + 1);
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         team1Name: PossessionState.team1Name,
         team2Name: PossessionState.team2Name,
         team1Ms: PossessionState.team1Ms,
         team2Ms: PossessionState.team2Ms,
+        pct1: pct1,
+        pct2: pct2,
+        current1MinBucket: current1MinBucket,
         updatedAt: new Date().toISOString()
       }));
     } catch (e) {
@@ -210,6 +270,16 @@
         if (parsed.team2Name) PossessionState.team2Name = parsed.team2Name;
         if (typeof parsed.team1Ms === 'number') PossessionState.team1Ms = parsed.team1Ms;
         if (typeof parsed.team2Ms === 'number') PossessionState.team2Ms = parsed.team2Ms;
+      }
+
+      // 운영판 경기 데이터 실시간 반영
+      const matchRaw = localStorage.getItem(MATCH_STORAGE_KEY);
+      if (matchRaw) {
+        const match = JSON.parse(matchRaw);
+        if (match.team1Name) PossessionState.team1Name = match.team1Name;
+        if (match.team2Name) PossessionState.team2Name = match.team2Name;
+        if (match.timer) PossessionState.matchTimerSeconds = match.timer.remainingSeconds;
+        PossessionState.isMatchEnded = !!match.isMatchEnded;
       }
     } catch (e) {
       console.error(e);
@@ -265,6 +335,7 @@
         PossessionState.team2Ms = 0;
         renderDisplays();
         saveToStorage();
+        SyncBus.post('POSSESSION_UPDATE', { team1Ms: 0, team2Ms: 0, reset: true });
       }
     });
 
@@ -288,7 +359,7 @@
   }
 
   // =========================================================================
-  // 초기화
+  // 초기화 및 실시간 브로드캐스트 동기화
   // =========================================================================
   document.addEventListener('DOMContentLoaded', () => {
     loadFromStorage();
@@ -300,5 +371,61 @@
 
     initEvents();
     renderDisplays();
+
+    // 1. 브로드캐스트 버스로 운영판 경기 데이터 즉각 수신 (0ms 지연)
+    SyncBus.listen((msg) => {
+      if (msg.type === 'MATCH_UPDATE' && msg.data) {
+        if (msg.data.team1Name && msg.data.team1Name !== PossessionState.team1Name) {
+          PossessionState.team1Name = msg.data.team1Name;
+          DOM.team1NameInput.value = msg.data.team1Name;
+          DOM.compTeam1Name.textContent = msg.data.team1Name;
+        }
+        if (msg.data.team2Name && msg.data.team2Name !== PossessionState.team2Name) {
+          PossessionState.team2Name = msg.data.team2Name;
+          DOM.team2NameInput.value = msg.data.team2Name;
+          DOM.compTeam2Name.textContent = msg.data.team2Name;
+        }
+        if (msg.data.timer) {
+          PossessionState.matchTimerSeconds = msg.data.timer.remainingSeconds;
+        }
+        if (typeof msg.data.isMatchEnded === 'boolean') {
+          PossessionState.isMatchEnded = msg.data.isMatchEnded;
+        }
+        saveToStorage();
+      }
+    });
+
+    // 2. 다른 창 스토리지 이벤트 동기화
+    window.addEventListener('storage', (e) => {
+      if (e.key === MATCH_STORAGE_KEY) {
+        loadFromStorage();
+        DOM.team1NameInput.value = PossessionState.team1Name;
+        DOM.team2NameInput.value = PossessionState.team2Name;
+        DOM.compTeam1Name.textContent = PossessionState.team1Name;
+        DOM.compTeam2Name.textContent = PossessionState.team2Name;
+      }
+    });
+
+    // 3. 고속 인터벌 (200ms) 폴링
+    setInterval(() => {
+      if (!PossessionState.activeTeam) {
+        const matchRaw = localStorage.getItem(MATCH_STORAGE_KEY);
+        if (matchRaw) {
+          try {
+            const m = JSON.parse(matchRaw);
+            if (m.team1Name && m.team1Name !== PossessionState.team1Name) {
+              PossessionState.team1Name = m.team1Name;
+              DOM.team1NameInput.value = m.team1Name;
+              DOM.compTeam1Name.textContent = m.team1Name;
+            }
+            if (m.team2Name && m.team2Name !== PossessionState.team2Name) {
+              PossessionState.team2Name = m.team2Name;
+              DOM.team2NameInput.value = m.team2Name;
+              DOM.compTeam2Name.textContent = m.team2Name;
+            }
+          } catch(e){}
+        }
+      }
+    }, 200);
   });
 })();

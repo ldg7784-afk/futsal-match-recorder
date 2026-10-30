@@ -392,6 +392,94 @@ body {
   color: var(--tesla-carbon-dark);
 }
 
+/* 실시간 볼 점유율 1분 주기 연동 바 (운영판) */
+.match-possession-section {
+  padding: 0.65rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: var(--radius-panel);
+}
+
+.match-possession-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.poss-title-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--tesla-blue);
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+.match-poss-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tesla-graphite);
+  letter-spacing: -0.01em;
+}
+
+.match-poss-readout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.poss-team1-badge {
+  color: var(--tesla-blue);
+}
+
+.poss-vs-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--tesla-silver-fog);
+}
+
+.poss-team2-badge {
+  color: var(--tesla-carbon-dark);
+}
+
+.match-poss-dual-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--tesla-light-ash);
+  width: 100%;
+}
+
+.match-poss-bar-team1 {
+  background: var(--tesla-blue);
+  transition: width 0.2s linear;
+}
+
+.match-poss-bar-team2 {
+  background: var(--tesla-carbon-dark);
+  transition: width 0.2s linear;
+}
+
 /* ==========================================================================
    3. 1팀(왼쪽)과 2팀(오른쪽) 2단 반응형 레이아웃
    ========================================================================== */

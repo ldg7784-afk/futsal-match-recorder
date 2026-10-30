@@ -28,6 +28,28 @@
   ];
 
   const STORAGE_KEY = 'futsal_shared_match_state';
+  const POSSESSION_STORAGE_KEY = 'futsal_possession_data';
+
+  // 초고속 실시간 브로드캐스트 채널 버스 (0ms 딜레이 동기화)
+  const SyncBus = {
+    channel: typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('futsal_sync_bus') : null,
+    post(type, data = {}) {
+      if (this.channel) {
+        try {
+          this.channel.postMessage({ type, data, timestamp: Date.now() });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    },
+    listen(handler) {
+      if (this.channel) {
+        this.channel.onmessage = (event) => {
+          if (event && event.data) handler(event.data);
+        };
+      }
+    }
+  };
 
   // 전역 상태
   const State = {
@@ -63,7 +85,7 @@
     }
   };
 
-  // 스토리지 저장 & 실시간 동기화
+  // 스토리지 저장 & 실시간 동기화 브로드캐스트 (0ms 즉시 전파)
   function saveState() {
     try {
       const data = {
@@ -81,6 +103,9 @@
       // 과거 세션 호환
       localStorage.setItem('futsal_session_' + State.sessionId, JSON.stringify(data));
       localStorage.setItem('futsal_current_session_id', State.sessionId);
+
+      // ★ 3개 앱(운영판, 전광판, 분석원) 즉시 브로드캐스트
+      SyncBus.post('MATCH_UPDATE', data);
     } catch (e) {
       console.error(e);
     }
@@ -519,9 +544,36 @@
       document.getElementById('team2CountBadge').textContent = `${team2Players.length}명`;
 
       document.getElementById('team1PlayersList').innerHTML = team1Players.map(p => this.createPlayerRowHtml(p)).join('');
-      document.getElementById('team2PlayersList').innerHTML = team2Players.map(p => this.createPlayerRowHtml(p)).join('');
+      // 5. 볼 점유율 분석원 실시간 바 동기화
+      renderPossessionBar();
     }
   };
+
+  // 운영판 실시간 볼 점유율 1분 주기 렌더러
+  function renderPossessionBar() {
+    const raw = localStorage.getItem(POSSESSION_STORAGE_KEY);
+    const t1Elem = document.getElementById('matchPossTeam1Val');
+    const t2Elem = document.getElementById('matchPossTeam2Val');
+    const b1Elem = document.getElementById('matchPossTeam1Bar');
+    const b2Elem = document.getElementById('matchPossTeam2Bar');
+    if (!t1Elem || !t2Elem || !b1Elem || !b2Elem) return;
+
+    let pct1 = 50, pct2 = 50;
+    if (raw) {
+      try {
+        const poss = JSON.parse(raw);
+        const sum = (poss.team1Ms || 0) + (poss.team2Ms || 0);
+        if (sum > 0) {
+          pct1 = Math.round(((poss.team1Ms || 0) / sum) * 100);
+          pct2 = 100 - pct1;
+        }
+      } catch (e) {}
+    }
+    t1Elem.textContent = `${State.team1Name} ${pct1}%`;
+    t2Elem.textContent = `${pct2}% ${State.team2Name}`;
+    b1Elem.style.width = `${pct1}%`;
+    b2Elem.style.width = `${pct2}%`;
+  }
 
   // 초기 로드
   document.addEventListener('DOMContentLoaded', () => {
@@ -530,8 +582,16 @@
 
     TimerModule.init();
     OperatorManager.init();
+    renderPossessionBar();
 
-    // 타 창(전광판, 분석원)에서의 변경 실시간 리스너
+    // 1. 브로드캐스트 버스로 점유율 분석원 데이터 즉시 수신 (0ms 지연)
+    SyncBus.listen((msg) => {
+      if (msg.type === 'POSSESSION_UPDATE') {
+        renderPossessionBar();
+      }
+    });
+
+    // 2. 타 창(전광판, 분석원)에서의 변경 실시간 리스너
     window.addEventListener('storage', (e) => {
       if (e.key === STORAGE_KEY) {
         const updated = loadState();
@@ -540,7 +600,12 @@
           OperatorManager.render();
           TimerModule.render();
         }
+      } else if (e.key === POSSESSION_STORAGE_KEY) {
+        renderPossessionBar();
       }
     });
+
+    // 3. 200ms 고속 인터벌로 점유율 실시간 스트리밍 반영
+    setInterval(renderPossessionBar, 200);
   });
 })();
