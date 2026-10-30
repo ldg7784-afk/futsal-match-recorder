@@ -1,0 +1,17 @@
+[
+  { "studentNumber": "10101", "name": "김민준", "maskedName": "김*준" },
+  { "studentNumber": "10102", "name": "이서준", "maskedName": "이*준" },
+  { "studentNumber": "10103", "name": "박도윤", "maskedName": "박*윤" },
+  { "studentNumber": "10104", "name": "정예준", "maskedName": "정*준" },
+  { "studentNumber": "10105", "name": "최시우", "maskedName": "최*우" },
+  { "studentNumber": "10201", "name": "강하준", "maskedName": "강*준" },
+  { "studentNumber": "10202", "name": "조은우", "maskedName": "조*우" },
+  { "studentNumber": "10203", "name": "윤지호", "maskedName": "윤*호" },
+  { "studentNumber": "10204", "name": "장유준", "maskedName": "장*준" },
+  { "studentNumber": "10205", "name": "임선우", "maskedName": "임*우" },
+  { "studentNumber": "20101", "name": "한지훈", "maskedName": "한*훈" },
+  { "studentNumber": "20102", "name": "오민재", "maskedName": "오*재" },
+  { "studentNumber": "20103", "name": "서현우", "maskedName": "서*우" },
+  { "studentNumber": "20104", "name": "신준우", "maskedName": "신*우" },
+  { "studentNumber": "20105", "name": "권승우", "maskedName": "권*우" }
+]
