@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>학교폭력예방 풋살대회 | 볼 점유율 실시간 분석</title>
+  <meta name="description" content="학교폭력예방 풋살대회 볼 점유율 분석원 전용 화면 - 꾹 누르는 동안 팀 점유 시간 측정 및 실시간 비교 분석">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="possession.css">
+</head>
+<body>
+  <div class="possession-app-container">
+    <!-- 헤더 -->
+    <header class="possession-header">
+      <div class="header-left">
+        <span class="live-dot"></span>
+        <span class="brand-tag">ANALYST CONSOLE</span>
+        <h1 class="header-title">학교폭력예방 풋살대회</h1>
+      </div>
+
+      <div class="header-right">
+        <a href="index.html" class="btn-nav">← 경기 기록 화면으로</a>
+      </div>
+    </header>
+
+    <!-- 상단 핵심 안내 메시지 (알림 배너) -->
+    <div class="guide-banner">
+      <div class="guide-icon">⚽</div>
+      <div class="guide-text-wrap">
+        <div class="guide-headline" id="guideHeadline">공을 소유한 팀 버튼을 꾹 누르고 계세요!</div>
+        <div class="guide-sub" id="guideSub">버튼을 꾹 누르면 해당 팀의 점유 시간이 올라가고, 손을 떼면 시간이 멈춥니다.</div>
+      </div>
+      <div class="live-indicator-pill" id="liveIndicatorPill">대기 중</div>
+    </div>
+
+    <!-- 메인 대형 팀 점유율 터치 버튼 영역 (2단 좌우 배치) -->
+    <main class="possession-touch-grid">
+      <!-- 1팀 대형 터치 패드 -->
+      <section class="team-touch-card team-1-touch" id="team1TouchCard">
+        <div class="team-card-top">
+          <div class="team-name-row">
+            <input type="text" id="team1NameInput" class="team-name-input" value="1팀 (블루)" title="클릭하여 팀명 변경 가능">
+            <span class="team-tag">TEAM 1</span>
+          </div>
+          <span class="touch-state-badge" id="team1StateBadge">대기 중</span>
+        </div>
+
+        <!-- 누르는 액션 버튼 (마우스/터치 지원) -->
+        <div class="touch-action-box" id="team1TouchBtn">
+          <div class="touch-ripple-ring"></div>
+          <div class="touch-instruction">
+            <span class="touch-icon">👆</span>
+            <span class="touch-prompt-text">1팀 볼 소유 시 꾹 누르세요</span>
+          </div>
+          <div class="possession-time-display">
+            <span id="team1TimeDisplay">00:00.0</span>
+          </div>
+        </div>
+
+        <div class="team-card-bottom">
+          <div class="pct-sub-label">실시간 점유율</div>
+          <div class="pct-sub-val" id="team1PctBadge">50.0%</div>
+        </div>
+      </section>
+
+      <!-- 2팀 대형 터치 패드 -->
+      <section class="team-touch-card team-2-touch" id="team2TouchCard">
+        <div class="team-card-top">
+          <div class="team-name-row">
+            <input type="text" id="team2NameInput" class="team-name-input" value="2팀 (오렌지)" title="클릭하여 팀명 변경 가능">
+            <span class="team-tag">TEAM 2</span>
+          </div>
+          <span class="touch-state-badge" id="team2StateBadge">대기 중</span>
+        </div>
+
+        <!-- 누르는 액션 버튼 (마우스/터치 지원) -->
+        <div class="touch-action-box" id="team2TouchBtn">
+          <div class="touch-ripple-ring"></div>
+          <div class="touch-instruction">
+            <span class="touch-icon">👆</span>
+            <span class="touch-prompt-text">2팀 볼 소유 시 꾹 누르세요</span>
+          </div>
+          <div class="possession-time-display">
+            <span id="team2TimeDisplay">00:00.0</span>
+          </div>
+        </div>
+
+        <div class="team-card-bottom">
+          <div class="pct-sub-label">실시간 점유율</div>
+          <div class="pct-sub-val" id="team2PctBadge">50.0%</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 하단 실시간 볼 점유율 비교 분석 전광판 바 -->
+    <section class="comparison-analysis-panel glass-card">
+      <div class="analysis-header">
+        <div class="analysis-title-wrap">
+          <span class="stat-dot"></span>
+          <h2 class="analysis-title">실시간 볼 점유율 비교 분석</h2>
+        </div>
+        <div class="total-time-badge">
+          인플레이 총 시간: <strong id="totalPossessionTime">00:00.0</strong>
+        </div>
+      </div>
+
+      <!-- 양 팀 실시간 퍼센트 대형 디스플레이 -->
+      <div class="comparison-numbers-row">
+        <div class="comp-team comp-team-1">
+          <span class="comp-team-name" id="compTeam1Name">1팀 (블루)</span>
+          <span class="comp-big-pct" id="compTeam1Pct">50%</span>
+        </div>
+
+        <div class="comp-vs-label">POSSESSION</div>
+
+        <div class="comp-team comp-team-2">
+          <span class="comp-big-pct" id="compTeam2Pct">50%</span>
+          <span class="comp-team-name" id="compTeam2Name">2팀 (오렌지)</span>
+        </div>
+      </div>
+
+      <!-- 실시간 점유율 듀얼 프로그레스 바 -->
+      <div class="possession-ratio-bar-wrap">
+        <div class="ratio-bar-team-1" id="ratioBarTeam1" style="width: 50%;"></div>
+        <div class="ratio-bar-team-2" id="ratioBarTeam2" style="width: 50%;"></div>
+      </div>
+
+      <!-- 하단 조작 컨트롤 -->
+      <div class="possession-footer-controls">
+        <button id="resetPossessionBtn" class="btn-reset" title="점유율 시간 0으로 리셋">
+          ⏱️ 점유율 시간 초기화
+        </button>
+        <button id="exportPossessionBtn" class="btn-export" title="점유율 분석 결과 내보내기">
+          📊 점유율 데이터 복사
+        </button>
+      </div>
+    </section>
+
+    <!-- 푸터 -->
+    <footer class="possession-footer">
+      <p>※ 본 화면은 학교폭력예방 풋살대회 경기 분석원 전용 콘솔입니다. 버튼에서 손을 떼거나 마우스를 떼면 즉시 시간이 정지됩니다.</p>
+    </footer>
+  </div>
+
+  <script src="possession.js"></script>
+</body>
+</html>

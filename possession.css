@@ -1,0 +1,507 @@
+/* ==========================================================================
+   볼 점유율 분석원 전용 콘솔 스타일 (Tesla Design System Inspired)
+   - Colors: Pure White (#FFFFFF), Light Ash (#F4F4F4), Carbon Dark (#171A20)
+   - Primary Accent: Electric Blue (#3E6AE1)
+   - Flat, Radical Subtraction, 4px Buttons, 12px Panels
+   - Mobile & Tablet Touch-Optimized (Touch Action: None, User Select: None)
+   ========================================================================== */
+
+:root {
+  --tesla-white: #ffffff;
+  --tesla-light-ash: #f4f4f4;
+  --tesla-cloud-gray: #eeeeee;
+  --tesla-pale-silver: #d0d1d2;
+  --tesla-silver-fog: #8e8e8e;
+  --tesla-pewter: #5c5e62;
+  --tesla-graphite: #393c41;
+  --tesla-carbon-dark: #171a20;
+
+  /* Accent */
+  --tesla-blue: #3e6ae1;
+  --tesla-blue-hover: #2e55bd;
+
+  /* Team Identifiers (High Contrast) */
+  --team-1-accent: #3e6ae1; /* Electric Blue */
+  --team-2-accent: #171a20; /* Carbon Dark */
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Radius */
+  --radius-btn: 4px;
+  --radius-panel: 12px;
+
+  /* Motion */
+  --tesla-transition: all 0.33s cubic-bezier(0.5, 0, 0, 0.75);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--tesla-light-ash);
+  color: var(--tesla-graphite);
+  min-height: 100vh;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+.possession-app-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   헤더
+   ========================================================================== */
+.possession-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.25rem 0.25rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--tesla-carbon-dark);
+}
+
+.brand-tag {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--tesla-pewter);
+  text-transform: uppercase;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+  letter-spacing: -0.01em;
+}
+
+.btn-nav {
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-pale-silver);
+  color: var(--tesla-pewter);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-btn);
+  text-decoration: none;
+  transition: var(--tesla-transition);
+}
+
+.btn-nav:hover {
+  background: var(--tesla-light-ash);
+  color: var(--tesla-carbon-dark);
+}
+
+/* ==========================================================================
+   상단 핵심 안내 메시지 배너
+   ========================================================================== */
+.guide-banner {
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-left: 4px solid var(--tesla-blue);
+  border-radius: var(--radius-btn);
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.guide-icon {
+  font-size: 22px;
+}
+
+.guide-text-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.guide-headline {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+  letter-spacing: -0.01em;
+}
+
+.guide-sub {
+  font-size: 12.5px;
+  color: var(--tesla-pewter);
+}
+
+.live-indicator-pill {
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-btn);
+  background: var(--tesla-light-ash);
+  color: var(--tesla-pewter);
+  border: 1px solid var(--tesla-cloud-gray);
+  transition: var(--tesla-transition);
+}
+
+.live-indicator-pill.active {
+  background: var(--tesla-blue);
+  color: var(--tesla-white);
+  border-color: var(--tesla-blue);
+}
+
+/* ==========================================================================
+   메인 대형 터치 패드 (1팀 vs 2팀)
+   ========================================================================== */
+.possession-touch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .possession-touch-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.team-touch-card {
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: var(--radius-panel);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: var(--tesla-transition);
+}
+
+.team-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--tesla-cloud-gray);
+}
+
+.team-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.team-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--tesla-carbon-dark);
+  font-size: 16px;
+  font-weight: 600;
+  width: 140px;
+  transition: var(--tesla-transition);
+}
+
+.team-name-input:focus {
+  border-bottom-color: var(--tesla-blue);
+  outline: none;
+}
+
+.team-tag {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: var(--radius-btn);
+  background: var(--tesla-light-ash);
+  color: var(--tesla-pewter);
+  border: 1px solid var(--tesla-cloud-gray);
+}
+
+.touch-state-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--tesla-silver-fog);
+  padding: 3px 8px;
+  border-radius: var(--radius-btn);
+  background: var(--tesla-light-ash);
+}
+
+.team-touch-card.pressing .touch-state-badge {
+  background: var(--tesla-blue);
+  color: var(--tesla-white);
+}
+
+/* 대형 터치 액션 박스 */
+.touch-action-box {
+  flex: 1;
+  min-height: 240px;
+  background: var(--tesla-light-ash);
+  border: 2px dashed var(--tesla-pale-silver);
+  border-radius: var(--radius-panel);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  cursor: pointer;
+  touch-action: none; /* 모바일에서 스크롤 방지 및 즉각 터치 인식 */
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.touch-instruction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
+
+.touch-icon {
+  font-size: 36px;
+  transition: transform 0.15s;
+}
+
+.touch-prompt-text {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--tesla-pewter);
+}
+
+.possession-time-display {
+  font-family: var(--font-mono);
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--tesla-carbon-dark);
+  letter-spacing: -0.03em;
+  pointer-events: none;
+}
+
+/* 꾹 누르고 있을 때 (Active Pressing State) */
+.team-touch-card.pressing .touch-action-box {
+  background: #ffffff;
+  border: 2px solid var(--tesla-blue);
+  box-shadow: inset 0 0 0 2px rgba(62, 106, 225, 0.15);
+}
+
+.team-touch-card.team-1-touch.pressing .possession-time-display {
+  color: var(--tesla-blue);
+}
+
+.team-touch-card.team-2-touch.pressing .possession-time-display {
+  color: var(--tesla-carbon-dark);
+}
+
+.team-touch-card.pressing .touch-icon {
+  transform: scale(1.2);
+}
+
+.team-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--tesla-cloud-gray);
+}
+
+.pct-sub-label {
+  font-size: 12px;
+  color: var(--tesla-pewter);
+}
+
+.pct-sub-val {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+}
+
+/* ==========================================================================
+   하단 실시간 볼 점유율 비교 분석 전광판 바
+   ========================================================================== */
+.comparison-analysis-panel {
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: var(--radius-panel);
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.analysis-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--tesla-blue);
+}
+
+.analysis-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+}
+
+.total-time-badge {
+  font-size: 13px;
+  color: var(--tesla-pewter);
+}
+
+.total-time-badge strong {
+  font-family: var(--font-mono);
+  color: var(--tesla-carbon-dark);
+  font-weight: 600;
+}
+
+/* 대형 퍼센트 숫자 비교 행 */
+.comparison-numbers-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.comp-team {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.comp-team-1 { color: var(--tesla-blue); }
+.comp-team-2 { color: var(--tesla-carbon-dark); }
+
+.comp-team-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.comp-big-pct {
+  font-family: var(--font-sans);
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.comp-vs-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--tesla-silver-fog);
+  text-align: center;
+}
+
+/* 점유율 듀얼 프로그레스 바 */
+.possession-ratio-bar-wrap {
+  width: 100%;
+  height: 10px;
+  background: var(--tesla-cloud-gray);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+}
+
+.ratio-bar-team-1 {
+  height: 100%;
+  background: var(--tesla-blue);
+  transition: width 0.1s linear;
+}
+
+.ratio-bar-team-2 {
+  height: 100%;
+  background: var(--tesla-carbon-dark);
+  transition: width 0.1s linear;
+}
+
+/* 하단 버튼 */
+.possession-footer-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+}
+
+.btn-reset {
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-pale-silver);
+  color: var(--tesla-pewter);
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: var(--tesla-transition);
+}
+
+.btn-reset:hover {
+  background: var(--tesla-light-ash);
+  color: var(--tesla-carbon-dark);
+}
+
+.btn-export {
+  background: var(--tesla-blue);
+  color: var(--tesla-white);
+  border: none;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: var(--tesla-transition);
+}
+
+.btn-export:hover {
+  background: var(--tesla-blue-hover);
+}
+
+.possession-footer {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--tesla-silver-fog);
+  padding: 0.5rem 0;
+}
