@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>학교폭력예방 풋살대회 | 운영 포털</title>
+  <meta name="description" content="학교폭력예방 풋살대회 운영 포털 - 경기 기록 운영원 앱 및 볼 점유율 분석원 앱 독립 접속">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --tesla-white: #ffffff;
+      --tesla-light-ash: #f4f4f4;
+      --tesla-cloud-gray: #eeeeee;
+      --tesla-pale-silver: #d0d1d2;
+      --tesla-silver-fog: #8e8e8e;
+      --tesla-pewter: #5c5e62;
+      --tesla-graphite: #393c41;
+      --tesla-carbon-dark: #171a20;
+      --tesla-blue: #3e6ae1;
+      --tesla-blue-hover: #2e55bd;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --radius-btn: 4px;
+      --radius-panel: 12px;
+      --tesla-transition: all 0.33s cubic-bezier(0.5, 0, 0, 0.75);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--tesla-light-ash);
+      color: var(--tesla-graphite);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .portal-container {
+      width: 100%;
+      max-width: 880px;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .portal-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--tesla-pewter);
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--tesla-carbon-dark);
+    }
+
+    .portal-title {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--tesla-carbon-dark);
+      letter-spacing: -0.02em;
+    }
+
+    .portal-subtitle {
+      font-size: 14px;
+      color: var(--tesla-pewter);
+      max-width: 520px;
+    }
+
+    /* 2단 독립 앱 선택 카드 그리드 */
+    .app-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 680px) {
+      .app-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+
+    .app-card {
+      background: var(--tesla-white);
+      border: 1px solid var(--tesla-cloud-gray);
+      border-radius: var(--radius-panel);
+      padding: 2rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      transition: var(--tesla-transition);
+      position: relative;
+    }
+
+    .app-card:hover {
+      border-color: var(--tesla-pale-silver);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .app-card-top {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .app-role-pill {
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: var(--radius-btn);
+      text-transform: uppercase;
+    }
+
+    .card-match .app-role-pill {
+      background: rgba(62, 106, 225, 0.1);
+      color: var(--tesla-blue);
+      border: 1px solid rgba(62, 106, 225, 0.25);
+    }
+
+    .card-possession .app-role-pill {
+      background: var(--tesla-light-ash);
+      color: var(--tesla-carbon-dark);
+      border: 1px solid var(--tesla-cloud-gray);
+    }
+
+    .app-card-title {
+      font-size: 21px;
+      font-weight: 600;
+      color: var(--tesla-carbon-dark);
+      letter-spacing: -0.01em;
+    }
+
+    .app-card-desc {
+      font-size: 13.5px;
+      color: var(--tesla-pewter);
+      line-height: 1.6;
+    }
+
+    .app-features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 12.5px;
+      color: var(--tesla-graphite);
+    }
+
+    .app-features-list li::before {
+      content: "•";
+      color: var(--tesla-silver-fog);
+      display: inline-block;
+      width: 1em;
+    }
+
+    .app-card-bottom {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .btn-enter-app {
+      width: 100%;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      border-radius: var(--radius-btn);
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--tesla-transition);
+      cursor: pointer;
+    }
+
+    .card-match .btn-enter-app {
+      background: var(--tesla-blue);
+      color: var(--tesla-white);
+    }
+
+    .card-match:hover .btn-enter-app {
+      background: var(--tesla-blue-hover);
+    }
+
+    .card-possession .btn-enter-app {
+      background: var(--tesla-carbon-dark);
+      color: var(--tesla-white);
+    }
+
+    .card-possession:hover .btn-enter-app {
+      background: #000000;
+    }
+
+    .url-chip {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--tesla-silver-fog);
+      text-align: center;
+      background: var(--tesla-light-ash);
+      padding: 4px 8px;
+      border-radius: var(--radius-btn);
+    }
+
+    .portal-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--tesla-silver-fog);
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-container">
+    <header class="portal-header">
+      <div class="brand-badge">
+        <span class="live-dot"></span>
+        <span>TOURNAMENT OPERATIONS</span>
+      </div>
+      <h1 class="portal-title">학교폭력예방 풋살대회</h1>
+      <p class="portal-subtitle">담당 학생의 역할에 따라 아래 독립 전용 앱 링크를 각각 전달해 주시기 바랍니다.</p>
+    </header>
+
+    <main class="app-cards-grid">
+      <!-- 1. 경기 기록 운영원 전용 앱 -->
+      <a href="match.html" class="app-card card-match">
+        <div class="app-card-top">
+          <span class="app-role-pill">운영 학생 담당</span>
+          <h2 class="app-card-title">경기 기록 운영원 앱</h2>
+          <p class="app-card-desc">중앙 15분 경기 타이머를 제어하고, 1팀과 2팀 선수별 득점·도움·파울을 실시간으로 입력합니다.</p>
+          <ul class="app-features-list">
+            <li>15분 전광판 경기 타이머 측정</li>
+            <li>1팀 vs 2팀 실시간 스코어보드</li>
+            <li>선수별 득점·도움·파울 카운트</li>
+            <li>수업 종료 후에도 자동 영구 저장</li>
+          </ul>
+        </div>
+        <div class="app-card-bottom">
+          <div class="btn-enter-app">경기 기록 앱 실행 →</div>
+          <span class="url-chip">독립 주소: /match.html</span>
+        </div>
+      </a>
+
+      <!-- 2. 볼 점유율 분석원 전용 앱 -->
+      <a href="possession.html" class="app-card card-possession">
+        <div class="app-card-top">
+          <span class="app-role-pill">분석원 학생 담당</span>
+          <h2 class="app-card-title">볼 점유율 분석원 앱</h2>
+          <p class="app-card-desc">공을 소유한 팀 버튼을 꾹 누르는 동안만 시간을 측정하여 실시간 양 팀 점유율(%)을 비교 분석합니다.</p>
+          <ul class="app-features-list">
+            <li>버튼 꾹 누르기 방식 (손 떼면 즉시 정지)</li>
+            <li>1팀 vs 2팀 실시간 점유율 (%) 계산</li>
+            <li>듀얼 비주얼 프로그레스 바</li>
+            <li>모바일/태블릿 터치 화면 완벽 최적화</li>
+          </ul>
+        </div>
+        <div class="app-card-bottom">
+          <div class="btn-enter-app">볼 점유율 분석 앱 실행 →</div>
+          <span class="url-chip">독립 주소: /possession.html</span>
+        </div>
+      </a>
+    </main>
+
+    <footer class="portal-footer">
+      <p>※ 각 앱은 서로 간섭 없이 독립된 브라우저 창이나 모바일 기기에서 분리되어 단독 실행됩니다.</p>
+    </footer>
+  </div>
+</body>
+</html>
