@@ -1,12 +1,12 @@
 /* ==========================================================================
    Design System Inspired by Tesla (DESIGN.md 구현)
-   Principles:
-   - Radical Subtraction: 극단적 절제, 장식적 그라디언트/네온/그림자 일체 배제
-   - Palette: Pure White (#FFFFFF), Light Ash (#F4F4F4), Carbon Dark (#171A20)
+   - Title: 학교폭력예방 풋살대회
+   - Radical Subtraction: 극단적 절제, 순수 화이트 & 모노톤
    - Single Accent: Electric Blue (#3E6AE1)
-   - Typography: Clean Engineered Sans (Inter/Universal Sans), 400 & 500 weights only
-   - Precision Radius: 4px for interactive buttons & controls, 12px for main panels
-   - Motion Timing: 0.33s cubic-bezier(0.5, 0, 0, 0.75)
+   - Mobile-First & All Device Precision:
+     줄바꿈/깨짐 없는 득점·도움·파울 인라인 3열 레이아웃
+   - Radius: 4px Buttons, 12px Panels
+   - Motion: 0.33s cubic-bezier(0.5, 0, 0, 0.75)
    ========================================================================== */
 
 :root {
@@ -24,24 +24,18 @@
   --tesla-blue: #3e6ae1;
   --tesla-blue-hover: #2e55bd;
 
-  /* Team Delineation in Tesla Palette (Subtle High-Contrast) */
-  --team-1-accent: #3e6ae1; /* Electric Blue */
-  --team-2-accent: #171a20; /* Carbon Dark Contrast */
-
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Elevation: Strictly Flat / No Shadows */
-  --shadow-none: none;
+  /* Elevation: Strictly Flat */
   --border-subtle: 1px solid var(--tesla-cloud-gray);
-  --border-focus: 1px solid var(--tesla-blue);
 
-  /* Radius System (DESIGN.md Section 5) */
+  /* Radius System */
   --radius-btn: 4px;      /* Interactive controls: 4px */
   --radius-panel: 12px;   /* Category cards & containers: 12px */
 
-  /* Motion Timing (DESIGN.md Section 4 & 6) */
+  /* Motion Timing */
   --tesla-transition: all 0.33s cubic-bezier(0.5, 0, 0, 0.75);
 }
 
@@ -59,7 +53,7 @@ body {
   line-height: 1.45;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  letter-spacing: normal; /* "Normal" letter-spacing everywhere */
+  letter-spacing: normal;
 }
 
 .sr-only {
@@ -75,45 +69,45 @@ body {
 
 /* Layout Container */
 .app-container {
-  max-width: 1380px;
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem;
+  padding: 1.25rem 1rem 3rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
-/* Tesla Flat Panel (No Shadows, Clean White Canvas) */
+/* Tesla Flat Panel (Clean White Canvas) */
 .glass-card {
   background: var(--tesla-white);
   border: var(--border-subtle);
   border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-none);
+  box-shadow: none;
   transition: var(--tesla-transition);
 }
 
 /* ==========================================================================
-   1. 헤더 (Tesla Navigation Style)
+   1. 헤더 (Header)
    ========================================================================== */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
-  padding: 0.5rem 0.25rem;
+  gap: 0.75rem;
+  padding: 0.25rem 0.25rem;
 }
 
 .header-left {
   display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.65rem;
 }
 
 .brand-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .live-dot {
@@ -126,213 +120,28 @@ body {
 .brand-sub {
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   color: var(--tesla-pewter);
   text-transform: uppercase;
 }
 
 .main-title {
-  font-size: 20px;
-  font-weight: 500;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--tesla-carbon-dark);
-  letter-spacing: normal;
+  letter-spacing: -0.01em;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.purpose-select {
-  background: var(--tesla-white);
-  border: 1px solid var(--tesla-pale-silver);
-  color: var(--tesla-graphite);
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: var(--radius-btn);
-  outline: none;
-  cursor: pointer;
-  transition: var(--tesla-transition);
-}
-
-.purpose-select:focus {
-  border-color: var(--tesla-blue);
-}
-
-/* ==========================================================================
-   2. 기록자(학생) 식별 입력 바 (Tesla Clean Input Bar)
-   ========================================================================== */
-.student-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem 1.25rem;
-  flex-wrap: wrap;
-  background: var(--tesla-white);
-  border: var(--border-subtle);
-}
-
-.student-bar-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.badge-tag {
-  background: var(--tesla-light-ash);
-  color: var(--tesla-carbon-dark);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 3px 8px;
-  border-radius: var(--radius-btn);
-}
-
-.student-bar-desc {
-  font-size: 13px;
-  color: var(--tesla-pewter);
-}
-
-.student-bar-inputs {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.autocomplete-group {
-  position: relative;
-}
-
-.autocomplete-group input {
-  background: var(--tesla-white);
-  border: 1px solid var(--tesla-pale-silver);
-  border-radius: var(--radius-btn);
-  color: var(--tesla-carbon-dark);
-  padding: 7px 12px;
-  font-size: 13px;
-  font-weight: 400;
-  outline: none;
-  width: 150px;
-  transition: var(--tesla-transition);
-}
-
-.autocomplete-group input::placeholder {
-  color: var(--tesla-silver-fog);
-}
-
-.autocomplete-group input:focus {
-  border-color: var(--tesla-blue);
-}
-
-.autocomplete-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 190px;
-  z-index: 50;
-  margin-top: 4px;
-  background: var(--tesla-white);
-  border: 1px solid var(--tesla-pale-silver);
-  border-radius: var(--radius-btn);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  max-height: 180px;
-  overflow-y: auto;
-}
-
-.autocomplete-item {
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--tesla-cloud-gray);
-  transition: background-color 0.15s;
-}
-
-.autocomplete-item:hover {
-  background-color: var(--tesla-light-ash);
-  color: var(--tesla-blue);
-}
-
-.autocomplete-item .item-sub {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--tesla-pewter);
-}
-
-.toggle-container {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--tesla-pewter);
-  user-select: none;
-}
-
-.toggle-container input {
-  display: none;
-}
-
-.toggle-slider {
-  width: 32px;
-  height: 16px;
-  background-color: var(--tesla-cloud-gray);
-  border-radius: var(--radius-btn);
-  position: relative;
-  transition: var(--tesla-transition);
-}
-
-.toggle-slider::before {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  background-color: var(--tesla-white);
-  transition: var(--tesla-transition);
-}
-
-.toggle-container input:checked + .toggle-slider {
-  background-color: var(--tesla-blue);
-}
-
-.toggle-container input:checked + .toggle-slider::before {
-  transform: translateX(16px);
-}
-
-.student-notice {
-  background: var(--tesla-light-ash);
-  border: 1px solid var(--tesla-pale-silver);
-  color: var(--tesla-carbon-dark);
-  padding: 6px 10px;
-  border-radius: var(--radius-btn);
-  font-size: 12px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-text {
-  background: none;
-  border: none;
-  color: var(--tesla-blue);
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: 12px;
+  gap: 0.85rem;
 }
 
 .save-status-inline {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   font-size: 12px;
   color: var(--tesla-pewter);
 }
@@ -352,39 +161,33 @@ body {
   color: var(--tesla-carbon-dark);
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 500;
 }
 
 /* ==========================================================================
-   3. 맨 위 가운데 전광판 (Tesla Vehicle Cluster / Minimal Scoreboard)
-   [1팀 점수] - [15분 전광판 타이머] - [2팀 점수]
+   2. 상단 중앙 전광판 (Top Center Scoreboard & Timer)
    ========================================================================== */
 .top-center-scoreboard {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
+  grid-template-columns: 260px 1fr 260px;
   align-items: center;
-  gap: 1.5rem;
-  padding: 1.75rem 2rem;
-  background: var(--tesla-white);
-  border: var(--border-subtle);
-  border-radius: var(--radius-panel);
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 900px) {
   .top-center-scoreboard {
     grid-template-columns: 1fr;
-    gap: 1.25rem;
-    padding: 1.25rem;
+    gap: 1rem;
+    padding: 1.25rem 1rem;
   }
 }
 
-/* 팀 요약 블록 */
 .team-summary {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  padding: 1rem;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
   background: var(--tesla-light-ash);
   border-radius: var(--radius-panel);
   border: 1px solid var(--tesla-cloud-gray);
@@ -393,7 +196,7 @@ body {
 .team-name-editable-wrap {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   width: 100%;
   justify-content: center;
 }
@@ -403,11 +206,11 @@ body {
   border: none;
   border-bottom: 1px solid transparent;
   color: var(--tesla-carbon-dark);
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   text-align: center;
   padding: 2px 4px;
-  width: 140px;
+  width: 130px;
   transition: var(--tesla-transition);
 }
 
@@ -419,8 +222,8 @@ body {
 .team-sub-badge {
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  padding: 2px 6px;
+  letter-spacing: 0.05em;
+  padding: 2px 5px;
   border-radius: var(--radius-btn);
   background: var(--tesla-white);
   color: var(--tesla-pewter);
@@ -429,8 +232,8 @@ body {
 
 .team-big-score {
   font-family: var(--font-sans);
-  font-size: 64px;
-  font-weight: 500;
+  font-size: 56px;
+  font-weight: 600;
   line-height: 1;
   color: var(--tesla-carbon-dark);
   letter-spacing: -0.02em;
@@ -444,7 +247,7 @@ body {
 
 .team-fouls-summary strong {
   color: var(--tesla-carbon-dark);
-  font-weight: 500;
+  font-weight: 600;
   font-family: var(--font-mono);
 }
 
@@ -453,7 +256,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
 .timer-display-box {
@@ -467,8 +270,8 @@ body {
   align-items: baseline;
   justify-content: center;
   font-family: var(--font-sans);
-  font-size: 56px;
-  font-weight: 500;
+  font-size: 52px;
+  font-weight: 600;
   line-height: 1;
   color: var(--tesla-carbon-dark);
   letter-spacing: -0.03em;
@@ -497,18 +300,17 @@ body {
   color: var(--tesla-pewter);
   font-size: 11px;
   font-weight: 500;
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: var(--radius-btn);
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
-/* 프로그레스 바 (Tesla Flat Minimalist) */
+/* 타이머 프로그레스 */
 .timer-progress-wrap {
   width: 100%;
-  max-width: 320px;
+  max-width: 300px;
   height: 3px;
   background: var(--tesla-cloud-gray);
-  border-radius: 0;
   overflow: hidden;
 }
 
@@ -519,12 +321,12 @@ body {
   transition: width 0.3s linear;
 }
 
-/* 타이머 조작 버튼 (Tesla 40px Height, 4px Radius Standard) */
+/* 타이머 조작 버튼 (Tesla 40px 규격) */
 .timer-control-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   width: 100%;
-  max-width: 340px;
+  max-width: 320px;
 }
 
 .btn-timer {
@@ -533,7 +335,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.3rem;
-  height: 40px;
+  height: 38px;
   border-radius: var(--radius-btn);
   font-size: 13px;
   font-weight: 500;
@@ -542,12 +344,8 @@ body {
   transition: var(--tesla-transition);
 }
 
-.btn-timer:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
+.btn-timer:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* Primary CTA: Electric Blue (#3E6AE1) */
 .btn-start {
   background: var(--tesla-blue);
   color: var(--tesla-white);
@@ -556,7 +354,6 @@ body {
   background: var(--tesla-blue-hover);
 }
 
-/* Secondary CTA: Clean White */
 .btn-pause {
   background: var(--tesla-light-ash);
   color: var(--tesla-graphite);
@@ -578,7 +375,7 @@ body {
 
 .timer-extra-chips {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .btn-chip {
@@ -587,7 +384,7 @@ body {
   color: var(--tesla-pewter);
   font-size: 11px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: var(--radius-btn);
   cursor: pointer;
   transition: var(--tesla-transition);
@@ -599,7 +396,7 @@ body {
 }
 
 /* ==========================================================================
-   4. 본문: 1팀(왼쪽)과 2팀(오른쪽) 2단 레이아웃 (Tesla Grid)
+   3. 1팀(왼쪽)과 2팀(오른쪽) 2단 반응형 레이아웃
    ========================================================================== */
 .teams-two-column-layout {
   display: grid;
@@ -608,24 +405,24 @@ body {
   align-items: start;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .teams-two-column-layout {
     grid-template-columns: 1fr;
   }
 }
 
 .team-column {
-  padding: 1.5rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .team-column-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.65rem;
   border-bottom: 1px solid var(--tesla-cloud-gray);
 }
 
@@ -644,7 +441,7 @@ body {
 
 .team-column-title {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--tesla-carbon-dark);
 }
 
@@ -652,7 +449,7 @@ body {
   font-size: 12px;
   color: var(--tesla-pewter);
   background: var(--tesla-light-ash);
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: var(--radius-btn);
 }
 
@@ -663,80 +460,95 @@ body {
   gap: 0.5rem;
 }
 
+/* ==========================================================================
+   ★ 절대 안 깨지는 반응형 선수 카드 & 인라인 3단 스탯 유닛
+   ========================================================================== */
 .player-card {
   background: var(--tesla-white);
   border: 1px solid var(--tesla-cloud-gray);
   border-radius: var(--radius-btn);
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.85rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   transition: var(--tesla-transition);
 }
 
 .player-card:hover {
   border-color: var(--tesla-pale-silver);
-  background: var(--tesla-light-ash);
+  background: #fafafa;
 }
 
+/* 선수 정보 (등번호 + 이름) */
 .player-identity {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  min-width: 120px;
+  gap: 0.5rem;
+  min-width: 95px;
+  flex-shrink: 0;
 }
 
 .player-num {
   font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 500;
-  width: 28px;
-  height: 28px;
+  font-size: 12px;
+  font-weight: 600;
+  width: 26px;
+  height: 26px;
   border-radius: var(--radius-btn);
   background: var(--tesla-light-ash);
   color: var(--tesla-carbon-dark);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .player-name-text {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--tesla-carbon-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 85px;
 }
 
-/* 선수 카드 내 3단 스탯 버튼 (득점, 도움, 파울) */
+/* 득점·도움·파울 가로 인라인 컨테이너 (절대 줄바꿈 방지) */
 .player-actions-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex: 1;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
+/* 스탯 단위 박스 (인라인 고정 형태) */
 .stat-unit {
-  background: var(--tesla-white);
+  background: var(--tesla-light-ash);
   border: 1px solid var(--tesla-cloud-gray);
   border-radius: var(--radius-btn);
-  padding: 4px 8px;
-  display: flex;
+  padding: 3px 6px;
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .stat-label-icon {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--tesla-pewter);
+  user-select: none;
 }
 
 .stat-num-val {
   font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 500;
-  min-width: 1.8ch;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 1.4ch;
   text-align: center;
   color: var(--tesla-carbon-dark);
   transition: color 0.15s;
@@ -747,25 +559,27 @@ body {
 }
 
 .stat-btns-pair {
-  display: flex;
+  display: inline-flex;
   gap: 2px;
 }
 
 .btn-ctrl {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-btn);
-  border: 1px solid var(--tesla-cloud-gray);
-  background: var(--tesla-light-ash);
+  border: 1px solid var(--tesla-pale-silver);
+  background: var(--tesla-white);
   color: var(--tesla-graphite);
-  font-weight: 500;
-  font-size: 14px;
-  display: flex;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: var(--tesla-transition);
   user-select: none;
+  padding: 0;
 }
 
 .btn-ctrl:hover {
@@ -773,10 +587,8 @@ body {
   color: var(--tesla-carbon-dark);
 }
 
-.btn-ctrl.plus {
-  background: var(--tesla-white);
-  border-color: var(--tesla-pale-silver);
-  color: var(--tesla-carbon-dark);
+.btn-ctrl:active {
+  transform: scale(0.93);
 }
 
 .btn-ctrl.plus:hover {
@@ -785,8 +597,42 @@ body {
   color: var(--tesla-white);
 }
 
+/* 모바일/초소형 화면 최적화 미디어 쿼리 */
+@media (max-width: 480px) {
+  .player-card {
+    padding: 0.5rem 0.6rem;
+    gap: 0.4rem;
+  }
+  .player-identity {
+    min-width: 75px;
+  }
+  .player-name-text {
+    max-width: 65px;
+    font-size: 12.5px;
+  }
+  .player-actions-row {
+    gap: 0.25rem;
+  }
+  .stat-unit {
+    padding: 2px 4px;
+    gap: 0.2rem;
+  }
+  .stat-label-icon {
+    font-size: 10px;
+  }
+  .stat-num-val {
+    font-size: 13px;
+    min-width: 1.2ch;
+  }
+  .btn-ctrl {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+  }
+}
+
 /* ==========================================================================
-   5. 교사 관리 모드 & 버튼 시스템 (Tesla Style)
+   4. 교사 관리 모드 & 버튼 시스템
    ========================================================================== */
 .teacher-dashboard {
   padding: 1.5rem;
@@ -827,7 +673,7 @@ body {
 
 .session-table th,
 .session-table td {
-  padding: 10px 14px;
+  padding: 9px 12px;
   border-bottom: 1px solid var(--tesla-cloud-gray);
 }
 
@@ -848,18 +694,16 @@ body {
   border: none;
   border-radius: var(--radius-btn);
   font-weight: 500;
-  padding: 8px 16px;
+  padding: 7px 14px;
   cursor: pointer;
   font-size: 13px;
   transition: var(--tesla-transition);
 }
 
-.btn-primary:hover {
-  background: var(--tesla-blue-hover);
-}
+.btn-primary:hover { background: var(--tesla-blue-hover); }
 
 .btn-primary.btn-sm {
-  padding: 6px 12px;
+  padding: 5px 10px;
   font-size: 12px;
 }
 
@@ -869,7 +713,7 @@ body {
   color: var(--tesla-graphite);
   border-radius: var(--radius-btn);
   font-weight: 500;
-  padding: 8px 16px;
+  padding: 7px 14px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -878,9 +722,7 @@ body {
   transition: var(--tesla-transition);
 }
 
-.btn-secondary:hover {
-  background: var(--tesla-light-ash);
-}
+.btn-secondary:hover { background: var(--tesla-light-ash); }
 
 .btn-danger {
   background: var(--tesla-white);
@@ -888,7 +730,7 @@ body {
   color: var(--tesla-pewter);
   border-radius: var(--radius-btn);
   font-weight: 500;
-  padding: 8px 16px;
+  padding: 7px 14px;
   cursor: pointer;
   font-size: 13px;
   transition: var(--tesla-transition);
@@ -917,18 +759,18 @@ body {
 }
 
 /* ==========================================================================
-   6. 푸터 및 모달
+   5. 푸터 및 모달
    ========================================================================== */
 .app-footer {
   margin-top: 2rem;
   border-top: 1px solid var(--tesla-cloud-gray);
-  padding: 2rem 0 1rem;
+  padding: 1.5rem 0 1rem;
 }
 
 .footer-content {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.65rem;
   align-items: center;
   text-align: center;
 }
@@ -960,25 +802,16 @@ body {
   transition: color 0.15s;
 }
 
-.footer-link-btn:hover {
-  color: var(--tesla-carbon-dark);
-}
+.footer-link-btn:hover { color: var(--tesla-carbon-dark); }
 
-.divider {
-  color: var(--tesla-cloud-gray);
-  font-size: 11px;
-}
-
-.footer-notice {
-  font-size: 11px;
-  color: var(--tesla-silver-fog);
-}
+.divider { color: var(--tesla-cloud-gray); font-size: 11px; }
+.footer-notice { font-size: 11px; color: var(--tesla-silver-fog); }
 
 /* Modals */
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(23, 26, 32, 0.65); /* Level 2 Overlay */
+  background: rgba(23, 26, 32, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -998,10 +831,7 @@ body {
   border: var(--border-subtle);
 }
 
-.modal-dialog.modal-lg {
-  max-width: 760px;
-  max-height: 85vh;
-}
+.modal-dialog.modal-lg { max-width: 760px; max-height: 85vh; }
 
 .modal-header {
   display: flex;
@@ -1009,11 +839,7 @@ body {
   align-items: center;
 }
 
-.modal-header h3 {
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--tesla-carbon-dark);
-}
+.modal-header h3 { font-size: 17px; font-weight: 500; color: var(--tesla-carbon-dark); }
 
 .modal-close {
   background: none;
@@ -1023,12 +849,7 @@ body {
   cursor: pointer;
 }
 
-.modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
+.modal-body { display: flex; flex-direction: column; gap: 1rem; }
 .modal-scroll-body {
   overflow-y: auto;
   max-height: 60vh;
@@ -1038,23 +859,8 @@ body {
   color: var(--tesla-graphite);
 }
 
-.modal-scroll-body h4 {
-  color: var(--tesla-carbon-dark);
-  font-weight: 500;
-  margin: 1rem 0 0.4rem;
-}
+.modal-scroll-body h4 { color: var(--tesla-carbon-dark); font-weight: 500; margin: 1rem 0 0.4rem; }
+.modal-scroll-body ul { padding-left: 1.25rem; margin-bottom: 0.5rem; }
 
-.modal-scroll-body ul {
-  padding-left: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.6rem;
-}
-
-.hidden {
-  display: none !important;
-}
+.modal-footer { display: flex; justify-content: flex-end; gap: 0.6rem; }
+.hidden { display: none !important; }

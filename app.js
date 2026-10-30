@@ -1,38 +1,17 @@
 /**
- * 풋살경기 기록 (Futsal Match Recorder)
+ * 학교폭력예방 풋살대회 경기 기록 시스템
  * 핵심 기능 모듈:
- * - Module 1: Two-Column UI (1팀 왼쪽 vs 2팀 오른쪽) & 상단 센터 전광판
- * - Module 2: 이름·학번 자동 연동 (오타 방지 및 가명 처리)
- * - Module 3: 15분 정밀 경기 타이머 (Date.now 보정)
- * - Module 4: 실시간 자동 저장 및 세션 관리 (영속화)
- * - Module 5: 교사 관리자 모드 (전체 세션 이력, 백업/삭제)
- * - Module 6: 개인정보 보호 & 보안
- * - Module 7: 심의 대응 정책 문서 모달
+ * - Module 1: 1팀(왼쪽) vs 2팀(오른쪽) 2단 레이아웃 & 상단 중앙 스코어보드
+ * - Module 2: 15분 정밀 경기 타이머 (Date.now 보정)
+ * - Module 3: 실시간 자동 저장 및 세션 관리 (영속화)
+ * - Module 4: 교사 관리자 모드 (전체 세션 이력, 백업/삭제)
+ * - Module 5: 정책 문서 모달
  */
 
 (function () {
   'use strict';
 
-  // 기본 학생 명단 (자동완성용)
-  const DEFAULT_STUDENTS = [
-    { studentNumber: "10101", name: "김민준", maskedName: "김*준" },
-    { studentNumber: "10102", name: "이서준", maskedName: "이*준" },
-    { studentNumber: "10103", name: "박도윤", maskedName: "박*윤" },
-    { studentNumber: "10104", name: "정예준", maskedName: "정*준" },
-    { studentNumber: "10105", name: "최시우", maskedName: "최*우" },
-    { studentNumber: "10201", name: "강하준", maskedName: "강*준" },
-    { studentNumber: "10202", name: "조은우", maskedName: "조*우" },
-    { studentNumber: "10203", name: "윤지호", maskedName: "윤*호" },
-    { studentNumber: "10204", name: "장유준", maskedName: "장*준" },
-    { studentNumber: "10205", name: "임선우", maskedName: "임*우" },
-    { studentNumber: "20101", name: "한지훈", maskedName: "한*훈" },
-    { studentNumber: "20102", name: "오민재", maskedName: "오*재" },
-    { studentNumber: "20103", name: "서현우", maskedName: "서*우" },
-    { studentNumber: "20104", name: "신준우", maskedName: "신*우" },
-    { studentNumber: "20105", name: "권승우", maskedName: "권*우" }
-  ];
-
-  // 초기 풋살 5 vs 5 라인업 (1팀: 왼쪽, 2팀: 오른쪽)
+  // 초기 풋살 5 vs 5 라인업
   const INITIAL_PLAYERS = [
     { id: "p1", name: "선수 1", number: 1, team: "1", goals: 0, assists: 0, fouls: 0 },
     { id: "p2", name: "선수 2", number: 7, team: "1", goals: 0, assists: 0, fouls: 0 },
@@ -47,7 +26,7 @@
   ];
 
   // =========================================================================
-  // 모듈 4: 스토리지 영속화 엔진
+  // 스토리지 엔진
   // =========================================================================
   const StorageModule = {
     KEYS: {
@@ -119,16 +98,12 @@
   // =========================================================================
   const State = {
     currentSession: null,
-    students: [...DEFAULT_STUDENTS],
     saveTimerId: null,
-    isMasked: false,
 
     initSession(existingSession = null) {
       if (existingSession) {
-        // 기존 세션에 팀 이름 및 형식 보정
         if (!existingSession.team1Name) existingSession.team1Name = "1팀 (블루)";
         if (!existingSession.team2Name) existingSession.team2Name = "2팀 (오렌지)";
-        // A, B 팀 형식이었던 경우 1, 2로 변환
         if (existingSession.players) {
           existingSession.players.forEach(p => {
             if (p.team === 'A') p.team = '1';
@@ -141,14 +116,8 @@
         this.currentSession = {
           sessionId: newId,
           createdAt: new Date().toISOString(),
-          purpose: document.getElementById('purposeSelect')?.value || 'afterschool',
           team1Name: "1팀 (블루)",
           team2Name: "2팀 (오렌지)",
-          student: {
-            name: '',
-            studentNumber: '',
-            isConfirmed: false
-          },
           timer: {
             durationSeconds: 15 * 60,
             remainingSeconds: 15 * 60,
@@ -162,193 +131,7 @@
   };
 
   // =========================================================================
-  // 모듈 2: 학생 식별 (이름·학번 자동 연동)
-  // =========================================================================
-  const StudentAuthModule = {
-    nameInput: null,
-    numberInput: null,
-    nameSuggestions: null,
-    numberSuggestions: null,
-    confirmNotice: null,
-    confirmedText: null,
-    maskCheckbox: null,
-
-    init() {
-      this.nameInput = document.getElementById('studentNameInput');
-      this.numberInput = document.getElementById('studentNumberInput');
-      this.nameSuggestions = document.getElementById('nameSuggestions');
-      this.numberSuggestions = document.getElementById('numberSuggestions');
-      this.confirmNotice = document.getElementById('studentConfirmNotice');
-      this.confirmedText = document.getElementById('confirmedStudentText');
-      this.maskCheckbox = document.getElementById('maskNameCheckbox');
-
-      this.bindEvents();
-      this.loadStudentRoster();
-    },
-
-    loadStudentRoster() {
-      fetch('students.json')
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data) && data.length > 0) {
-            State.students = data;
-          }
-        })
-        .catch(() => {
-          State.students = [...DEFAULT_STUDENTS];
-        });
-    },
-
-    bindEvents() {
-      // 1. 이름 입력 시 학번 자동 추천
-      this.nameInput.addEventListener('input', (e) => {
-        const val = e.target.value.trim();
-        if (!val) {
-          this.hideSuggestions(this.nameSuggestions);
-          return;
-        }
-
-        const matches = State.students.filter(s => s.name.includes(val));
-        this.renderSuggestions(this.nameSuggestions, matches, (selected) => {
-          this.nameInput.value = selected.name;
-          this.numberInput.value = selected.studentNumber;
-          this.hideSuggestions(this.nameSuggestions);
-          App.scheduleAutoSave();
-        });
-
-        const exact = State.students.find(s => s.name === val);
-        if (exact) {
-          this.numberInput.value = exact.studentNumber;
-          App.scheduleAutoSave();
-        }
-      });
-
-      // 2. 학번 입력 시 이름 자동 연동
-      this.numberInput.addEventListener('input', (e) => {
-        const val = e.target.value.trim();
-        if (!val) {
-          this.hideSuggestions(this.numberSuggestions);
-          return;
-        }
-
-        const matches = State.students.filter(s => s.studentNumber.startsWith(val));
-        this.renderSuggestions(this.numberSuggestions, matches, (selected) => {
-          this.numberInput.value = selected.studentNumber;
-          this.nameInput.value = selected.name;
-          this.hideSuggestions(this.numberSuggestions);
-          App.scheduleAutoSave();
-        });
-
-        const exact = State.students.find(s => s.studentNumber === val);
-        if (exact) {
-          this.nameInput.value = exact.name;
-          App.scheduleAutoSave();
-        }
-      });
-
-      document.addEventListener('click', (e) => {
-        if (!this.nameInput.contains(e.target)) this.hideSuggestions(this.nameSuggestions);
-        if (!this.numberInput.contains(e.target)) this.hideSuggestions(this.numberSuggestions);
-      });
-
-      this.maskCheckbox.addEventListener('change', (e) => {
-        State.isMasked = e.target.checked;
-        this.updateConfirmedDisplay();
-        App.scheduleAutoSave();
-      });
-
-      document.getElementById('confirmStudentBtn').addEventListener('click', () => {
-        this.confirmStudent();
-      });
-
-      document.getElementById('editStudentBtn').addEventListener('click', () => {
-        this.unlockInputs();
-      });
-    },
-
-    renderSuggestions(container, list, onSelect) {
-      if (!list || list.length === 0) {
-        this.hideSuggestions(container);
-        return;
-      }
-      container.innerHTML = '';
-      list.slice(0, 6).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'autocomplete-item';
-        div.innerHTML = `
-          <span>${item.name}</span>
-          <span class="item-sub">${item.studentNumber}</span>
-        `;
-        div.addEventListener('click', () => onSelect(item));
-        container.appendChild(div);
-      });
-      container.classList.remove('hidden');
-    },
-
-    hideSuggestions(container) {
-      container.innerHTML = '';
-      container.classList.add('hidden');
-    },
-
-    confirmStudent() {
-      const name = this.nameInput.value.trim();
-      const num = this.numberInput.value.trim();
-
-      if (!name) {
-        alert("학생 이름을 입력해 주세요.");
-        this.nameInput.focus();
-        return;
-      }
-
-      if (!num || !/^\d{4,6}$/.test(num)) {
-        alert("학번을 4~6자리 숫자로 입력해 주세요 (예: 10101).");
-        this.numberInput.focus();
-        return;
-      }
-
-      State.currentSession.student = {
-        name,
-        studentNumber: num,
-        isConfirmed: true
-      };
-
-      this.lockInputs();
-      this.updateConfirmedDisplay();
-      App.scheduleAutoSave();
-    },
-
-    lockInputs() {
-      this.nameInput.disabled = true;
-      this.numberInput.disabled = true;
-      document.getElementById('confirmStudentBtn').classList.add('hidden');
-      this.confirmNotice.classList.remove('hidden');
-    },
-
-    unlockInputs() {
-      this.nameInput.disabled = false;
-      this.numberInput.disabled = false;
-      document.getElementById('confirmStudentBtn').classList.remove('hidden');
-      this.confirmNotice.classList.add('hidden');
-      State.currentSession.student.isConfirmed = false;
-      App.scheduleAutoSave();
-    },
-
-    updateConfirmedDisplay() {
-      const st = State.currentSession.student;
-      if (!st || !st.name) return;
-      const displayName = State.isMasked ? this.maskName(st.name) : st.name;
-      this.confirmedText.textContent = `기록자 확정: ${st.studentNumber} ${displayName} 학생`;
-    },
-
-    maskName(name) {
-      if (!name) return '';
-      if (name.length <= 2) return name[0] + '*';
-      return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
-    }
-  };
-
-  // =========================================================================
-  // 모듈 3: 15분 정밀 타이머 (상단 중앙 전광판)
+  // 15분 정밀 타이머
   // =========================================================================
   const TimerModule = {
     intervalId: null,
@@ -488,7 +271,7 @@
   };
 
   // =========================================================================
-  // 모듈 1: 1팀(왼쪽)과 2팀(오른쪽) 2단 레이아웃 & 스코어보드 렌더러
+  // 1팀(왼쪽)과 2팀(오른쪽) 2단 레이아웃 & 스코어보드 렌더러
   // =========================================================================
   const MatchRecordModule = {
     team1ListElem: null,
@@ -524,7 +307,6 @@
     },
 
     bindEvents() {
-      // 1팀 이름 변경
       this.team1NameInput.addEventListener('input', (e) => {
         const val = e.target.value.trim() || "1팀";
         State.currentSession.team1Name = val;
@@ -532,7 +314,6 @@
         App.scheduleAutoSave();
       });
 
-      // 2팀 이름 변경
       this.team2NameInput.addEventListener('input', (e) => {
         const val = e.target.value.trim() || "2팀";
         State.currentSession.team2Name = val;
@@ -540,21 +321,18 @@
         App.scheduleAutoSave();
       });
 
-      // 선수 추가 버튼 (1팀용)
       document.getElementById('addPlayer1Btn').addEventListener('click', () => {
         document.getElementById('newPlayerTeamSelect').value = "1";
         document.getElementById('addPlayerModalTitle').textContent = `${State.currentSession.team1Name} 새 선수 등록`;
         document.getElementById('addPlayerModal').classList.remove('hidden');
       });
 
-      // 선수 추가 버튼 (2팀용)
       document.getElementById('addPlayer2Btn').addEventListener('click', () => {
         document.getElementById('newPlayerTeamSelect').value = "2";
         document.getElementById('addPlayerModalTitle').textContent = `${State.currentSession.team2Name} 새 선수 등록`;
         document.getElementById('addPlayerModal').classList.remove('hidden');
       });
 
-      // 모달 닫기
       document.getElementById('closeAddPlayerModalBtn').addEventListener('click', () => {
         document.getElementById('addPlayerModal').classList.add('hidden');
       });
@@ -562,12 +340,10 @@
         document.getElementById('addPlayerModal').classList.add('hidden');
       });
 
-      // 선수 저장
       document.getElementById('saveNewPlayerBtn').addEventListener('click', () => {
         this.addNewPlayer();
       });
 
-      // 점수/도움/파울 증감 버튼 클릭 (이벤트 위임)
       const handleStatClick = (e) => {
         const btn = e.target.closest('.btn-ctrl');
         if (!btn) return;
@@ -591,7 +367,6 @@
 
       player[statType] = newVal;
 
-      // 해당 버튼 옆의 숫자 UI만 초고속 즉시 부분 갱신
       const statUnit = triggerBtn.closest('.stat-unit');
       if (statUnit) {
         const valElem = statUnit.querySelector('.stat-num-val');
@@ -665,37 +440,37 @@
         <div class="player-card">
           <div class="player-identity">
             <span class="player-num">#${player.number}</span>
-            <span class="player-name-text">${player.name}</span>
+            <span class="player-name-text" title="${player.name}">${player.name}</span>
           </div>
 
           <div class="player-actions-row">
             <!-- 득점 -->
             <div class="stat-unit" title="득점">
-              <span class="stat-label-icon">⚽ 득점</span>
+              <span class="stat-label-icon">득점</span>
               <span class="stat-num-val">${player.goals}</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="goals" data-change="-1">-</button>
-                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="goals" data-change="1">+</button>
+                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="goals" data-change="-1" title="득점 -1">-</button>
+                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="goals" data-change="1" title="득점 +1">+</button>
               </div>
             </div>
 
             <!-- 도움 -->
             <div class="stat-unit" title="도움">
-              <span class="stat-label-icon">👟 도움</span>
+              <span class="stat-label-icon">도움</span>
               <span class="stat-num-val">${player.assists}</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="assists" data-change="-1">-</button>
-                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="assists" data-change="1">+</button>
+                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="assists" data-change="-1" title="도움 -1">-</button>
+                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="assists" data-change="1" title="도움 +1">+</button>
               </div>
             </div>
 
             <!-- 파울 -->
             <div class="stat-unit" title="파울">
-              <span class="stat-label-icon">⚠️ 파울</span>
+              <span class="stat-label-icon">파울</span>
               <span class="stat-num-val">${player.fouls}</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="fouls" data-change="-1">-</button>
-                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="fouls" data-change="1">+</button>
+                <button class="btn-ctrl" data-player-id="${player.id}" data-stat="fouls" data-change="-1" title="파울 -1">-</button>
+                <button class="btn-ctrl plus" data-player-id="${player.id}" data-stat="fouls" data-change="1" title="파울 +1">+</button>
               </div>
             </div>
           </div>
@@ -704,7 +479,6 @@
     },
 
     render() {
-      // 팀 이름 동기화
       const t1Name = State.currentSession.team1Name || "1팀 (블루)";
       const t2Name = State.currentSession.team2Name || "2팀 (오렌지)";
 
@@ -713,17 +487,13 @@
       this.team1TitleDisplay.textContent = t1Name;
       this.team2TitleDisplay.textContent = t2Name;
 
-      // 선수 분류
       const team1Players = State.currentSession.players.filter(p => p.team === '1' || p.team === 'A');
       const team2Players = State.currentSession.players.filter(p => p.team === '2' || p.team === 'B');
 
       this.team1CountBadge.textContent = `${team1Players.length}명`;
       this.team2CountBadge.textContent = `${team2Players.length}명`;
 
-      // 1팀 리스트 렌더링 (왼쪽)
       this.team1ListElem.innerHTML = team1Players.map(p => this.createPlayerCardHtml(p)).join('');
-
-      // 2팀 리스트 렌더링 (오른쪽)
       this.team2ListElem.innerHTML = team2Players.map(p => this.createPlayerCardHtml(p)).join('');
 
       this.updateScoreboardTotals();
@@ -731,7 +501,7 @@
   };
 
   // =========================================================================
-  // 모듈 5: 교사 관리 모드 (조회, 백업, 영구 삭제)
+  // 교사 관리 모드 (조회, 백업, 영구 삭제)
   // =========================================================================
   const TeacherModule = {
     dashboardElem: null,
@@ -782,7 +552,7 @@
       const sessions = StorageModule.getAllSessions();
 
       if (sessions.length === 0) {
-        this.tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding: 2rem;">저장된 경기 기록이 없습니다.</td></tr>`;
+        this.tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#8e8e8e; padding: 2rem;">저장된 경기 기록이 없습니다.</td></tr>`;
         return;
       }
 
@@ -797,7 +567,6 @@
         }
 
         const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleString('ko-KR') : '-';
-        const stName = s.student?.name ? `${s.student.studentNumber} ${s.student.name}` : '(미등록)';
         const t1 = s.team1Name || '1팀';
         const t2 = s.team2Name || '2팀';
 
@@ -805,13 +574,11 @@
         tr.innerHTML = `
           <td><code>${s.sessionId}</code></td>
           <td>${dateStr}</td>
-          <td>${stName}</td>
           <td><strong>${t1} ${score1} : ${score2} ${t2}</strong></td>
           <td>${totalFouls}회</td>
-          <td><span class="brand-badge" style="font-size:0.7rem;">${s.purpose || '방과후'}</span></td>
           <td>
             <button class="btn-primary btn-sm load-session-btn" data-id="${s.sessionId}">불러오기</button>
-            <button class="btn-danger btn-sm del-session-btn" data-id="${s.sessionId}" style="padding:0.35rem 0.6rem; margin-left:4px;">삭제</button>
+            <button class="btn-danger btn-sm del-session-btn" data-id="${s.sessionId}" style="padding:4px 8px; margin-left:4px;">삭제</button>
           </td>
         `;
         this.tableBody.appendChild(tr);
@@ -838,14 +605,14 @@
     exportAllData() {
       const data = {
         exportedAt: new Date().toISOString(),
-        appName: "풋살경기 기록",
+        appName: "학교폭력예방 풋살대회",
         sessions: StorageModule.getAllSessions()
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `futsal_match_records_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `futsal_tournament_records_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
     },
@@ -873,7 +640,7 @@
   };
 
   // =========================================================================
-  // 모듈 7: 정책 모달 로더
+  // 정책 모달 로더
   // =========================================================================
   const PolicyModalModule = {
     init() {
@@ -941,37 +708,16 @@
 
       State.initSession(restoredSession);
 
-      StudentAuthModule.init();
       TimerModule.init();
       MatchRecordModule.init();
       TeacherModule.init();
       PolicyModalModule.init();
 
       this.restoreUI();
-
-      document.getElementById('purposeSelect').addEventListener('change', (e) => {
-        State.currentSession.purpose = e.target.value;
-        this.scheduleAutoSave();
-      });
-
       this.updateSaveStatusUI('자동 저장 준비 완료');
     },
 
     restoreUI() {
-      const st = State.currentSession.student;
-      if (st && st.name) {
-        StudentAuthModule.nameInput.value = st.name;
-        StudentAuthModule.numberInput.value = st.studentNumber;
-        if (st.isConfirmed) {
-          StudentAuthModule.lockInputs();
-          StudentAuthModule.updateConfirmedDisplay();
-        }
-      }
-
-      if (State.currentSession.purpose) {
-        document.getElementById('purposeSelect').value = State.currentSession.purpose;
-      }
-
       document.getElementById('sessionBadge').textContent = `세션: ${State.currentSession.sessionId.slice(-8)}`;
       MatchRecordModule.render();
       TimerModule.render();
@@ -1002,9 +748,6 @@
 
     createNewSession() {
       State.initSession();
-      StudentAuthModule.unlockInputs();
-      StudentAuthModule.nameInput.value = '';
-      StudentAuthModule.numberInput.value = '';
       TimerModule.reset(15 * 60);
       MatchRecordModule.render();
       document.getElementById('sessionBadge').textContent = `세션: ${State.currentSession.sessionId.slice(-8)}`;
