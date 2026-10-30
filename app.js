@@ -399,64 +399,67 @@
     createPlayerRowHtml(p) {
       const isBanned = p.isBanned || p.fouls >= 5 || p.redCards > 0;
       const statusBadge = isBanned
-        ? `<span class="player-status-tag status-suspended">출전불가 (퇴장)</span>`
+        ? `<span class="player-status-tag status-suspended">출전 불가</span>`
         : `<span class="player-status-tag status-active">출전 가능</span>`;
 
       return `
-        <div class="player-card ${isBanned ? 'banned-card' : ''}" style="${isBanned ? 'background:#fff5f5; border-color:#fca5a5;' : ''}">
-          <div class="player-identity">
-            <span class="player-num">#${p.number}</span>
-            <div>
-              <div class="player-name-text">${p.name} <small style="font-size:11px; color:#8e8e8e;">(${p.studentNum})</small></div>
-              <div style="margin-top:2px;">${statusBadge}</div>
+        <div class="player-card ${isBanned ? 'banned-card' : ''}">
+          <!-- 1단: 선수 식별 및 출전 제어 -->
+          <div class="player-card-top-row">
+            <div class="player-identity">
+              <span class="player-num">#${p.number}</span>
+              <div class="player-name-wrap">
+                <span class="player-name-text">${p.name}</span>
+                <span class="player-snum-text">(${p.studentNum})</span>
+                ${statusBadge}
+              </div>
             </div>
+            <button class="btn-toggle-ban ${p.isBanned ? 'banned-active' : ''}" data-pid="${p.id}" data-act="toggleBan" title="출전 가능 / 출전 불가 상태 전환">
+              ${p.isBanned ? '출전금지 해제' : '출전불가 설정'}
+            </button>
           </div>
 
+          <!-- 2단: 4대 스탯 (득점, 도움, 파울, 퇴장) 4열 균등 그리드 (박스 100% 핏) -->
           <div class="player-actions-row">
             <!-- 득점 -->
-            <div class="stat-unit" title="득점">
+            <div class="stat-unit" title="득점 기록">
               <span class="stat-label-icon">⚽ 득점</span>
-              <span class="stat-num-val">${p.goals}</span>
+              <span class="stat-num-val pop">${p.goals}</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-pid="${p.id}" data-act="goals" data-delta="-1">-</button>
-                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="goals" data-delta="1">+</button>
+                <button class="btn-ctrl" data-pid="${p.id}" data-act="goals" data-delta="-1" title="득점 -1">-</button>
+                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="goals" data-delta="1" title="득점 +1">+</button>
               </div>
             </div>
 
             <!-- 도움 -->
-            <div class="stat-unit" title="도움">
+            <div class="stat-unit" title="도움(어시스트) 기록">
               <span class="stat-label-icon">👟 도움</span>
               <span class="stat-num-val">${p.assists}</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-pid="${p.id}" data-act="assists" data-delta="-1">-</button>
-                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="assists" data-delta="1">+</button>
+                <button class="btn-ctrl" data-pid="${p.id}" data-act="assists" data-delta="-1" title="도움 -1">-</button>
+                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="assists" data-delta="1" title="도움 +1">+</button>
               </div>
             </div>
 
-            <!-- 파울 (5개 시 자동 퇴장) -->
-            <div class="stat-unit" title="파울 (5개 시 자동 퇴장)" style="${p.fouls >= 5 ? 'border-color:#f59e0b;' : ''}">
-              <span class="stat-label-icon" style="color:#d97706;">🟨 파울</span>
-              <span class="stat-num-val">${p.fouls}/5</span>
+            <!-- 파울 (5개 누적 시 자동 퇴장 및 출전금지) -->
+            <div class="stat-unit ${p.fouls >= 5 ? 'foul-warning' : ''}" title="파울 (5회 누적 시 퇴장 및 출전불가)">
+              <span class="stat-label-icon foul-label">🟨 파울</span>
+              <span class="stat-num-val ${p.fouls >= 5 ? 'red-text' : ''}">${p.fouls}/5</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-pid="${p.id}" data-act="fouls" data-delta="-1">-</button>
-                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="fouls" data-delta="1">+</button>
+                <button class="btn-ctrl" data-pid="${p.id}" data-act="fouls" data-delta="-1" title="파울 -1">-</button>
+                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="fouls" data-delta="1" title="파울 +1">+</button>
               </div>
             </div>
 
             <!-- 퇴장 -->
-            <div class="stat-unit" title="퇴장 (레드카드)">
-              <span class="stat-label-icon" style="color:#dc2626;">🟥 퇴장</span>
-              <span class="stat-num-val" style="color:#dc2626;">${p.redCards}</span>
+            <div class="stat-unit ${p.redCards > 0 ? 'red-warning' : ''}" title="퇴장 (레드카드)">
+              <span class="stat-label-icon red-label">🟥 퇴장</span>
+              <span class="stat-num-val red-text">${p.redCards}</span>
               <div class="stat-btns-pair">
-                <button class="btn-ctrl" data-pid="${p.id}" data-act="redCards" data-delta="-1">-</button>
-                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="redCards" data-delta="1">+</button>
+                <button class="btn-ctrl" data-pid="${p.id}" data-act="redCards" data-delta="-1" title="퇴장 -1">-</button>
+                <button class="btn-ctrl plus" data-pid="${p.id}" data-act="redCards" data-delta="1" title="퇴장 +1">+</button>
               </div>
             </div>
-
-            <!-- 출전 불가 토글 -->
-            <button class="btn-outline-sm" data-pid="${p.id}" data-act="toggleBan" style="font-size:11px; padding:3px 6px; ${p.isBanned ? 'background:#fee2e2; color:#b91c1c;' : ''}">
-              ${p.isBanned ? '출전금지 해제' : '출전불가 설정'}
-            </button>
           </div>
         </div>
       `;
