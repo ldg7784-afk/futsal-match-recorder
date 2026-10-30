@@ -1,64 +1,51 @@
 /* ==========================================================================
-   풋살경기 기록 (Futsal Match Recorder) Design System
-   Visual Style: High-Contrast LED Scoreboard & Dark Modern Glassmorphism
-   - Top Center: [1팀 대형 점수] - [15분 전광판 타이머] - [2팀 대형 점수]
-   - Two Columns: [1팀 선수단 (왼쪽)] vs [2팀 선수단 (오른쪽)]
+   Design System Inspired by Tesla (DESIGN.md 구현)
+   Principles:
+   - Radical Subtraction: 극단적 절제, 장식적 그라디언트/네온/그림자 일체 배제
+   - Palette: Pure White (#FFFFFF), Light Ash (#F4F4F4), Carbon Dark (#171A20)
+   - Single Accent: Electric Blue (#3E6AE1)
+   - Typography: Clean Engineered Sans (Inter/Universal Sans), 400 & 500 weights only
+   - Precision Radius: 4px for interactive buttons & controls, 12px for main panels
+   - Motion Timing: 0.33s cubic-bezier(0.5, 0, 0, 0.75)
    ========================================================================== */
 
 :root {
-  /* Color Tokens */
-  --bg-primary: #080c14;
-  --bg-secondary: #0f172a;
-  --bg-card: rgba(15, 23, 42, 0.75);
-  --bg-card-hover: rgba(30, 41, 59, 0.85);
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-active: rgba(56, 189, 248, 0.5);
+  /* Tesla Official Color Palette */
+  --tesla-white: #ffffff;
+  --tesla-light-ash: #f4f4f4;
+  --tesla-cloud-gray: #eeeeee;
+  --tesla-pale-silver: #d0d1d2;
+  --tesla-silver-fog: #8e8e8e;
+  --tesla-pewter: #5c5e62;
+  --tesla-graphite: #393c41;
+  --tesla-carbon-dark: #171a20;
 
-  /* Team 1 Accent (Left / Blue) */
-  --team-1: #38bdf8;
-  --team-1-hover: #0284c7;
-  --team-1-glow: rgba(56, 189, 248, 0.25);
-  --team-1-bg: rgba(56, 189, 248, 0.12);
+  /* Primary Accent: Sole chromatic color */
+  --tesla-blue: #3e6ae1;
+  --tesla-blue-hover: #2e55bd;
 
-  /* Team 2 Accent (Right / Orange) */
-  --team-2: #fb923c;
-  --team-2-hover: #ea580c;
-  --team-2-glow: rgba(251, 146, 60, 0.25);
-  --team-2-bg: rgba(251, 146, 60, 0.12);
-
-  /* General Accents */
-  --accent-blue: #3e6ae1;
-  --accent-success: #10b981;
-  --accent-warning: #f59e0b;
-  --accent-danger: #ef4444;
+  /* Team Delineation in Tesla Palette (Subtle High-Contrast) */
+  --team-1-accent: #3e6ae1; /* Electric Blue */
+  --team-2-accent: #171a20; /* Carbon Dark Contrast */
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Text Colors */
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  /* Elevation: Strictly Flat / No Shadows */
+  --shadow-none: none;
+  --border-subtle: 1px solid var(--tesla-cloud-gray);
+  --border-focus: 1px solid var(--tesla-blue);
 
-  /* Elevation */
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 14px 34px -4px rgba(0, 0, 0, 0.7);
-  --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.2);
+  /* Radius System (DESIGN.md Section 5) */
+  --radius-btn: 4px;      /* Interactive controls: 4px */
+  --radius-panel: 12px;   /* Category cards & containers: 12px */
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-
-  /* Transitions */
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Motion Timing (DESIGN.md Section 4 & 6) */
+  --tesla-transition: all 0.33s cubic-bezier(0.5, 0, 0, 0.75);
 }
 
-/* Reset & Global */
+/* Reset & Base */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -67,16 +54,12 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-primary);
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 90% 20%, rgba(251, 146, 60, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-  background-attachment: fixed;
-  color: var(--text-main);
-  line-height: 1.5;
+  background-color: var(--tesla-light-ash);
+  color: var(--tesla-graphite);
+  line-height: 1.45;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: normal; /* "Normal" letter-spacing everywhere */
 }
 
 .sr-only {
@@ -90,34 +73,27 @@ body {
   border: 0;
 }
 
-/* Container */
+/* Layout Container */
 .app-container {
-  max-width: 1560px;
+  max-width: 1380px;
   margin: 0 auto;
-  padding: 1rem 1.25rem;
+  padding: 1.5rem 1.25rem 3rem;
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
-  min-height: 100vh;
+  gap: 1.25rem;
 }
 
-/* Glassmorphism Card Base */
+/* Tesla Flat Panel (No Shadows, Clean White Canvas) */
 .glass-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  transition: border-color var(--transition-normal);
-}
-
-.glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--tesla-white);
+  border: var(--border-subtle);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-none);
+  transition: var(--tesla-transition);
 }
 
 /* ==========================================================================
-   1. 헤더 (Header)
+   1. 헤더 (Tesla Navigation Style)
    ========================================================================== */
 .app-header {
   display: flex;
@@ -125,53 +101,41 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.25rem;
 }
 
 .header-left {
   display: flex;
-  align-items: center;
-  gap: 0.85rem;
+  align-items: baseline;
+  gap: 0.75rem;
 }
 
 .brand-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-full);
 }
 
 .live-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background-color: var(--accent-success);
-  box-shadow: 0 0 10px var(--accent-success);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+  background-color: var(--tesla-carbon-dark);
 }
 
 .brand-sub {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--team-1);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--tesla-pewter);
+  text-transform: uppercase;
 }
 
 .main-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #fff;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--tesla-carbon-dark);
+  letter-spacing: normal;
 }
 
 .header-right {
@@ -181,29 +145,34 @@ body {
 }
 
 .purpose-select {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 0.45rem 0.85rem;
-  font-size: 0.825rem;
-  font-weight: 600;
-  border-radius: var(--radius-md);
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-pale-silver);
+  color: var(--tesla-graphite);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-btn);
   outline: none;
   cursor: pointer;
+  transition: var(--tesla-transition);
+}
+
+.purpose-select:focus {
+  border-color: var(--tesla-blue);
 }
 
 /* ==========================================================================
-   2. 기록자(학생) 식별 입력 가로형 바 (Student Bar)
+   2. 기록자(학생) 식별 입력 바 (Tesla Clean Input Bar)
    ========================================================================== */
 .student-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.85rem 1.25rem;
   flex-wrap: wrap;
-  background: rgba(15, 23, 42, 0.6);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--tesla-white);
+  border: var(--border-subtle);
 }
 
 .student-bar-header {
@@ -213,18 +182,17 @@ body {
 }
 
 .badge-tag {
-  background: var(--accent-blue-light);
-  border: 1px solid var(--border-active);
-  color: var(--team-1);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-sm);
+  background: var(--tesla-light-ash);
+  color: var(--tesla-carbon-dark);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: var(--radius-btn);
 }
 
 .student-bar-desc {
-  font-size: 0.785rem;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--tesla-pewter);
 }
 
 .student-bar-inputs {
@@ -239,56 +207,61 @@ body {
 }
 
 .autocomplete-group input {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-main);
-  padding: 0.45rem 0.75rem;
-  font-size: 0.85rem;
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-pale-silver);
+  border-radius: var(--radius-btn);
+  color: var(--tesla-carbon-dark);
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 400;
   outline: none;
-  width: 160px;
-  transition: all var(--transition-fast);
+  width: 150px;
+  transition: var(--tesla-transition);
+}
+
+.autocomplete-group input::placeholder {
+  color: var(--tesla-silver-fog);
 }
 
 .autocomplete-group input:focus {
-  border-color: var(--team-1);
-  box-shadow: 0 0 0 2px var(--team-1-bg);
+  border-color: var(--tesla-blue);
 }
 
 .autocomplete-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
-  width: 200px;
+  width: 190px;
   z-index: 50;
   margin-top: 4px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-active);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-pale-silver);
+  border-radius: var(--radius-btn);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   max-height: 180px;
   overflow-y: auto;
 }
 
 .autocomplete-item {
-  padding: 0.5rem 0.75rem;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.825rem;
+  font-size: 13px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--tesla-cloud-gray);
+  transition: background-color 0.15s;
 }
 
 .autocomplete-item:hover {
-  background-color: var(--team-1-bg);
-  color: var(--team-1);
+  background-color: var(--tesla-light-ash);
+  color: var(--tesla-blue);
 }
 
 .autocomplete-item .item-sub {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 11px;
+  color: var(--tesla-pewter);
 }
 
 .toggle-container {
@@ -296,8 +269,8 @@ body {
   align-items: center;
   gap: 0.4rem;
   cursor: pointer;
-  font-size: 0.785rem;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--tesla-pewter);
   user-select: none;
 }
 
@@ -308,40 +281,40 @@ body {
 .toggle-slider {
   width: 32px;
   height: 16px;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-full);
+  background-color: var(--tesla-cloud-gray);
+  border-radius: var(--radius-btn);
   position: relative;
+  transition: var(--tesla-transition);
 }
 
 .toggle-slider::before {
   content: "";
   position: absolute;
-  top: 1px;
+  top: 2px;
   left: 2px;
   width: 12px;
   height: 12px;
-  border-radius: 50%;
-  background-color: var(--text-dim);
-  transition: transform var(--transition-fast);
+  border-radius: 2px;
+  background-color: var(--tesla-white);
+  transition: var(--tesla-transition);
 }
 
 .toggle-container input:checked + .toggle-slider {
-  background-color: var(--team-1);
+  background-color: var(--tesla-blue);
 }
 
 .toggle-container input:checked + .toggle-slider::before {
-  transform: translateX(14px);
-  background-color: #fff;
+  transform: translateX(16px);
 }
 
 .student-notice {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: var(--accent-success);
-  padding: 0.4rem 0.75rem;
-  border-radius: var(--radius-md);
-  font-size: 0.8rem;
+  background: var(--tesla-light-ash);
+  border: 1px solid var(--tesla-pale-silver);
+  color: var(--tesla-carbon-dark);
+  padding: 6px 10px;
+  border-radius: var(--radius-btn);
+  font-size: 12px;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -350,230 +323,208 @@ body {
 .btn-text {
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--tesla-blue);
   text-decoration: underline;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 12px;
 }
 
 .save-status-inline {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.785rem;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--tesla-pewter);
 }
 
 .status-indicator-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background-color: var(--accent-success);
+  background-color: var(--tesla-pewter);
 }
 
 .status-indicator-dot.saving {
-  background-color: var(--accent-warning);
-  animation: pulse 1s infinite;
+  background-color: var(--tesla-blue);
 }
 
 .session-badge {
-  color: var(--team-1);
+  color: var(--tesla-carbon-dark);
   font-family: var(--font-mono);
-  font-size: 0.725rem;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 /* ==========================================================================
-   3. 맨 위 가운데 전광판 (Top Center Scoreboard & Timer)
-   [1팀 점수] - [15분 정밀 타이머] - [2팀 점수]
+   3. 맨 위 가운데 전광판 (Tesla Vehicle Cluster / Minimal Scoreboard)
+   [1팀 점수] - [15분 전광판 타이머] - [2팀 점수]
    ========================================================================== */
 .top-center-scoreboard {
   display: grid;
   grid-template-columns: 280px 1fr 280px;
   align-items: center;
   gap: 1.5rem;
-  padding: 1.25rem 2rem;
-  background: #060911;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  position: relative;
+  padding: 1.75rem 2rem;
+  background: var(--tesla-white);
+  border: var(--border-subtle);
+  border-radius: var(--radius-panel);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 960px) {
   .top-center-scoreboard {
     grid-template-columns: 1fr;
     gap: 1.25rem;
-    padding: 1rem;
+    padding: 1.25rem;
   }
 }
 
-/* 1팀 & 2팀 요약 */
+/* 팀 요약 블록 */
 .team-summary {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-}
-
-.team-summary-1 {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, transparent 80%);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-}
-
-.team-summary-2 {
-  background: linear-gradient(225deg, rgba(251, 146, 60, 0.12) 0%, transparent 80%);
-  border: 1px solid rgba(251, 146, 60, 0.25);
+  gap: 0.35rem;
+  padding: 1rem;
+  background: var(--tesla-light-ash);
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--tesla-cloud-gray);
 }
 
 .team-name-editable-wrap {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   width: 100%;
   justify-content: center;
 }
 
 .team-name-input {
   background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-sm);
-  color: #fff;
-  font-size: 1.1rem;
-  font-weight: 800;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--tesla-carbon-dark);
+  font-size: 16px;
+  font-weight: 500;
   text-align: center;
-  padding: 0.2rem 0.5rem;
-  width: 160px;
-  transition: all var(--transition-fast);
+  padding: 2px 4px;
+  width: 140px;
+  transition: var(--tesla-transition);
 }
 
 .team-name-input:focus {
-  border-color: #fff;
-  background: rgba(0, 0, 0, 0.4);
+  border-bottom-color: var(--tesla-blue);
+  outline: none;
 }
-
-.team-summary-1 .team-name-input { color: var(--team-1); }
-.team-summary-2 .team-name-input { color: var(--team-2); }
 
 .team-sub-badge {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  padding: 0.15rem 0.4rem;
-  border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, 0.4);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: var(--radius-btn);
+  background: var(--tesla-white);
+  color: var(--tesla-pewter);
+  border: 1px solid var(--tesla-cloud-gray);
 }
 
-.team-summary-1 .team-sub-badge { color: var(--team-1); }
-.team-summary-2 .team-sub-badge { color: var(--team-2); }
-
 .team-big-score {
-  font-family: var(--font-mono);
-  font-size: 4.75rem;
-  font-weight: 800;
+  font-family: var(--font-sans);
+  font-size: 64px;
+  font-weight: 500;
   line-height: 1;
-  text-shadow: 0 0 30px currentColor;
+  color: var(--tesla-carbon-dark);
+  letter-spacing: -0.02em;
   user-select: none;
 }
 
-.team-summary-1 .team-big-score {
-  color: var(--team-1);
-}
-
-.team-summary-2 .team-big-score {
-  color: var(--team-2);
-}
-
 .team-fouls-summary {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--tesla-pewter);
 }
 
 .team-fouls-summary strong {
-  color: var(--accent-warning);
+  color: var(--tesla-carbon-dark);
+  font-weight: 500;
   font-family: var(--font-mono);
-  font-size: 0.95rem;
 }
 
-/* 중앙 15분 전광판 타이머 */
+/* 중앙 15분 타이머 */
 .center-timer-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem;
+  gap: 0.85rem;
 }
 
 .timer-display-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
 }
 
 .time-readout {
   display: flex;
   align-items: baseline;
   justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 5rem;
-  font-weight: 800;
+  font-family: var(--font-sans);
+  font-size: 56px;
+  font-weight: 500;
   line-height: 1;
-  color: #fff;
-  letter-spacing: -0.04em;
-  text-shadow: 0 0 30px rgba(255, 255, 255, 0.35);
+  color: var(--tesla-carbon-dark);
+  letter-spacing: -0.03em;
 }
 
 .time-digit {
-  min-width: 2ch;
+  min-width: 1.8ch;
   text-align: center;
 }
 
 .time-colon {
   animation: blink 1s infinite step-start;
-  margin: 0 -0.1ch;
-  color: var(--accent-success);
+  color: var(--tesla-pewter);
 }
 
 .time-colon.paused {
   animation: none;
 }
 
-.timer-badge {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid var(--accent-success);
-  color: var(--accent-success);
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.2rem 0.65rem;
-  border-radius: var(--radius-full);
-  margin-top: 0.35rem;
+@keyframes blink {
+  50% { opacity: 0.2; }
 }
 
-/* 프로그레스 바 */
+.timer-badge {
+  background: var(--tesla-light-ash);
+  color: var(--tesla-pewter);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--radius-btn);
+  margin-top: 4px;
+}
+
+/* 프로그레스 바 (Tesla Flat Minimalist) */
 .timer-progress-wrap {
   width: 100%;
-  max-width: 380px;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-full);
+  max-width: 320px;
+  height: 3px;
+  background: var(--tesla-cloud-gray);
+  border-radius: 0;
   overflow: hidden;
 }
 
 .timer-progress-bar {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, var(--accent-success), var(--team-1));
+  background: var(--tesla-blue);
   transition: width 0.3s linear;
 }
 
-/* 타이머 조작 버튼 */
+/* 타이머 조작 버튼 (Tesla 40px Height, 4px Radius Standard) */
 .timer-control-buttons {
   display: flex;
   gap: 0.5rem;
   width: 100%;
-  max-width: 360px;
+  max-width: 340px;
 }
 
 .btn-timer {
@@ -581,27 +532,49 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  padding: 0.65rem 0.5rem;
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  font-weight: 700;
+  gap: 0.3rem;
+  height: 40px;
+  border-radius: var(--radius-btn);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  border: none;
-  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  transition: var(--tesla-transition);
 }
 
-.btn-timer:active { transform: scale(0.96); }
-.btn-timer:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-timer:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
-.btn-start { background: var(--accent-success); color: #032b17; }
-.btn-start:hover:not(:disabled) { background: #059669; color: #fff; }
+/* Primary CTA: Electric Blue (#3E6AE1) */
+.btn-start {
+  background: var(--tesla-blue);
+  color: var(--tesla-white);
+}
+.btn-start:hover:not(:disabled) {
+  background: var(--tesla-blue-hover);
+}
 
-.btn-pause { background: var(--accent-warning); color: #451a03; }
-.btn-pause:hover:not(:disabled) { background: #d97706; color: #fff; }
+/* Secondary CTA: Clean White */
+.btn-pause {
+  background: var(--tesla-light-ash);
+  color: var(--tesla-graphite);
+  border-color: var(--tesla-cloud-gray);
+}
+.btn-pause:hover:not(:disabled) {
+  background: var(--tesla-cloud-gray);
+}
 
-.btn-reset { background: rgba(255, 255, 255, 0.1); color: var(--text-main); }
-.btn-reset:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+.btn-reset {
+  background: var(--tesla-white);
+  color: var(--tesla-pewter);
+  border-color: var(--tesla-pale-silver);
+}
+.btn-reset:hover:not(:disabled) {
+  background: var(--tesla-light-ash);
+  color: var(--tesla-carbon-dark);
+}
 
 .timer-extra-chips {
   display: flex;
@@ -609,22 +582,24 @@ body {
 }
 
 .btn-chip {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  padding: 0.3rem 0.65rem;
-  border-radius: var(--radius-full);
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  color: var(--tesla-pewter);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-btn);
   cursor: pointer;
+  transition: var(--tesla-transition);
 }
 
 .btn-chip:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: var(--tesla-light-ash);
+  color: var(--tesla-carbon-dark);
 }
 
 /* ==========================================================================
-   4. 본문: 1팀(왼쪽)과 2팀(오른쪽) 2단 좌우 배치 (Two-Column Layout)
+   4. 본문: 1팀(왼쪽)과 2팀(오른쪽) 2단 레이아웃 (Tesla Grid)
    ========================================================================== */
 .teams-two-column-layout {
   display: grid;
@@ -633,25 +608,17 @@ body {
   align-items: start;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 860px) {
   .teams-two-column-layout {
     grid-template-columns: 1fr;
   }
 }
 
 .team-column {
-  padding: 1.25rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.team-1-column {
-  border-top: 4px solid var(--team-1);
-}
-
-.team-2-column {
-  border-top: 4px solid var(--team-2);
 }
 
 .team-column-header {
@@ -659,209 +626,176 @@ body {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--tesla-cloud-gray);
 }
 
 .team-title-wrap {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .team-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
+  background-color: var(--tesla-carbon-dark);
 }
-
-.team-1-dot { background-color: var(--team-1); box-shadow: 0 0 10px var(--team-1); }
-.team-2-dot { background-color: var(--team-2); box-shadow: 0 0 10px var(--team-2); }
 
 .team-column-title {
-  font-size: 1.2rem;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--tesla-carbon-dark);
 }
-
-.team-1-header .team-column-title { color: var(--team-1); }
-.team-2-header .team-column-title { color: var(--team-2); }
 
 .team-count {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--radius-full);
+  font-size: 12px;
+  color: var(--tesla-pewter);
+  background: var(--tesla-light-ash);
+  padding: 2px 8px;
+  border-radius: var(--radius-btn);
 }
 
-/* 선수 스택 (카드 목록) */
+/* 선수 목록 스택 */
 .players-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .player-card {
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.85rem 1rem;
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: var(--radius-btn);
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  transition: all var(--transition-fast);
+  transition: var(--tesla-transition);
 }
 
 .player-card:hover {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateX(2px);
-}
-
-.team-1-column .player-card {
-  border-left: 3px solid var(--team-1);
-}
-
-.team-2-column .player-card {
-  border-left: 3px solid var(--team-2);
+  border-color: var(--tesla-pale-silver);
+  background: var(--tesla-light-ash);
 }
 
 .player-identity {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  min-width: 130px;
+  gap: 0.65rem;
+  min-width: 120px;
 }
 
 .player-num {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 800;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-btn);
+  background: var(--tesla-light-ash);
+  color: var(--tesla-carbon-dark);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.team-1-column .player-num {
-  background: var(--team-1-bg);
-  border: 1px solid var(--team-1);
-  color: var(--team-1);
-}
-
-.team-2-column .player-num {
-  background: var(--team-2-bg);
-  border: 1px solid var(--team-2);
-  color: var(--team-2);
-}
-
 .player-name-text {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tesla-carbon-dark);
 }
 
 /* 선수 카드 내 3단 스탯 버튼 (득점, 도움, 파울) */
 .player-actions-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   flex: 1;
   justify-content: flex-end;
 }
 
 .stat-unit {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-sm);
-  padding: 0.35rem 0.5rem;
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: var(--radius-btn);
+  padding: 4px 8px;
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
 .stat-label-icon {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tesla-pewter);
 }
 
 .stat-num-val {
-  font-family: var(--font-mono);
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
   min-width: 1.8ch;
   text-align: center;
-  color: #fff;
-  transition: transform 0.15s ease;
+  color: var(--tesla-carbon-dark);
+  transition: color 0.15s;
 }
 
 .stat-num-val.pop {
-  transform: scale(1.35);
-  color: var(--accent-success);
+  color: var(--tesla-blue);
 }
 
 .stat-btns-pair {
   display: flex;
-  gap: 0.2rem;
+  gap: 2px;
 }
 
 .btn-ctrl {
   width: 26px;
   height: 26px;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.9rem;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--tesla-cloud-gray);
+  background: var(--tesla-light-ash);
+  color: var(--tesla-graphite);
+  font-weight: 500;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--tesla-transition);
   user-select: none;
 }
 
 .btn-ctrl:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--tesla-cloud-gray);
+  color: var(--tesla-carbon-dark);
 }
-
-.btn-ctrl:active { transform: scale(0.92); }
 
 .btn-ctrl.plus {
-  background: rgba(62, 106, 225, 0.25);
-  border-color: rgba(62, 106, 225, 0.4);
-  color: var(--team-1);
-}
-
-.team-2-column .btn-ctrl.plus {
-  background: rgba(251, 146, 60, 0.25);
-  border-color: rgba(251, 146, 60, 0.4);
-  color: var(--team-2);
+  background: var(--tesla-white);
+  border-color: var(--tesla-pale-silver);
+  color: var(--tesla-carbon-dark);
 }
 
 .btn-ctrl.plus:hover {
-  background: var(--team-1);
-  color: #000;
-}
-
-.team-2-column .btn-ctrl.plus:hover {
-  background: var(--team-2);
-  color: #000;
+  background: var(--tesla-blue);
+  border-color: var(--tesla-blue);
+  color: var(--tesla-white);
 }
 
 /* ==========================================================================
-   5. 교사 관리 모드 (Teacher Dashboard)
+   5. 교사 관리 모드 & 버튼 시스템 (Tesla Style)
    ========================================================================== */
 .teacher-dashboard {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  border-color: rgba(62, 106, 225, 0.4);
+  gap: 1.25rem;
+  background: var(--tesla-white);
+  border: var(--border-subtle);
+  border-radius: var(--radius-panel);
 }
 
 .teacher-header {
@@ -874,115 +808,127 @@ body {
 
 .teacher-actions {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .table-responsive {
   overflow-x: auto;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--tesla-cloud-gray);
 }
 
 .session-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 13px;
 }
 
 .session-table th,
 .session-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-color);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--tesla-cloud-gray);
 }
 
 .session-table th {
-  background: rgba(0, 0, 0, 0.4);
-  color: var(--text-muted);
-  font-weight: 600;
+  background: var(--tesla-light-ash);
+  color: var(--tesla-pewter);
+  font-weight: 500;
 }
 
 .session-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--tesla-light-ash);
 }
 
-/* 공통 버튼 */
+/* Buttons */
 .btn-primary {
-  background: var(--accent-blue);
-  color: #fff;
+  background: var(--tesla-blue);
+  color: var(--tesla-white);
   border: none;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  padding: 0.5rem 1rem;
+  border-radius: var(--radius-btn);
+  font-weight: 500;
+  padding: 8px 16px;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  font-size: 13px;
+  transition: var(--tesla-transition);
 }
 
-.btn-primary:hover { background: var(--accent-blue-hover); }
+.btn-primary:hover {
+  background: var(--tesla-blue-hover);
+}
 
 .btn-primary.btn-sm {
-  padding: 0.4rem 0.75rem;
-  font-size: 0.8rem;
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  padding: 0.5rem 1rem;
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-pale-silver);
+  color: var(--tesla-graphite);
+  border-radius: var(--radius-btn);
+  font-weight: 500;
+  padding: 8px 16px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  transition: all var(--transition-fast);
+  font-size: 13px;
+  transition: var(--tesla-transition);
 }
 
-.btn-secondary:hover { background: rgba(255, 255, 255, 0.16); }
+.btn-secondary:hover {
+  background: var(--tesla-light-ash);
+}
 
 .btn-danger {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid var(--accent-danger);
-  color: var(--accent-danger);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  padding: 0.5rem 1rem;
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-pale-silver);
+  color: var(--tesla-pewter);
+  border-radius: var(--radius-btn);
+  font-weight: 500;
+  padding: 8px 16px;
   cursor: pointer;
+  font-size: 13px;
+  transition: var(--tesla-transition);
 }
 
-.btn-danger:hover { background: var(--accent-danger); color: #fff; }
+.btn-danger:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
 
 .btn-outline-sm {
   background: transparent;
-  border: 1px dashed var(--border-color);
-  color: var(--text-muted);
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--radius-md);
-  font-size: 0.775rem;
-  font-weight: 600;
+  border: 1px solid var(--tesla-cloud-gray);
+  color: var(--tesla-pewter);
+  padding: 4px 10px;
+  border-radius: var(--radius-btn);
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
+  transition: var(--tesla-transition);
 }
 
 .btn-outline-sm:hover {
-  border-color: #fff;
-  color: #fff;
+  border-color: var(--tesla-carbon-dark);
+  color: var(--tesla-carbon-dark);
 }
 
 /* ==========================================================================
    6. 푸터 및 모달
    ========================================================================== */
 .app-footer {
-  margin-top: auto;
-  border-top: 1px solid var(--border-color);
-  padding: 1.25rem 0 0.5rem;
+  margin-top: 2rem;
+  border-top: 1px solid var(--tesla-cloud-gray);
+  padding: 2rem 0 1rem;
 }
 
 .footer-content {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.75rem;
   align-items: center;
   text-align: center;
 }
@@ -990,15 +936,15 @@ body {
 .footer-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.25rem;
   justify-content: center;
-  font-size: 0.775rem;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--tesla-pewter);
 }
 
 .footer-links {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.75rem;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
@@ -1007,23 +953,32 @@ body {
 .footer-link-btn {
   background: none;
   border: none;
-  color: var(--team-1);
-  font-size: 0.8rem;
+  color: var(--tesla-pewter);
+  font-size: 12px;
   cursor: pointer;
   text-decoration: underline;
+  transition: color 0.15s;
 }
 
-.footer-link-btn:hover { color: #fff; }
+.footer-link-btn:hover {
+  color: var(--tesla-carbon-dark);
+}
 
-.divider { color: var(--text-dim); font-size: 0.75rem; }
-.footer-notice { font-size: 0.725rem; color: var(--text-dim); }
+.divider {
+  color: var(--tesla-cloud-gray);
+  font-size: 11px;
+}
 
-/* 모달 */
+.footer-notice {
+  font-size: 11px;
+  color: var(--tesla-silver-fog);
+}
+
+/* Modals */
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(23, 26, 32, 0.65); /* Level 2 Overlay */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1034,14 +989,13 @@ body {
 .modal-dialog {
   width: 100%;
   max-width: 480px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  background: var(--tesla-white);
+  border-radius: var(--radius-panel);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  box-shadow: var(--shadow-lg);
+  border: var(--border-subtle);
 }
 
 .modal-dialog.modal-lg {
@@ -1055,27 +1009,52 @@ body {
   align-items: center;
 }
 
-.modal-header h3 { font-size: 1.2rem; font-weight: 700; }
+.modal-header h3 {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--tesla-carbon-dark);
+}
+
 .modal-close {
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--tesla-pewter);
   font-size: 1.5rem;
   cursor: pointer;
 }
 
-.modal-body { display: flex; flex-direction: column; gap: 1rem; }
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .modal-scroll-body {
   overflow-y: auto;
   max-height: 60vh;
   padding-right: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 13px;
   line-height: 1.6;
-  color: var(--text-muted);
+  color: var(--tesla-graphite);
 }
 
-.modal-scroll-body h4 { color: #fff; margin: 1rem 0 0.4rem; }
-.modal-scroll-body ul { padding-left: 1.25rem; margin-bottom: 0.5rem; }
+.modal-scroll-body h4 {
+  color: var(--tesla-carbon-dark);
+  font-weight: 500;
+  margin: 1rem 0 0.4rem;
+}
 
-.modal-footer { display: flex; justify-content: flex-end; gap: 0.6rem; }
-.hidden { display: none !important; }
+.modal-scroll-body ul {
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.hidden {
+  display: none !important;
+}
