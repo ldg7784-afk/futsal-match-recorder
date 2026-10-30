@@ -7,9 +7,8 @@ try {
   const remoteUrl = `https://${token}@github.com/ldg7784-afk/futsal-match-recorder.git`;
 
   execSync('git add -A', { stdio: 'inherit' });
-  execSync('git commit -m "chore: cleanup helper scripts"', { stdio: 'inherit' });
+  execSync('git commit -m "chore: remove push_temp2.js"', { stdio: 'inherit' });
   execSync(`git push ${remoteUrl} main`, { stdio: 'inherit' });
-  console.log('CLEANUP PUSH SUCCESS');
 } catch (e) {
-  console.error(e.message);
+  // do nothing if clean
 }
