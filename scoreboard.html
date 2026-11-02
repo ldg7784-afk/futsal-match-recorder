@@ -52,7 +52,7 @@
           </div>
         </div>
 
-        <!-- 중앙 스코어 & 디지털 경기 타이머 코어 -->
+        <!-- 중앙 스코어 & 초대형 디지털 경기 타이머 코어 -->
         <div class="scorebug-center-core">
           <div class="match-period-badge" id="sbClockStatus">
             <span class="status-indicator"></span>
@@ -63,23 +63,25 @@
             <div class="score-digit-wrap">
               <span class="score-num team-1-score-num" id="sbScore1">0</span>
             </div>
-            <div class="score-vs-separator">
+            
+            <div class="jumbo-timer-container">
               <div class="timer-clock-box">
                 <span class="match-clock" id="sbClock">15:00</span>
               </div>
-              <span class="vs-badge-text">VS</span>
+              <span class="vs-badge-text">MATCH TIME</span>
             </div>
+
             <div class="score-digit-wrap">
               <span class="score-num team-2-score-num" id="sbScore2">0</span>
             </div>
           </div>
 
           <div class="possession-ratio-indicator">
-            <span class="mini-pos-tag" id="miniPoss1">50%</span>
+            <span class="mini-pos-tag tag-blue" id="miniPoss1">50%</span>
             <div class="mini-pos-track">
               <div class="mini-pos-fill-1" id="miniPossFill1" style="width: 50%;"></div>
             </div>
-            <span class="mini-pos-tag" id="miniPoss2">50%</span>
+            <span class="mini-pos-tag tag-orange" id="miniPoss2">50%</span>
           </div>
         </div>
 
@@ -185,18 +187,22 @@
               <span class="stats-sub-tag">실시간 공식 경기 데이터</span>
             </div>
 
-            <!-- 스탯 1: 가로형 듀얼 볼 점유율 그래픽 (핵심 요구사항) -->
+            <!-- 스탯 1: 가로형 듀얼 볼 점유율 그래픽 (대형 굵은 바 + 고가시성) -->
             <div class="stat-row possession-stat-row">
               <div class="stat-info-line">
-                <span class="stat-val-left" id="statPossVal1">50%</span>
-                <span class="stat-name-label">⚽ BALL POSSESSION (볼 점유율)</span>
-                <span class="stat-val-right" id="statPossVal2">50%</span>
+                <span class="stat-val-left pos-big-val" id="statPossVal1">50%</span>
+                <span class="stat-name-label pos-big-label">⚽ BALL POSSESSION (볼 점유율)</span>
+                <span class="stat-val-right pos-big-val" id="statPossVal2">50%</span>
               </div>
               <div class="stat-dual-bar-wrap">
-                <div class="dual-bar-track">
-                  <div class="dual-bar-fill bar-fill-left" id="statPossBar1" style="width: 50%;"></div>
-                  <div class="dual-bar-center-pin"></div>
-                  <div class="dual-bar-fill bar-fill-right" id="statPossBar2" style="width: 50%;"></div>
+                <div class="dual-bar-track jumbo-possession-track">
+                  <div class="dual-bar-fill bar-fill-left pos-fill-blue" id="statPossBar1" style="width: 50%;">
+                    <span class="bar-inner-text left-text" id="statPossInnerText1">50%</span>
+                  </div>
+                  <div class="dual-bar-center-pin pin-jumbo"></div>
+                  <div class="dual-bar-fill bar-fill-right pos-fill-orange" id="statPossBar2" style="width: 50%;">
+                    <span class="bar-inner-text right-text" id="statPossInnerText2">50%</span>
+                  </div>
                 </div>
               </div>
             </div>

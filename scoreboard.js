@@ -348,6 +348,11 @@
     document.getElementById('statPossBar1').style.width = `${pct1}%`;
     document.getElementById('statPossBar2').style.width = `${pct2}%`;
 
+    const inner1 = document.getElementById('statPossInnerText1');
+    const inner2 = document.getElementById('statPossInnerText2');
+    if (inner1) inner1.textContent = pct1 >= 14 ? `${pct1}%` : '';
+    if (inner2) inner2.textContent = pct2 >= 14 ? `${pct2}%` : '';
+
     // 6. 슈팅 & 유효슈팅 & 파울 공식 통계 그래픽 (핵심 요구사항 6)
     const shots1 = match.team1Shots || 0;
     const shots2 = match.team2Shots || 0;

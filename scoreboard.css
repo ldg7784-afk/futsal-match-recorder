@@ -207,9 +207,9 @@ html, body {
    2. 중앙 메인 스코어버그 (Central Scorebug)
    ========================================================================== */
 .main-scorebug-section {
-  height: 145px;
+  height: 165px;
   display: grid;
-  grid-template-columns: 1fr 420px 1fr;
+  grid-template-columns: 1fr 560px 1fr;
   align-items: center;
   gap: 20px;
   background: linear-gradient(180deg, rgba(16, 29, 64, 0.9) 0%, rgba(8, 15, 36, 0.95) 100%);
@@ -370,11 +370,11 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 .score-digit-wrap {
-  width: 105px;
+  width: 95px;
   text-align: center;
 }
 
@@ -397,63 +397,78 @@ html, body {
   text-shadow: 0 0 35px var(--team-2-glow), 0 4px 15px rgba(0, 0, 0, 0.8);
 }
 
-.score-vs-separator {
+/* 초대형 타이머 컨테이너 (점수 숫자 크기급 대형화) */
+.jumbo-timer-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .timer-clock-box {
-  background: #000000;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-  padding: 3px 14px;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9);
+  background: radial-gradient(circle at center, #111a2e 0%, #000000 100%);
+  border: 2px solid rgba(255, 215, 0, 0.45);
+  border-radius: 8px;
+  padding: 0 22px;
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 215, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .match-clock {
   font-family: var(--font-score);
-  font-size: 38px;
+  font-size: 96px; /* 점수 크기와 대등한 초대형 사이즈 */
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   color: var(--accent-gold);
-  line-height: 1;
+  line-height: 0.95;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.5), 0 4px 15px rgba(0, 0, 0, 0.9);
 }
 
 .vs-badge-text {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 900;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   color: #64748b;
-  line-height: 1;
+  text-transform: uppercase;
 }
 
 /* 미니 점유율 게이지 */
 .possession-ratio-indicator {
-  width: 280px;
+  width: 320px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 2px;
 }
 
 .mini-pos-tag {
   font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   color: #94a3b8;
-  width: 34px;
+  width: 40px;
   text-align: center;
+}
+
+.mini-pos-tag.tag-blue {
+  color: var(--team-1-cyan);
+}
+
+.mini-pos-tag.tag-orange {
+  color: var(--team-2-orange);
 }
 
 .mini-pos-track {
   flex: 1;
-  height: 6px;
+  height: 9px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  border-radius: 5px;
   overflow: hidden;
   display: flex;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .mini-pos-fill-1 {
@@ -1059,6 +1074,65 @@ html, body {
   align-items: center;
   position: relative;
   overflow: hidden;
+}
+
+/* ★ 대형 굵은 볼 점유율 바 (파랑 & 주황 고가시성) */
+.possession-stat-row {
+  margin-bottom: 6px;
+}
+
+.pos-big-val {
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em;
+}
+
+.pos-big-label {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em;
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.jumbo-possession-track {
+  height: 32px !important; /* 굵기를 32px로 대폭 키움 */
+  background: rgba(0, 0, 0, 0.65) !important;
+  border: 2px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.95);
+}
+
+.pos-fill-blue {
+  background: linear-gradient(90deg, #0052cc 0%, #00d2ff 100%) !important;
+  box-shadow: 0 0 22px rgba(0, 210, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.pos-fill-orange {
+  background: linear-gradient(90deg, #ff3d00 0%, #ff9800 100%) !important;
+  box-shadow: 0 0 22px rgba(255, 87, 34, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.bar-inner-text {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffffff;
+  padding: 0 14px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+}
+
+.pin-jumbo {
+  width: 4px !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 10px #ffffff;
 }
 
 .dual-bar-fill {
