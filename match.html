@@ -3,239 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>풋살 대회 대진표·일정 자동 생성 및 경기 결과 확정 | 학교폭력예방 풋살대회</title>
-  <meta name="description" content="구글시트 12팀(남8+여4) 불러오기, 교사 시드 추첨 및 12팀 토너먼트 대진/일정 자동 생성, 학생용 경기 종료 확정(승패·점수·다음 라운드 진출자 표시)">
+  <title>경기 기록 운영원 | 학교폭력예방 풋살대회</title>
+  <meta name="description" content="학교폭력예방 풋살대회 경기 기록 운영원 전용 앱 - 득점, 도움, 파울(5회 시 자동 퇴장), 출전 불가 및 경기 종료">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* 운영판 추가 확장 스타일 (Tesla Design System 규격) */
+    .game-status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--tesla-light-ash);
+      color: var(--tesla-pewter);
+      border: 1px solid var(--tesla-cloud-gray);
+    }
+    .game-status-badge.ended {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fca5a5;
+    }
+    .btn-end-match {
+      background: #171a20;
+      color: #ffffff;
+      border: 1px solid #171a20;
+    }
+    .btn-end-match:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+    .player-status-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-active {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .status-suspended {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .status-disqualified {
+      background: #f3f4f6;
+      color: #4b5563;
+      border: 1px solid #d1d5db;
+    }
+    /* 슈팅 컨트롤 유닛 */
+    .team-shots-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 11px;
+      color: var(--tesla-pewter);
+      background: var(--tesla-white);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--tesla-cloud-gray);
+    }
+    .btn-shot-mini {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      border: 1px solid var(--tesla-pale-silver);
+      background: var(--tesla-light-ash);
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+    }
+  </style>
 </head>
 <body>
   <div class="app-container">
-    <!-- 1. 최상단 헤더 (역할 분리 표시 및 경기 종료 확정 액션) -->
+    <!-- 1. 최상단 헤더 -->
     <header class="app-header">
       <div class="header-left">
         <div class="brand-badge">
           <span class="live-dot"></span>
-          <span class="brand-sub">FUTSAL TOURNAMENT &amp; MATCH CONFIRMATION</span>
+          <span class="brand-sub">OPERATOR CONSOLE</span>
         </div>
-        <h1 class="main-title">풋살 대회 대진표·일정 자동 생성 &amp; 경기 결과 확정</h1>
-        <span id="currentRoleIndicatorBadge" class="role-indicator-pill role-teacher">👨‍🏫 교사(운영자) 화면</span>
+        <h1 class="main-title">학교폭력예방 풋살대회 (경기 기록 운영)</h1>
       </div>
 
       <div class="header-right">
-        <!-- 교사/학생 화면 전환기 (권한 분리 확인 및 미리보기용) -->
-        <div class="role-switch-group" role="group" aria-label="화면 역할 전환">
-          <button type="button" id="switchTeacherRoleBtn" class="btn-role-switch active-role-btn" title="교사 전용 대회 운영 화면">
-            👨‍🏫 교사 운영 화면
-          </button>
-          <button type="button" id="switchStudentRoleBtn" class="btn-role-switch" title="학생 전용 결과 확인/확정 화면 (교사 기능 차단)">
-            🙋‍♂️ 학생 확인 화면
-          </button>
-        </div>
+        <span class="game-status-badge" id="gameStatusBadge">경기 진행 중</span>
 
-        <span class="game-status-badge" id="gameStatusBadge">⚽ 경기 진행 중</span>
-
-        <button id="endMatchBtn" class="btn-primary btn-end-match" title="현재 경기 종료 확정 시 승패·점수·다음 라운드 진출자 즉시 표시 및 다음 경기로 자동 이동">
+        <button id="endMatchBtn" class="btn-primary btn-end-match" title="경기 종료 시 학생 전광판에 최종 결과 표시">
           🏁 경기 종료 확정
         </button>
 
-        <a href="scoreboard.html" target="_blank" class="btn-secondary" title="학생들이 보는 대형 전광판 새 창 열기">
+        <a href="scoreboard.html" target="_blank" class="btn-secondary" title="학생들이 보는 전광판 새 창 열기">
           🖥️ 학생 전광판 보기 ↗
         </a>
       </div>
     </header>
 
-    <!-- =====================================================================
-         [교사 전용 화면 A] 범위/대상 설정 체크리스트 + 구글시트 12팀(남8+여4) 검증 + 시드 추첨
-         (학생용 링크 ?role=student 접속 시 RoleAuthModule에 의해 자동 차단/숨김)
-         ===================================================================== -->
-    <section class="teacher-only-section glass-card tournament-admin-panel" id="teacherOperationsSection">
-      <div class="admin-panel-header">
-        <div>
-          <span class="section-step-pill">교사 전용 운영 콘솔 (TEACHER ONLY)</span>
-          <h2 class="section-main-heading">1. 대회 범위 설정 · 구글시트 12팀(남8+여4) 불러오기 · 시드 추첨 대진 생성</h2>
-          <p class="section-sub-desc">구글폼 응답 시트에서 팀 목록을 불러와 남 8팀·여 4팀을 검증하고, 시드 추첨으로 12팀 토너먼트 대진표와 일정을 자동 생성합니다.</p>
-        </div>
-        <div class="admin-header-actions">
-          <button type="button" id="copyStudentLinkBtn" class="btn-secondary">
-            🔗 학생용 전용 링크 복사
-          </button>
-          <button type="button" id="runAutomatedTestsBtn" class="btn-secondary">
-            🧪 필수 테스트 4종 검증
-          </button>
-        </div>
-      </div>
-      <div id="studentLinkCopyFeedback" class="copy-feedback-text"></div>
-
-      <!-- 심의 대응용 범위/대상 설정 체크리스트 (요구사항 1 반영) -->
-      <div class="compliance-checklist-box">
-        <div class="checklist-title">📋 심의/운영 대응용 범위 및 대상 설정 체크리스트</div>
-        <div class="checklist-grid">
-          <label class="chk-item">
-            <input type="checkbox" checked disabled>
-            <span><strong>[x] 사용 목적:</strong> 교사용 대회 운영 + 학생용 결과 확인</span>
-          </label>
-          <label class="chk-item">
-            <input type="checkbox" checked disabled>
-            <span><strong>[x] 사용 장면:</strong> 학생은 수업/동아리 시간에 학생용 링크에서 결과만 확인</span>
-          </label>
-          <label class="chk-item">
-            <input type="checkbox" checked disabled>
-            <span><strong>[x] 교사만 운영:</strong> 시드 추첨/대진 생성/진행 상태 반영은 교사 화면에서만 수행</span>
-          </label>
-          <label class="chk-item chk-needs-confirm">
-            <input type="checkbox" id="chkHomeworkUse">
-            <span><strong>[ ] 가정/과제용 여부:</strong> <mark>(선생님 확인 필요 - 기본값 미설정)</mark></span>
-          </label>
-        </div>
-      </div>
-
-      <!-- 자동화 테스트 4종 실행 결과 표시 영역 -->
-      <div id="automatedTestResultBox" class="test-result-panel hidden"></div>
-
-      <!-- 2단 구성: [좌] 구글시트 팀 불러오기 & 컬럼 매핑 / [우] 남8+여4 검증 결과 및 시드 추첨 -->
-      <div class="teacher-two-col-grid">
-        <!-- 좌측: (1) 구글시트 연동 및 컬럼 매핑 -->
-        <div class="teacher-sub-card">
-          <h3 class="sub-card-title">① 구글폼/구글시트 팀 목록 불러오기 (컬럼 매핑)</h3>
-          <p class="sub-card-help">
-            구글시트에 <code>이름, 학번, 팀명, 성별</code>이 있어도 개인정보 보호 모듈이 <strong>이름·학번은 즉시 폐기</strong>하고 화면에는 <strong>팀명만 표시</strong>합니다.
-          </p>
-
-          <div class="col-map-row">
-            <label>이름 컬럼명 <input type="text" id="colMapName" value="이름"></label>
-            <label>학번 컬럼명 <input type="text" id="colMapStudentId" value="학번"></label>
-            <label>팀명 컬럼명 <input type="text" id="colMapTeamName" value="팀명"></label>
-            <label>성별 컬럼명 <input type="text" id="colMapGender" value="성별"></label>
-          </div>
-
-          <div class="sheet-url-row">
-            <input type="url" id="googleSheetUrlInput" class="sheet-url-input" placeholder="구글시트 공유 URL 입력 (미입력 시 가짜 테스트 데이터 12팀 즉시 로드)">
-            <button type="button" id="fetchGoogleSheetBtn" class="btn-primary">
-              📥 구글시트에서 팀 불러오기
-            </button>
-          </div>
-
-          <details class="csv-paste-details">
-            <summary>또는 구글시트 CSV 데이터 직접 붙여넣기 / 테스트 데이터 선택</summary>
-            <textarea id="googleSheetCsvPasteInput" rows="3" placeholder="이름,학번,팀명,성별&#10;홍길동,10101,청룡 FC,남"></textarea>
-          </details>
-
-          <div class="sample-test-btns-row">
-            <button type="button" id="loadSample12TeamsBtn" class="btn-chip">
-              ✅ 정상 12팀 불러오기 (남 8팀 + 여 4팀)
-            </button>
-            <button type="button" id="loadInvalidTeamsTestBtn" class="btn-chip btn-chip-warn">
-              ⚠️ 부족/초과 오류 테스트 (남 7팀 + 여 3팀)
-            </button>
-          </div>
-
-          <!-- 검증 상태 알림 박스 -->
-          <div id="teamValidationStatusBox" class="validation-alert-box valid"></div>
-        </div>
-
-        <!-- 우측: (2) 12팀 목록 확인(팀명만 노출) & 시드 추첨 후 대진 생성 -->
-        <div class="teacher-sub-card">
-          <div class="sub-card-header-line">
-            <h3 class="sub-card-title">② 팀 수 검증 표 (남 8 + 여 4) &amp; 시드 추첨</h3>
-            <button type="button" id="drawSeedsAndGenerateBtn" class="btn-primary">
-              🎲 시드 추첨 후 대진 생성
-            </button>
-          </div>
-
-          <div class="teams-preview-table-wrap">
-            <table class="teams-preview-table">
-              <thead>
-                <tr>
-                  <th>번호</th>
-                  <th>팀명 (화면 노출 항목)</th>
-                  <th>성별</th>
-                  <th>시드 추첨 결과</th>
-                </tr>
-              </thead>
-              <tbody id="loadedTeamsTableBody">
-                <!-- JS 렌더링 -->
-              </tbody>
-            </table>
-          </div>
-
-          <div class="data-safety-bar">
-            <span>보안/백업 관리:</span>
-            <button type="button" id="exportTournamentJsonBtn" class="btn-chip">💾 데이터 JSON 백업</button>
-            <button type="button" id="purgeTournamentDataBtn" class="btn-chip btn-chip-danger">🗑️ 대회 데이터 영구 파기</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =====================================================================
-         [학생 & 교사 공통 화면 B] 현재 경기 안내 + 12팀 토너먼트 대진표/일정 + 경기 종료 확정
-         ===================================================================== -->
-    <section class="glass-card tournament-bracket-section" id="studentAndTeacherBracketSection">
-      <div class="bracket-section-header">
-        <div>
-          <span class="section-step-pill">실시간 대진표 · 경기 일정 · 결과 확정 (TEAM NAMES ONLY)</span>
-          <h2 class="section-main-heading">2. 12팀 토너먼트 대진표 및 경기 종료 확정</h2>
-          <p class="section-sub-desc">
-            각 경기에서 <strong>‘🏁 경기 종료 확정’</strong> 버튼을 누르면 해당 경기의 <strong>승패 · 점수 · 다음 라운드 진출자(누가 올라가는지)</strong>가 즉시 표시되고 다음 경기로 자동 이동합니다.
-          </p>
-        </div>
-        <div class="seed-audit-chip" id="currentTournamentSeedBadge">추첨 시드값 대기 중</div>
-      </div>
-
-      <!-- 현재 진행 중인 경기 강조 스포트라이트 & 최근 확정 결과 요약 바 -->
-      <div id="currentTournamentMatchBanner"></div>
-
-      <!-- 4라운드(12강 -> 8강[부전승 4팀 포함] -> 4강 -> 결승) 전체 대진표 컨테이너 -->
-      <div id="tournamentBracketContainer" class="tournament-bracket-container"></div>
-    </section>
-
-    <!-- =====================================================================
-         [교사 전용 화면 C] 토너먼트 진행 상태 대시보드 (요구사항 4-A-3)
-         ===================================================================== -->
-    <section class="teacher-only-section glass-card tournament-dashboard-section">
-      <div class="bracket-section-header">
-        <div>
-          <span class="section-step-pill">교사용 진행 상태 대시보드</span>
-          <h2 class="section-main-heading">3. 전체 경기 진행 상태 (대기 / 진행 / 확정) 및 진출자 현황</h2>
-        </div>
-        <span id="teacherDashboardSummaryStats" class="seed-audit-chip">집계 중</span>
-      </div>
-      <div class="dashboard-table-wrap">
-        <table class="teams-preview-table">
-          <thead>
-            <tr>
-              <th>경기 ID (라운드)</th>
-              <th>매치업 (팀명만 표시)</th>
-              <th>진행 상태</th>
-              <th>확정 점수</th>
-              <th>승리 팀</th>
-              <th>다음 라운드 진출자 반영</th>
-            </tr>
-          </thead>
-          <tbody id="teacherProgressTableBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- =====================================================================
-         [실시간 경기 타이머 & 스코어 연동 보드] (현재 진행 경기와 자동 연동)
-         ===================================================================== -->
+    <!-- 2. 상단 중앙 타이머 및 스코어보드 -->
     <section class="top-center-scoreboard glass-card">
       <!-- 1팀 요약 -->
       <div class="team-summary team-summary-1">
         <div class="team-name-editable-wrap">
-          <input type="text" id="team1NameInput" class="team-name-input" value="청룡 FC" title="현재 경기 A팀 이름">
-          <span class="team-sub-badge">TEAM A</span>
+          <input type="text" id="team1NameInput" class="team-name-input" value="1팀 (블루)" title="1팀 이름을 변경할 수 있습니다">
+          <span class="team-sub-badge">TEAM 1</span>
         </div>
         <div class="team-big-score" id="team1Score">0</div>
-        <div class="team-score-quick-btns">
-          <button type="button" class="btn-shot-mini" id="team1GoalMinusBtn" title="A팀 득점 -1">-1골</button>
-          <button type="button" class="btn-shot-mini btn-goal-plus" id="team1GoalPlusBtn" title="A팀 득점 +1">+1골 득점</button>
-        </div>
         <div class="team-fouls-summary">팀 파울: <strong id="team1TotalFouls">0</strong>회 | 퇴장: <strong id="team1TotalRed">0</strong>명</div>
-        <div class="team-shots-ctrl" title="A팀 총 슈팅 수 조작">
+        <!-- 슈팅 카운트 -->
+        <div class="team-shots-ctrl" title="1팀 총 슈팅 수 조작">
           <span>🎯 슈팅: <strong id="team1ShotsDisplay">0</strong></span>
           <button class="btn-shot-mini" id="team1ShotMinus">-</button>
           <button class="btn-shot-mini" id="team1ShotPlus">+</button>
@@ -250,7 +131,7 @@
             <span class="time-colon">:</span>
             <span id="timerSeconds" class="time-digit">00</span>
           </div>
-          <span class="timer-badge" id="timerPeriodBadge">현재 진행 경기 타이머</span>
+          <span class="timer-badge" id="timerPeriodBadge">15:00 정규 경기</span>
         </div>
 
         <div class="timer-progress-wrap">
@@ -259,36 +140,46 @@
 
         <div class="timer-control-buttons">
           <button id="startTimerBtn" class="btn-timer btn-start" title="경기 시작">
-            <span>▶ 경기 시작</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>경기 시작</span>
           </button>
+
           <button id="pauseTimerBtn" class="btn-timer btn-pause" disabled title="일시 정지">
-            <span>⏸ 일시정지</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            <span>일시정지</span>
           </button>
+
           <button id="resetTimerBtn" class="btn-timer btn-reset" title="15분 초기화">
-            <span>↺ 리셋</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span>리셋</span>
           </button>
         </div>
 
         <div class="timer-extra-chips">
           <button type="button" class="btn-chip" id="add1MinBtn">+1분</button>
           <button type="button" class="btn-chip" id="add5MinBtn">+5분</button>
-          <button type="button" class="btn-chip" id="newMatchSessionBtn">점수 초기화</button>
+          <button type="button" class="btn-chip" id="newMatchSessionBtn">새 경기 시작</button>
         </div>
       </div>
 
       <!-- 2팀 요약 -->
       <div class="team-summary team-summary-2">
         <div class="team-name-editable-wrap">
-          <input type="text" id="team2NameInput" class="team-name-input" value="백호 유나이티드" title="현재 경기 B팀 이름">
-          <span class="team-sub-badge">TEAM B</span>
+          <input type="text" id="team2NameInput" class="team-name-input" value="2팀 (오렌지)" title="2팀 이름을 변경할 수 있습니다">
+          <span class="team-sub-badge">TEAM 2</span>
         </div>
         <div class="team-big-score" id="team2Score">0</div>
-        <div class="team-score-quick-btns">
-          <button type="button" class="btn-shot-mini" id="team2GoalMinusBtn" title="B팀 득점 -1">-1골</button>
-          <button type="button" class="btn-shot-mini btn-goal-plus" id="team2GoalPlusBtn" title="B팀 득점 +1">+1골 득점</button>
-        </div>
         <div class="team-fouls-summary">팀 파울: <strong id="team2TotalFouls">0</strong>회 | 퇴장: <strong id="team2TotalRed">0</strong>명</div>
-        <div class="team-shots-ctrl" title="B팀 총 슈팅 수 조작">
+        <!-- 슈팅 카운트 -->
+        <div class="team-shots-ctrl" title="2팀 총 슈팅 수 조작">
           <span>🎯 슈팅: <strong id="team2ShotsDisplay">0</strong></span>
           <button class="btn-shot-mini" id="team2ShotMinus">-</button>
           <button class="btn-shot-mini" id="team2ShotPlus">+</button>
@@ -296,17 +187,17 @@
       </div>
     </section>
 
-    <!-- 실시간 볼 점유율 연동 바 -->
+    <!-- 실시간 볼 점유율 1분 주기 연동 바 (운영판) -->
     <section class="match-possession-section glass-card">
       <div class="match-possession-header">
         <div class="poss-title-left">
           <span class="pulse-dot"></span>
-          <span class="match-poss-title">실시간 볼 점유율 연동</span>
+          <span class="match-poss-title">볼 점유율 분석원 연동 (1분 주기)</span>
         </div>
         <div class="match-poss-readout">
-          <span id="matchPossTeam1Val" class="poss-team1-badge">A팀 50%</span>
+          <span id="matchPossTeam1Val" class="poss-team1-badge">1팀 50%</span>
           <span class="poss-vs-label">VS</span>
-          <span id="matchPossTeam2Val" class="poss-team2-badge">50% B팀</span>
+          <span id="matchPossTeam2Val" class="poss-team2-badge">50% 2팀</span>
         </div>
       </div>
       <div class="match-poss-dual-bar">
@@ -315,132 +206,61 @@
       </div>
     </section>
 
-    <!-- 개인정보 보호 원칙에 따라 선수별 세부 기록 패널은 기본적으로 접어 두어 화면에 '팀명만 노출'되도록 보장 -->
-    <details class="player-detail-accordion glass-card">
-      <summary class="accordion-summary-bar">
-        <span>⚙️ (선택) 운영원용 선수 번호별 세부 득점·파울 기록 패널 열기</span>
-        <span class="privacy-note-tag">※ 개인정보 보호 기본 원칙: 대진표 및 결과 화면에는 '팀명'만 표시됩니다.</span>
-      </summary>
-      <main class="teams-two-column-layout" style="margin-top: 1rem;">
-        <section class="team-column team-1-column glass-card">
-          <div class="team-column-header team-1-header">
-            <div class="team-title-wrap">
-              <span class="team-dot team-1-dot"></span>
-              <h2 class="team-column-title" id="team1TitleDisplay">A팀</h2>
-              <span class="team-count" id="team1CountBadge">5명</span>
-            </div>
-            <button class="btn-outline-sm" id="addPlayer1Btn">+ 선수 번호 추가</button>
+    <!-- 3. 본문: 1팀(왼쪽)과 2팀(오른쪽) 2단 선수 기록 패널 -->
+    <main class="teams-two-column-layout">
+      <!-- 1팀 -->
+      <section class="team-column team-1-column glass-card">
+        <div class="team-column-header team-1-header">
+          <div class="team-title-wrap">
+            <span class="team-dot team-1-dot"></span>
+            <h2 class="team-column-title" id="team1TitleDisplay">1팀 (블루)</h2>
+            <span class="team-count" id="team1CountBadge">5명</span>
           </div>
-          <div class="players-stack" id="team1PlayersList"></div>
-        </section>
-
-        <section class="team-column team-2-column glass-card">
-          <div class="team-column-header team-2-header">
-            <div class="team-title-wrap">
-              <span class="team-dot team-2-dot"></span>
-              <h2 class="team-column-title" id="team2TitleDisplay">B팀</h2>
-              <span class="team-count" id="team2CountBadge">5명</span>
-            </div>
-            <button class="btn-outline-sm" id="addPlayer2Btn">+ 선수 번호 추가</button>
-          </div>
-          <div class="players-stack" id="team2PlayersList"></div>
-        </section>
-      </main>
-    </details>
-
-    <!-- =====================================================================
-         [푸터] 심의/운영 대응 필수 5대 링크 (개인정보 처리방침, 이용약관, 문의/담당자, 기관명, 시행일/변경일)
-         ===================================================================== -->
-    <footer class="app-footer compliance-footer">
-      <div class="footer-content">
-        <div class="footer-policy-links">
-          <a href="PRIVACY_POLICY.md" data-policy-modal="privacy" class="footer-link"><strong>개인정보 처리방침</strong></a>
-          <span class="footer-divider">|</span>
-          <a href="TERMS_OF_SERVICE.md" data-policy-modal="terms" class="footer-link"><strong>이용약관</strong></a>
-          <span class="footer-divider">|</span>
-          <a href="#contact" data-policy-modal="info" class="footer-link">문의/담당자: <span>(선생님 확인 필요)</span></a>
-          <span class="footer-divider">|</span>
-          <a href="#org" data-policy-modal="info" class="footer-link">기관명: <span>(선생님 확인 필요)</span></a>
-          <span class="footer-divider">|</span>
-          <span class="footer-date-info">시행일/변경일: 2026-11-06</span>
+          <button class="btn-outline-sm" id="addPlayer1Btn">+ 1팀 선수 추가</button>
         </div>
+        <div class="players-stack" id="team1PlayersList"></div>
+      </section>
+
+      <!-- 2팀 -->
+      <section class="team-column team-2-column glass-card">
+        <div class="team-column-header team-2-header">
+          <div class="team-title-wrap">
+            <span class="team-dot team-2-dot"></span>
+            <h2 class="team-column-title" id="team2TitleDisplay">2팀 (오렌지)</h2>
+            <span class="team-count" id="team2CountBadge">5명</span>
+          </div>
+          <button class="btn-outline-sm" id="addPlayer2Btn">+ 2팀 선수 추가</button>
+        </div>
+        <div class="players-stack" id="team2PlayersList"></div>
+      </section>
+    </main>
+
+    <!-- 4. 푸터 -->
+    <footer class="app-footer">
+      <div class="footer-content">
         <div class="footer-meta">
-          <span>개인정보 보호 원칙 준수: 화면에는 <strong>팀명</strong>만 노출되며, 이름·학번은 수집·표시하지 않습니다.</span>
+          <span>※ 파울이 5개가 되면 자동으로 퇴장(레드카드 1개) 및 '출전 불가' 처리됩니다.</span>
+          <span>전광판 연동: LocalStorage 실시간 동기화 지원</span>
         </div>
       </div>
     </footer>
   </div>
 
-  <!-- =====================================================================
-       [핵심 모달 1] 경기 종료 확정 시 승패 · 점수 · 다음 라운드 진출자 즉시 표시 모달
-       ===================================================================== -->
-  <div class="modal-backdrop hidden" id="tournamentConfirmResultModal">
-    <div class="modal-dialog glass-card confirm-result-modal-card">
-      <div class="modal-header">
-        <div>
-          <span id="confirmModalRoundBadge" class="section-step-pill">경기 종료 확정 결과</span>
-          <h3 id="confirmModalWinnerHeadline" class="confirm-winner-headline">🎉 승리 확정!</h3>
-        </div>
-        <button class="modal-close" id="closeConfirmResultModalBtn" aria-label="닫기">&times;</button>
-      </div>
-      <div class="modal-body">
-        <!-- 승패 및 점수 대조 보드 -->
-        <div class="confirm-scoreboard-compare">
-          <div class="confirm-team-col">
-            <span id="confirmModalBadgeA" class="result-wl-badge wl-win">🏆 승리</span>
-            <div id="confirmModalTeamAName" class="confirm-team-name">청룡 FC</div>
-            <div id="confirmModalScoreA" class="confirm-team-score">2</div>
-          </div>
-          <div class="confirm-vs-divider">FINAL</div>
-          <div class="confirm-team-col">
-            <span id="confirmModalBadgeB" class="result-wl-badge wl-lose">패배</span>
-            <div id="confirmModalTeamBName" class="confirm-team-name">백호 유나이티드</div>
-            <div id="confirmModalScoreB" class="confirm-team-score">1</div>
-          </div>
-        </div>
-
-        <!-- 다음 라운드 진출자 강조 박스 -->
-        <div class="confirm-advancement-highlight" id="confirmModalAdvancementText">
-          🚀 다음 라운드 진출: 청룡 FC → 2라운드(8강) 진출!
-        </div>
-
-        <!-- 다음 경기로 자동 이동 안내 -->
-        <div class="confirm-next-match-guide" id="confirmModalNextMatchGuide"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-primary" onclick="document.getElementById('tournamentConfirmResultModal').classList.add('hidden')">
-          확인 및 다음 경기 진행 →
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- [모달 2] 개인정보 처리방침 / 이용약관 / 기관 정보 열람 모달 -->
-  <div class="modal-backdrop hidden" id="policyDocModal">
-    <div class="modal-dialog glass-card" style="max-width: 680px;">
-      <div class="modal-header">
-        <h3 id="policyDocModalTitle">정책 문서</h3>
-        <button class="modal-close" id="closePolicyDocModalBtn">&times;</button>
-      </div>
-      <div class="modal-body" id="policyDocModalBody"></div>
-    </div>
-  </div>
-
-  <!-- [모달 3] 선수 번호 추가 모달 (가명/번호 기본) -->
+  <!-- 선수 추가 모달 -->
   <div class="modal-backdrop hidden" id="addPlayerModal">
     <div class="modal-dialog glass-card">
       <div class="modal-header">
-        <h3 id="addPlayerModalTitle">새 선수 번호/가명 등록</h3>
+        <h3 id="addPlayerModalTitle">새 선수 등록</h3>
         <button class="modal-close" id="closeAddPlayerModalBtn">&times;</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="newPlayerName">선수 표시명 (가명 또는 등번호 권장)</label>
-          <input type="text" id="newPlayerName" placeholder="예: 1팀 7번 선수" required>
+          <label for="newPlayerName">선수 이름</label>
+          <input type="text" id="newPlayerName" placeholder="예: 박지성" required>
         </div>
         <div class="form-group">
-          <label for="newPlayerStudentNum">식별 코드 (선택 - 전광판 내부 구분용)</label>
-          <input type="text" id="newPlayerStudentNum" placeholder="예: P-07">
+          <label for="newPlayerStudentNum">학번 (득점자 전광판 표시용)</label>
+          <input type="text" id="newPlayerStudentNum" placeholder="예: 10101" required>
         </div>
         <div class="form-group">
           <label for="newPlayerNumber">등번호</label>
@@ -449,19 +269,18 @@
         <div class="form-group">
           <label for="newPlayerTeamSelect">소속 팀</label>
           <select id="newPlayerTeamSelect">
-            <option value="1">A팀 (왼쪽)</option>
-            <option value="2">B팀 (오른쪽)</option>
+            <option value="1">1팀 (왼쪽)</option>
+            <option value="2">2팀 (오른쪽)</option>
           </select>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" id="cancelAddPlayerBtn">취소</button>
-        <button class="btn-primary" id="saveNewPlayerBtn">추가</button>
+        <button class="btn-primary" id="saveNewPlayerBtn">선수 추가</button>
       </div>
     </div>
   </div>
 
-  <script src="tournament.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

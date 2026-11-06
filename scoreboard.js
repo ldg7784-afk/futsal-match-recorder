@@ -231,17 +231,17 @@
   }
 
   const INITIAL_PLAYERS = [
-    { id: "p1", name: "A팀 #1 (GK)", studentNum: "A-01", number: 1, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-    { id: "p2", name: "A팀 #7", studentNum: "A-07", number: 7, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-    { id: "p3", name: "A팀 #9", studentNum: "A-09", number: 9, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-    { id: "p4", name: "A팀 #10", studentNum: "A-10", number: 10, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-    { id: "p5", name: "A팀 #11", studentNum: "A-11", number: 11, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-
-    { id: "p6", name: "B팀 #1 (GK)", studentNum: "B-01", number: 1, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-    { id: "p7", name: "B팀 #7", studentNum: "B-07", number: 7, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-    { id: "p8", name: "B팀 #8", studentNum: "B-08", number: 8, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-    { id: "p9", name: "B팀 #10", studentNum: "B-10", number: 10, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
-    { id: "p10", name: "B팀 #18", studentNum: "B-18", number: 18, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false }
+    { id: "p1", name: "김민준", studentNum: "10101", number: 1, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p2", name: "이서준", studentNum: "10102", number: 7, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p3", name: "박도윤", studentNum: "10103", number: 9, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p4", name: "정예준", studentNum: "10104", number: 10, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p5", name: "최시우", studentNum: "10105", number: 11, team: "1", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    
+    { id: "p6", name: "강하준", studentNum: "10201", number: 1, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p7", name: "조은우", studentNum: "10202", number: 7, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p8", name: "윤지호", studentNum: "10203", number: 8, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p9", name: "장유준", studentNum: "10204", number: 10, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false },
+    { id: "p10", name: "임선우", studentNum: "10205", number: 18, team: "2", goals: 0, assists: 0, fouls: 0, redCards: 0, isBanned: false }
   ];
 
   const DEFAULT_MATCH = {
@@ -502,23 +502,6 @@
     }
 
     modal.classList.remove('hidden');
-
-    // 0. 토너먼트 승패 및 다음 라운드 진출자 표시
-    const trRes = match.lastTournamentResult;
-    const headlineEl = document.getElementById('endedTournamentHeadline');
-    const advBannerEl = document.getElementById('scoreboardAdvancementBanner');
-    if (trRes && advBannerEl) {
-      if (headlineEl) {
-        headlineEl.textContent = `🏆 ${trRes.winnerTeamName} 승리! (${trRes.teamAName} ${trRes.scoreA} : ${trRes.scoreB} ${trRes.teamBName})`;
-      }
-      advBannerEl.textContent = `🚀 다음 라운드 진출자: ${trRes.advancementText}`;
-    } else if (advBannerEl) {
-      const winLabel = s1 > s2 ? `${t1Name} 승리!` : (s2 > s1 ? `${t2Name} 승리!` : '무승부');
-      if (headlineEl) headlineEl.textContent = `경기 최종 결과 • ${winLabel}`;
-      advBannerEl.textContent = s1 !== s2
-        ? `🚀 다음 라운드 진출 확정: ${s1 > s2 ? t1Name : t2Name} (최종 점수 ${s1} : ${s2})`
-        : `최종 점수 ${s1} : ${s2} (승부차기/판정 진행)`;
-    }
 
     // 1. 스코어 및 팀명
     document.getElementById('modalTeam1Name').textContent = t1Name;
