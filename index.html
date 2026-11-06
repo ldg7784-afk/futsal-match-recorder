@@ -257,55 +257,55 @@
     </header>
 
     <main class="app-cards-grid">
-      <!-- 1. 경기 기록 운영원 앱 -->
-      <a href="match.html" class="app-card card-match">
+      <!-- 1. 교사용 대회 운영 콘솔 -->
+      <a href="match.html?role=teacher" class="app-card card-match">
         <div class="app-card-top">
-          <span class="app-role-pill">기록 운영원 담당</span>
-          <h2 class="app-card-title">1. 경기 기록 운영원</h2>
-          <p class="app-card-desc">타이머 제어, 선수별 득점·도움·파울(5개 시 자동 퇴장 및 출전불가), 슈팅 수 조작 및 경기 종료를 확정합니다.</p>
+          <span class="app-role-pill">교사(운영자) 전용</span>
+          <h2 class="app-card-title">1. 교사용 대회 운영 &amp; 대진 생성</h2>
+          <p class="app-card-desc">구글시트에서 12팀(남8+여4)을 불러와 검증하고, 시드 추첨으로 토너먼트 대진표와 일정을 자동 생성합니다.</p>
           <ul class="app-features-list">
-            <li>15분 전광판 타이머 제어</li>
-            <li>파울 5개 누적 시 자동 퇴장 처리</li>
-            <li>출전 불가 토글 및 슈팅 수 기록</li>
-            <li>경기 종료 확정 버튼</li>
+            <li>구글시트 12팀(남 8 + 여 4) 자동 검증</li>
+            <li>시드 추첨 및 12팀 토너먼트(부전승 포함) 생성</li>
+            <li>전체 라운드 진행 상태(대기/진행/확정) 대시보드</li>
+            <li>화면에는 개인정보 제외 '팀명'만 안전 노출</li>
           </ul>
         </div>
         <div class="app-card-bottom">
-          <div class="btn-enter-app">운영원 앱 실행 →</div>
-          <span class="url-chip">독립 주소: /match.html</span>
+          <div class="btn-enter-app">교사 운영 화면 실행 →</div>
+          <span class="url-chip">독립 주소: /match.html?role=teacher</span>
         </div>
       </a>
 
-      <!-- 2. 볼 점유율 분석원 앱 -->
-      <a href="possession.html" class="app-card card-possession">
+      <!-- 2. 학생용 결과 확인 & 경기 종료 확정 링크 -->
+      <a href="match.html?role=student" class="app-card card-possession">
         <div class="app-card-top">
-          <span class="app-role-pill">점유율 분석원 담당</span>
-          <h2 class="app-card-title">2. 볼 점유율 분석원</h2>
-          <p class="app-card-desc">공을 소유한 팀 버튼을 꾹 누르고 떼는 방식으로 실시간 점유 시간을 측정하며 1분 주기 통계에 실시간 반영됩니다.</p>
+          <span class="app-role-pill">학생(참관/확인자) 전용</span>
+          <h2 class="app-card-title">2. 학생용 대진표 &amp; 경기 종료 확정</h2>
+          <p class="app-card-desc">학생용 링크에서 대진표/일정을 확인하고, ‘경기 종료 확정’ 버튼을 누르면 승패·점수·다음 라운드 진출자가 즉시 표시됩니다.</p>
           <ul class="app-features-list">
-            <li>팀 버튼 꾹 누르기 측정 방식</li>
-            <li>손을 떼면 즉시 시간 정지</li>
-            <li>양 팀 점유율(%) 실시간 계산</li>
-            <li>모바일 터치 완벽 대응</li>
+            <li>팀명만 표시되는 실시간 대진표/일정</li>
+            <li>‘경기 종료 확정’ 시 승패·점수·진출자 5초 내 표시</li>
+            <li>확정 후 다음 경기로 상태 자동 이동</li>
+            <li>교사 기능(시드 추첨/대진 생성) 접근 완전 차단</li>
           </ul>
         </div>
         <div class="app-card-bottom">
-          <div class="btn-enter-app">분석원 앱 실행 →</div>
-          <span class="url-chip">독립 주소: /possession.html</span>
+          <div class="btn-enter-app">학생 확인 화면 실행 →</div>
+          <span class="url-chip">독립 주소: /match.html?role=student</span>
         </div>
       </a>
 
-      <!-- 3. 스마트 학생 전광판 (신규!) -->
+      <!-- 3. 스마트 학생 전광판 -->
       <a href="scoreboard.html" class="app-card card-scoreboard">
         <div class="app-card-top">
-          <span class="app-role-pill">관람 학생 & 대회장 스크린</span>
-          <h2 class="app-card-title">3. 스마트 학생 전광판</h2>
-          <p class="app-card-desc">중앙 축구장 그래픽과 양측 5인 프로필(공/축구화/옐로/레드카드), 1분 점유율 및 경기 종료 시 최종 결과표를 표출합니다.</p>
+          <span class="app-role-pill">관람 학생 &amp; 대회장 스크린</span>
+          <h2 class="app-card-title">3. 스마트 학생 전광판 (중계용)</h2>
+          <p class="app-card-desc">대회장 대형 스크린용 전광판으로 실시간 스코어, 볼 점유율, 경기 종료 시 승패·점수·다음 라운드 진출자를 표출합니다.</p>
           <ul class="app-features-list">
-            <li>중앙 풋살 축구장 잔디 그래픽</li>
-            <li>양 팀 5명 프로필 (공⚽/축구화👟/🟨/🟥)</li>
-            <li>1분 주기 점유율 자동 연동</li>
-            <li>종료 시: 팀→점수(득점자)→점유율→슈팅</li>
+            <li>실시간 스코어 및 경기 타이머 연동</li>
+            <li>볼 점유율 분석원 앱(/possession.html) 연동</li>
+            <li>경기 종료 확정 시 승패 및 다음 라운드 진출자 표시</li>
+            <li>개인정보 보호(팀명 및 등번호/가명 기반 표시)</li>
           </ul>
         </div>
         <div class="app-card-bottom">
@@ -316,7 +316,14 @@
     </main>
 
     <footer class="portal-footer">
-      <p>※ 모든 앱은 동일한 브라우저나 디바이스 간 LocalStorage를 통해 실시간으로 완벽하게 연동됩니다.</p>
+      <div style="margin-bottom: 0.4rem;">
+        <a href="PRIVACY_POLICY.md" style="color:inherit; font-weight:600;">개인정보 처리방침</a> |
+        <a href="TERMS_OF_SERVICE.md" style="color:inherit; font-weight:600;">이용약관</a> |
+        <span>문의/담당자: (선생님 확인 필요)</span> |
+        <span>기관명: (선생님 확인 필요)</span> |
+        <span>시행일/변경일: 2026-11-06</span>
+      </div>
+      <p>※ 모든 앱은 실시간 상태 동기화를 지원하며 화면에는 개인정보 보호를 위해 팀명만 노출됩니다.</p>
     </footer>
   </div>
 </body>

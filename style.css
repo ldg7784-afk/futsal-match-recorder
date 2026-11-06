@@ -870,3 +870,813 @@ body {
 .modal-body { display: flex; flex-direction: column; gap: 0.75rem; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; }
 .hidden { display: none !important; }
+
+/* ==========================================================================
+   10. 12팀 토너먼트 대진표 · 시드 추첨 · 경기 종료 확정 시스템 스타일 확장
+   ========================================================================== */
+.role-indicator-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--tesla-cloud-gray);
+}
+.role-indicator-pill.role-teacher {
+  background: rgba(62, 106, 225, 0.1);
+  color: var(--tesla-blue);
+  border-color: rgba(62, 106, 225, 0.3);
+}
+.role-indicator-pill.role-student {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.role-switch-group {
+  display: inline-flex;
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: var(--radius-btn);
+  overflow: hidden;
+}
+.btn-role-switch {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--tesla-pewter);
+  cursor: pointer;
+  transition: var(--tesla-transition);
+}
+.btn-role-switch.active-role-btn {
+  background: var(--tesla-carbon-dark);
+  color: var(--tesla-white);
+}
+
+.game-status-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 4px;
+  background: var(--tesla-white);
+  color: var(--tesla-carbon-dark);
+  border: 1px solid var(--tesla-cloud-gray);
+}
+.btn-end-match {
+  background: var(--tesla-blue);
+  color: #ffffff;
+  border: 1px solid var(--tesla-blue);
+  font-weight: 600;
+}
+.btn-end-match:hover {
+  background: var(--tesla-blue-hover);
+}
+
+.tournament-admin-panel,
+.tournament-bracket-section,
+.tournament-dashboard-section {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-panel-header,
+.bracket-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.section-step-pill {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--tesla-blue);
+  background: rgba(62, 106, 225, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+}
+
+.section-main-heading {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+}
+
+.section-sub-desc {
+  font-size: 12.5px;
+  color: var(--tesla-pewter);
+  margin-top: 0.15rem;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.copy-feedback-text {
+  font-size: 12px;
+  color: #047857;
+  font-weight: 600;
+}
+
+/* 심의 대응 체크리스트 */
+.compliance-checklist-box {
+  background: var(--tesla-light-ash);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+.checklist-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+  margin-bottom: 0.5rem;
+}
+.checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem 1rem;
+}
+@media (max-width: 768px) {
+  .checklist-grid { grid-template-columns: 1fr; }
+}
+.chk-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 12px;
+  color: var(--tesla-graphite);
+}
+.chk-item mark {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* 교사 2단 그리드 */
+.teacher-two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 960px) {
+  .teacher-two-col-grid { grid-template-columns: 1fr; }
+}
+.teacher-sub-card {
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--tesla-white);
+}
+.sub-card-header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.sub-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+}
+.sub-card-help {
+  font-size: 12px;
+  color: var(--tesla-pewter);
+}
+
+.col-map-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+.col-map-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 11px;
+  color: var(--tesla-pewter);
+}
+.col-map-row input {
+  padding: 5px 8px;
+  border: 1px solid var(--tesla-pale-silver);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.sheet-url-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.sheet-url-input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--tesla-pale-silver);
+  border-radius: 4px;
+  font-size: 12.5px;
+}
+.csv-paste-details {
+  font-size: 11.5px;
+  color: var(--tesla-pewter);
+}
+.csv-paste-details textarea {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 6px 8px;
+  border: 1px solid var(--tesla-pale-silver);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.sample-test-btns-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.btn-chip-warn {
+  border-color: #fcd34d !important;
+  background: #fffbeb !important;
+  color: #92400e !important;
+}
+.btn-chip-danger {
+  border-color: #fca5a5 !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+.validation-alert-box {
+  padding: 0.75rem 0.9rem;
+  border-radius: 6px;
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.validation-alert-box.valid {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+.validation-alert-box.invalid {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+.validation-alert-box.neutral {
+  background: var(--tesla-light-ash);
+  border: 1px solid var(--tesla-cloud-gray);
+  color: var(--tesla-graphite);
+}
+.val-title { font-weight: 600; }
+.val-guide { font-size: 11.5px; }
+
+.teams-preview-table-wrap,
+.dashboard-table-wrap {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: 6px;
+}
+.teams-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+.teams-preview-table th,
+.teams-preview-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--tesla-cloud-gray);
+}
+.teams-preview-table th {
+  background: var(--tesla-light-ash);
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+  position: sticky;
+  top: 0;
+}
+.gender-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.gender-m { background: rgba(62, 106, 225, 0.12); color: var(--tesla-blue); }
+.gender-f { background: #fce7f3; color: #be185d; }
+.seed-pill {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--tesla-light-ash);
+  color: var(--tesla-graphite);
+}
+.seed-pill.seed-bye {
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.data-safety-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  font-size: 11.5px;
+  color: var(--tesla-pewter);
+}
+
+/* 자동 검증 리포트 */
+.test-result-panel {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  font-size: 12px;
+}
+.test-report-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  color: var(--tesla-carbon-dark);
+}
+.test-report-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.test-pass { color: #065f46; }
+.test-fail { color: #991b1b; }
+
+/* 현재 진행 경기 강조 스포트라이트 */
+.recent-confirmed-strip {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 0.55rem 0.9rem;
+  border-radius: 6px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+.strip-tag {
+  background: #047857;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.strip-winner, .strip-advance { font-weight: 600; }
+
+.active-match-spotlight {
+  background: var(--tesla-carbon-dark);
+  color: var(--tesla-white);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.spotlight-live-pill {
+  display: inline-block;
+  background: var(--tesla-blue);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 0.3rem;
+}
+.spotlight-match-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+.spotlight-match-title .vs-txt {
+  color: var(--tesla-silver-fog);
+  margin: 0 0.35rem;
+  font-size: 14px;
+}
+.spotlight-sub {
+  font-size: 12px;
+  color: var(--tesla-pale-silver);
+  margin-top: 0.2rem;
+}
+.quick-confirm-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.quick-score-lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 11px;
+  color: var(--tesla-pale-silver);
+}
+.quick-score-input {
+  width: 64px;
+  height: 38px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 4px;
+  border: 1px solid var(--tesla-pale-silver);
+}
+.quick-colon {
+  font-size: 20px;
+  font-weight: 700;
+  padding-bottom: 6px;
+}
+.btn-confirm-spotlight {
+  height: 38px;
+  padding: 0 14px;
+  font-weight: 600;
+}
+
+/* 부전승 배너 */
+.bye-teams-banner {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  margin-bottom: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.bye-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #92400e;
+}
+.bye-team-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.bye-chip {
+  font-size: 12px;
+  background: #ffffff;
+  border: 1px solid #fcd34d;
+  color: #78350f;
+  padding: 3px 9px;
+  border-radius: 4px;
+}
+
+/* 4라운드 토너먼트 그리드 */
+.bracket-four-columns-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+}
+@media (max-width: 1100px) {
+  .bracket-four-columns-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .bracket-four-columns-grid { grid-template-columns: 1fr; }
+}
+.bracket-round-col {
+  background: var(--tesla-light-ash);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.bracket-round-header h4 {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+}
+.bracket-round-header span {
+  font-size: 11px;
+  color: var(--tesla-pewter);
+}
+.bracket-matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.bracket-match-card {
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: 6px;
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  transition: var(--tesla-transition);
+}
+.bracket-match-card.card-in-progress {
+  border: 2px solid var(--tesla-blue);
+}
+.bracket-match-card.card-confirmed {
+  background: #f8fafc;
+}
+.match-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.match-num-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+}
+.m-status-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.status-live { background: rgba(62, 106, 225, 0.14); color: var(--tesla-blue); }
+.status-confirmed { background: #ecfdf5; color: #047857; }
+.status-waiting { background: var(--tesla-light-ash); color: var(--tesla-pewter); }
+
+.match-teams-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.match-team-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: var(--tesla-light-ash);
+  font-size: 12.5px;
+}
+.match-team-row.row-winner {
+  background: #ecfdf5;
+  color: #065f46;
+  font-weight: 600;
+  border: 1px solid #a7f3d0;
+}
+.match-team-row.row-tbd {
+  color: var(--tesla-silver-fog);
+}
+.team-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.slot-letter {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--tesla-pewter);
+  background: var(--tesla-white);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.bye-slot-tag {
+  font-size: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+.win-crown {
+  font-size: 10.5px;
+  color: #047857;
+  font-weight: 700;
+}
+.t-score {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.match-confirm-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.3rem;
+  border-top: 1px dashed var(--tesla-cloud-gray);
+}
+.inline-score-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.card-score-input {
+  width: 44px;
+  padding: 3px 4px;
+  text-align: center;
+  border: 1px solid var(--tesla-pale-silver);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.btn-card-confirm {
+  background: var(--tesla-blue);
+  color: var(--tesla-white);
+  border: none;
+  border-radius: 4px;
+  padding: 5px 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-card-confirm:hover { background: var(--tesla-blue-hover); }
+
+.match-confirmed-result-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.confirmed-wl-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.35rem;
+  color: #166534;
+}
+.confirmed-next-row {
+  color: #065f46;
+  font-size: 11px;
+}
+.match-waiting-notice {
+  font-size: 11px;
+  color: var(--tesla-silver-fog);
+  text-align: center;
+  padding: 3px 0;
+}
+
+/* 경기 종료 확정 모달 */
+.confirm-result-modal-card {
+  max-width: 540px;
+}
+.confirm-winner-headline {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--tesla-carbon-dark);
+}
+.confirm-scoreboard-compare {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--tesla-light-ash);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+.confirm-team-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.result-wl-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.result-wl-badge.wl-win {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.result-wl-badge.wl-lose {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+.confirm-team-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+}
+.confirm-team-score {
+  font-size: 32px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--tesla-carbon-dark);
+}
+.confirm-vs-divider {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tesla-pewter);
+}
+.confirm-advancement-highlight {
+  background: rgba(62, 106, 225, 0.1);
+  border: 1px solid rgba(62, 106, 225, 0.3);
+  color: var(--tesla-blue);
+  padding: 0.85rem;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.confirm-next-match-guide {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+
+/* 선수 상세 아코디언 & 빠른 골 버튼 */
+.team-score-quick-btns {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+.btn-goal-plus {
+  background: var(--tesla-blue) !important;
+  color: #fff !important;
+  border-color: var(--tesla-blue) !important;
+  padding: 0 8px !important;
+  width: auto !important;
+}
+.player-detail-accordion {
+  padding: 0.85rem 1.1rem;
+}
+.accordion-summary-bar {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tesla-carbon-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.privacy-note-tag {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--tesla-pewter);
+}
+
+/* 푸터 및 정책 모달 */
+.compliance-footer .footer-policy-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.footer-link {
+  color: var(--tesla-graphite);
+  text-decoration: none;
+  font-size: 12px;
+}
+.footer-link:hover { text-decoration: underline; }
+.footer-divider { color: var(--tesla-pale-silver); }
+.policy-doc-content {
+  font-size: 12.5px;
+  color: var(--tesla-graphite);
+  line-height: 1.6;
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.policy-doc-content h4 {
+  color: var(--tesla-carbon-dark);
+  margin-top: 0.35rem;
+}
+.policy-doc-content mark {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
