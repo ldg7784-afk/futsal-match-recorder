@@ -96,7 +96,7 @@
             >
           </div>
 
-          <div id="teamValidationStatusBox" class="validation-alert-box valid"></div>
+          <div id="teamValidationStatusBox" class="validation-alert-box neutral"></div>
 
           <!-- 남자부 8팀 / 여자부 4팀 나란히 딱 정리된 보드 -->
           <div class="gender-organized-board">
@@ -104,7 +104,7 @@
             <div class="gender-division-column male-division-box">
               <div class="division-box-header">
                 <span class="division-title">🟦 남자부 신청 팀</span>
-                <span id="maleTeamCountBadge" class="division-count-pill count-ok">8 / 8팀</span>
+                <span id="maleTeamCountBadge" class="division-count-pill count-bad">0 / 8팀</span>
               </div>
               <ul id="maleTeamsOrganizedList" class="organized-team-list"></ul>
             </div>
@@ -113,13 +113,16 @@
             <div class="gender-division-column female-division-box">
               <div class="division-box-header">
                 <span class="division-title">🟥 여자부 신청 팀</span>
-                <span id="femaleTeamCountBadge" class="division-count-pill count-ok">4 / 4팀</span>
+                <span id="femaleTeamCountBadge" class="division-count-pill count-bad">0 / 4팀</span>
               </div>
               <ul id="femaleTeamsOrganizedList" class="organized-team-list"></ul>
 
               <div class="sample-test-btns-row" style="margin-top: auto; padding-top: 0.5rem;">
+                <button type="button" id="clearSheetTeamsBtn" class="btn-chip">
+                  🗑️ 비우기 (0팀 대기)
+                </button>
                 <button type="button" id="loadSample12TeamsBtn" class="btn-chip">
-                  ✅ 샘플 12팀(남8·여4) 채우기
+                  🧪 연습용 샘플 12팀
                 </button>
                 <button type="button" id="loadInvalidTeamsTestBtn" class="btn-chip btn-chip-warn">
                   ⚠️ 부족(남7·여3) 테스트

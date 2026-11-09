@@ -4,9 +4,10 @@
  * ============================================================================
  * - 기본 연동 구글시트:
  *   https://docs.google.com/spreadsheets/d/1c-_A-UnDxHvvDTFOLTwIyyV0trYpZ18j62o_BWRAue0/edit?resourcekey=&gid=541552316#gid=541552316
+ * - 구글시트 실제 상태를 그대로 반영 (신청 팀이 0팀이면 남자부 0/8팀, 여자부 0/4팀 빈 슬롯으로 표시)
  * - 상단 좌측: 구글시트 신청 팀 현황 (남자부 8팀 / 여자부 4팀 분리 정리 표시)
  * - 상단 우측: 남자부(8팀) / 여자부(4팀) 대진 추첨 콘솔
- * - 하단: 남자부 토너먼트 대진표 (8강 -> 4강 -> 결승) & 여자부 토너먼트 대진표 (4강 -> 결승) 분리 생성
+ * - 하단: 남자부 토너먼트 대진표 (8강 -> 4강 -> 결승) & 여자부 토너먼트 대진표 (4강 -> 결승) 분리 표시
  * - 각 경기 ‘🏁 경기 종료 확정’ 클릭 시 승패·점수·다음 라운드 진출자 즉시 표시 및 다음 경기 자동 이동
  * ============================================================================
  */
@@ -19,7 +20,7 @@
   const DEFAULT_SHEET_ID = '1c-_A-UnDxHvvDTFOLTwIyyV0trYpZ18j62o_BWRAue0';
   const DEFAULT_GID = '541552316';
 
-  const TOURNAMENT_STORAGE_KEY = 'futsal_tournament_v2_gender_split';
+  const TOURNAMENT_STORAGE_KEY = 'futsal_tournament_v3_sheet_sync';
   const AUDIT_LOG_STORAGE_KEY = 'futsal_tournament_audit_logs';
 
   // 실시간 동기화 채널 (교사 화면 <-> 학생 화면 0ms 연동)
@@ -38,7 +39,6 @@
 
   // ==========================================================================
   // 모듈 (7) 개인정보보호/표시 규칙 모듈 (PrivacyGuardModule)
-  // - 역할: 화면에는 팀명만 노출, 구글시트의 이름/학번 수집 즉시 폐기·마스킹
   // ==========================================================================
   const PrivacyGuardModule = {
     sanitizeSheetRow(rawRow, columnMap, index) {
@@ -55,7 +55,6 @@
       let rawTeamName = teamNameCol ? String(rawRow[teamNameCol] ?? '').trim() : '';
       let rawGender = genderCol ? String(rawRow[genderCol] ?? '').trim() : '';
 
-      // 만약 컬럼 헤더가 다르게 되어 있을 경우 행 값 중에서 성별('남'/'여'/'남자부'/'여자부')과 팀명을 자동 추론
       if (!rawGender) {
         for (const k of keys) {
           const v = String(rawRow[k] ?? '').trim();
@@ -66,7 +65,6 @@
         }
       }
       if (!rawTeamName) {
-        // 타임스탬프/학번/성별이 아닌 텍스트 컬럼 중 팀명 후보 탐색
         for (const k of keys) {
           if (/타임스탬프|timestamp|학번|이름|성명|연락처|전화|성별|부문/i.test(k)) continue;
           const v = String(rawRow[k] ?? '').trim();
@@ -76,6 +74,9 @@
           }
         }
       }
+
+      // 헤더 행 자체가 데이터로 들어온 경우 제외
+      if (/^(팀명|팀 이름|참가팀|신청팀|team)$/i.test(rawTeamName)) return null;
 
       const normalizedGender = this.normalizeGender(rawGender);
       const safeTeamName = this.sanitizeTeamName(rawTeamName);
@@ -176,7 +177,6 @@
 
   // ==========================================================================
   // 모듈 (3) 구글시트 연동 모듈 (SheetSyncModule)
-  // - 지정된 구글시트(gid=541552316)에서 신청 팀을 읽어 남자부(8팀) / 여자부(4팀)로 정리
   // ==========================================================================
   const SheetSyncModule = {
     defaultColumnMap: {
@@ -229,9 +229,6 @@
       return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
     },
 
-    /**
-     * CSV 또는 구글시트 복사(TSV 탭 구분) 문자열을 모두 파싱합니다.
-     */
     parseCsvText(text) {
       const lines = String(text || '')
         .split(/\r?\n/)
@@ -239,7 +236,6 @@
         .filter(Boolean);
       if (lines.length < 1) return [];
 
-      // 탭(\t)이 포함되어 있으면 TSV로 분리, 아니면 CSV로 분리
       const isTsv = lines[0].includes('\t');
       const splitLine = (line) => {
         if (isTsv) return line.split('\t').map(s => s.trim());
@@ -262,7 +258,6 @@
       };
 
       const firstCols = splitLine(lines[0]);
-      // 첫 줄이 헤더('팀명', '성별', '이름' 등)인지 데이터 행인지 판별
       const hasHeader = firstCols.some(c => /팀|성별|부문|이름|학번|타임스탬프|team|gender/i.test(c));
       const headers = hasHeader ? firstCols : ['이름', '학번', '팀명', '성별'];
       const startIdx = hasHeader ? 1 : 0;
@@ -279,9 +274,6 @@
       return rows;
     },
 
-    /**
-     * 브라우저에서 CORS 없이 구글시트를 불러오기 위한 Google Visualization JSONP 로더
-     */
     fetchViaJsonp(sheetUrl) {
       const { sheetId, gid } = this.parseSheetIds(sheetUrl);
       return new Promise((resolve, reject) => {
@@ -327,16 +319,15 @@
     },
 
     /**
-     * 원격 구글시트(https://docs.google.com/spreadsheets/d/1c-_A-UnDxHvvDTFOLTwIyyV0trYpZ18j62o_BWRAue0/edit?gid=541552316)에서
-     * 실시간으로 신청 팀 목록을 불러옵니다.
+     * 원격 구글시트에서 실시간으로 신청 팀 목록을 불러옵니다 (신청 팀이 0팀이어도 그대로 0팀으로 반영!).
      */
     async fetchFromGoogleSheetUrl(sheetUrl, customColumnMap = {}) {
       RoleAuthModule.assertTeacherPermission('구글시트 URL에서 신청 팀 불러오기');
 
-      // 1차 시도: Google Visualization JSONP (CORS 우회 및 브라우저 세션 활용)
+      // 1차 시도: Google Visualization JSONP (0팀인 빈 시트도 정상 반환)
       try {
         const jsonpRows = await this.fetchViaJsonp(sheetUrl);
-        if (Array.isArray(jsonpRows) && jsonpRows.length > 0) {
+        if (Array.isArray(jsonpRows)) {
           return this.extractAndValidateTeams(jsonpRows, customColumnMap, '구글시트 실시간 연동 완료');
         }
       } catch (_) {
@@ -350,20 +341,15 @@
 
       if (!response.ok || text.includes('<!DOCTYPE html>') || text.includes('show-login-page')) {
         throw new Error(
-          '현재 구글시트가 비공개(로그인 필요) 상태이거나 아직 공유 설정이 열리지 않았습니다.\n\n' +
-          '💡 해결 방법:\n' +
-          '1) 구글시트 우측 상단 [공유] 버튼 클릭 → 일반 액세스를 [링크가 있는 모든 사용자 (뷰어)]로 변경 후 다시 눌러주세요.\n' +
-          '2) 또는 시트에서 신청 목록을 드래그 복사(Ctrl+C)하여 아래 [시트 내용 붙여넣기] 칸에 붙여넣으셔도 즉시 남자부/여자부로 정리됩니다!'
+          '현재 구글시트가 비공개(로그인 필요) 상태이거나 아직 신청 데이터가 없습니다.\n\n' +
+          '💡 실시간 자동 연동을 위해 구글시트 우측 상단 [공유] → 일반 액세스를 [링크가 있는 모든 사용자 (뷰어)]로 설정해 주세요.'
         );
       }
 
       const rows = this.parseCsvText(text);
-      return this.extractAndValidateTeams(rows, customColumnMap, '구글시트 CSV 실시간 연동 완료');
+      return this.extractAndValidateTeams(rows, customColumnMap, '구글시트 실시간 연동 완료');
     },
 
-    /**
-     * 신청 행에서 중복 팀명을 제거하고 남자부(8팀) / 여자부(4팀)로 깔끔하게 분류·검증합니다.
-     */
     extractAndValidateTeams(rawRows, customColumnMap = {}, sourceLabel = '') {
       RoleAuthModule.assertTeacherPermission('구글시트 팀 목록 불러오기 및 검증');
       const colMap = { ...this.defaultColumnMap, ...customColumnMap };
@@ -403,23 +389,26 @@
       let message = '';
       let guide = '';
       if (isValid) {
-        message = `검증 완료: 남자부 8팀, 여자부 4팀 (총 12팀)이 모두 정리되었습니다!`;
-        guide = `우측의 [🎲 남자부 / 여자부 대진 추첨] 버튼을 눌러 각 부문별 토너먼트 대진표를 생성하세요.`;
+        message = `검증 완료: 남자부 8팀, 여자부 4팀 (총 12팀) 신청이 모두 확인되었습니다!`;
+        guide = `우측의 [🎲 남자부 / 여자부 대진 추첨] 버튼을 눌러 각 부문별 토너먼트 대진표를 추첨하세요.`;
+      } else if (maleTeams.length === 0 && femaleTeams.length === 0) {
+        message = `남자 8팀, 여자 4팀이 필요합니다. 현재 남/여 팀 수: 남 0, 여 0 (현재 구글시트에 신청한 팀이 없습니다)`;
+        guide = `학생들이 구글폼(구글시트)에 신청을 완료한 뒤 [🔄 구글시트에서 팀 불러오기]를 누르면 남자부(8팀)·여자부(4팀) 칸에 자동으로 채워집니다.`;
       } else {
         message = `남자 8팀, 여자 4팀이 필요합니다. 현재 남/여 팀 수: 남 ${maleTeams.length}, 여 ${femaleTeams.length}`;
         const issues = [];
         if (maleTeams.length !== 8) {
           const diff = 8 - maleTeams.length;
-          issues.push(diff > 0 ? `남자부 ${diff}팀 추가 신청 필요(현재 ${maleTeams.length}/8팀)` : `남자부 ${Math.abs(diff)}팀 초과(현재 ${maleTeams.length}/8팀)`);
+          issues.push(diff > 0 ? `남자부 ${diff}팀 추가 신청 대기 중(현재 ${maleTeams.length}/8팀)` : `남자부 ${Math.abs(diff)}팀 초과(현재 ${maleTeams.length}/8팀)`);
         }
         if (femaleTeams.length !== 4) {
           const diff = 4 - femaleTeams.length;
-          issues.push(diff > 0 ? `여자부 ${diff}팀 추가 신청 필요(현재 ${femaleTeams.length}/4팀)` : `여자부 ${Math.abs(diff)}팀 초과(현재 ${femaleTeams.length}/4팀)`);
+          issues.push(diff > 0 ? `여자부 ${diff}팀 추가 신청 대기 중(현재 ${femaleTeams.length}/4팀)` : `여자부 ${Math.abs(diff)}팀 초과(현재 ${femaleTeams.length}/4팀)`);
         }
         if (unknownTeams.length > 0) {
           issues.push(`성별 미분류 팀 ${unknownTeams.length}개('남자부' 또는 '여자부'로 표기 필요)`);
         }
-        guide = `[현황 안내] ${issues.join(' · ')}. 시트에서 신청이 완료되면 다시 불러오거나 테스트용 12팀 채우기를 이용하세요.`;
+        guide = `[신청 현황] ${issues.join(' · ')}`;
       }
 
       return {
@@ -452,7 +441,7 @@
       return function () {
         h = Math.imul(h ^ (h >>> 16), 2246822507);
         h = Math.imul(h ^ (h >>> 13), 3266489909);
-        return ((h ^= h >>> 16) >>> 0) / 4296967296;
+        return ((h ^= h >>> 16) >>> 0) / 4294967296;
       };
     },
 
@@ -469,10 +458,29 @@
     },
 
     /**
-     * 남자부(8팀 -> 8강 4경기, 4강 2경기, 결승 1경기) 및
-     * 여자부(4팀 -> 4강 2경기, 결승 1경기) 토너먼트 대진표를 각각 분리 생성합니다.
-     * (하위 호환을 위해 통합 12팀 부전승 포함 생성 함수 generateCombined12TeamTournament 도 함께 제공)
+     * 추첨 전 빈 대진표 틀(남자부 8강->4강->결승 7경기 + 여자부 4강->결승 3경기)을 생성합니다.
      */
+    createEmptyBracketSkeleton() {
+      return [
+        // 남자부 8강 (4경기)
+        { matchId: 'M_M1', division: '남자부', roundNumber: 1, roundName: '남자부 8강', matchNumber: 1, matchLabel: '남자부 8강 제1경기', teamAId: null, teamBId: null, teamASourceLabel: '남자부 추첨 시드 #1', teamBSourceLabel: '남자부 추첨 시드 #8', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: 'M_M5', nextSlot: 'A' },
+        { matchId: 'M_M2', division: '남자부', roundNumber: 1, roundName: '남자부 8강', matchNumber: 2, matchLabel: '남자부 8강 제2경기', teamAId: null, teamBId: null, teamASourceLabel: '남자부 추첨 시드 #2', teamBSourceLabel: '남자부 추첨 시드 #7', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: 'M_M5', nextSlot: 'B' },
+        { matchId: 'M_M3', division: '남자부', roundNumber: 1, roundName: '남자부 8강', matchNumber: 3, matchLabel: '남자부 8강 제3경기', teamAId: null, teamBId: null, teamASourceLabel: '남자부 추첨 시드 #3', teamBSourceLabel: '남자부 추첨 시드 #6', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: 'M_M6', nextSlot: 'A' },
+        { matchId: 'M_M4', division: '남자부', roundNumber: 1, roundName: '남자부 8강', matchNumber: 4, matchLabel: '남자부 8강 제4경기', teamAId: null, teamBId: null, teamASourceLabel: '남자부 추첨 시드 #4', teamBSourceLabel: '남자부 추첨 시드 #5', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: 'M_M6', nextSlot: 'B' },
+        // 남자부 4강 (2경기)
+        { matchId: 'M_M5', division: '남자부', roundNumber: 2, roundName: '남자부 4강', matchNumber: 5, matchLabel: '남자부 4강 제1경기', teamAId: null, teamBId: null, teamASourceLabel: '남자부 8강 1경기 승자', teamBSourceLabel: '남자부 8강 2경기 승자', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: 'M_M7', nextSlot: 'A' },
+        { matchId: 'M_M6', division: '남자부', roundNumber: 2, roundName: '남자부 4강', matchNumber: 6, matchLabel: '남자부 4강 제2경기', teamAId: null, teamBId: null, teamASourceLabel: '남자부 8강 3경기 승자', teamBSourceLabel: '남자부 8강 4경기 승자', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: 'M_M7', nextSlot: 'B' },
+        // 남자부 결승 (1경기)
+        { matchId: 'M_M7', division: '남자부', roundNumber: 3, roundName: '남자부 결승', matchNumber: 7, matchLabel: '남자부 대망의 결승전', teamAId: null, teamBId: null, teamASourceLabel: '남자부 4강 1경기 승자', teamBSourceLabel: '남자부 4강 2경기 승자', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: null, nextSlot: null },
+
+        // 여자부 4강 (2경기)
+        { matchId: 'M_F1', division: '여자부', roundNumber: 1, roundName: '여자부 4강', matchNumber: 1, matchLabel: '여자부 4강 제1경기', teamAId: null, teamBId: null, teamASourceLabel: '여자부 추첨 시드 #1', teamBSourceLabel: '여자부 추첨 시드 #4', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: 'M_F3', nextSlot: 'A' },
+        { matchId: 'M_F2', division: '여자부', roundNumber: 1, roundName: '여자부 4강', matchNumber: 2, matchLabel: '여자부 4강 제2경기', teamAId: null, teamBId: null, teamASourceLabel: '여자부 추첨 시드 #2', teamBSourceLabel: '여자부 추첨 시드 #3', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: 'M_F3', nextSlot: 'B' },
+        // 여자부 결승 (1경기)
+        { matchId: 'M_F3', division: '여자부', roundNumber: 2, roundName: '여자부 결승', matchNumber: 3, matchLabel: '여자부 대망의 결승전', teamAId: null, teamBId: null, teamASourceLabel: '여자부 4강 1경기 승자', teamBSourceLabel: '여자부 4강 2경기 승자', status: '대기', scoreA: 0, scoreB: 0, winnerTeamId: null, nextMatchId: null, nextSlot: null }
+      ];
+    },
+
     generateTournament(teams, customSeedValue = null) {
       RoleAuthModule.assertTeacherPermission('시드 추첨 및 남·여 토너먼트 대진 생성');
 
@@ -489,7 +497,6 @@
       const tournamentId = 'TRN_' + Date.now();
       const seedValue = customSeedValue || `SEED-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-      // 1. 남자부 8팀 시드 추첨 (시드 1 ~ 8)
       const shuffledMales = this.shuffleWithSeed(maleTeams, seedValue + '_MALE').map((t, idx) => ({
         ...t,
         teamId: t.teamId || `M_TEAM_${idx + 1}`,
@@ -497,7 +504,6 @@
         division: '남자부'
       }));
 
-      // 2. 여자부 4팀 시드 추첨 (시드 1 ~ 4)
       const shuffledFemales = this.shuffleWithSeed(femaleTeams, seedValue + '_FEMALE').map((t, idx) => ({
         ...t,
         teamId: t.teamId || `F_TEAM_${idx + 1}`,
@@ -505,7 +511,6 @@
         division: '여자부'
       }));
 
-      // ==================== 남자부 토너먼트 (8팀: 8강 4경기 -> 4강 2경기 -> 결승 1경기) ====================
       const maleMatches = [
         {
           matchId: 'M_M1',
@@ -515,8 +520,8 @@
           roundName: '남자부 8강',
           matchNumber: 1,
           matchLabel: '남자부 8강 제1경기',
-          teamAId: shuffledMales[0].teamId, // 남 시드 1
-          teamBId: shuffledMales[7].teamId, // 남 시드 8
+          teamAId: shuffledMales[0].teamId,
+          teamBId: shuffledMales[7].teamId,
           status: '진행',
           scoreA: 0,
           scoreB: 0,
@@ -532,8 +537,8 @@
           roundName: '남자부 8강',
           matchNumber: 2,
           matchLabel: '남자부 8강 제2경기',
-          teamAId: shuffledMales[1].teamId, // 남 시드 2
-          teamBId: shuffledMales[6].teamId, // 남 시드 7
+          teamAId: shuffledMales[1].teamId,
+          teamBId: shuffledMales[6].teamId,
           status: '대기',
           scoreA: 0,
           scoreB: 0,
@@ -549,8 +554,8 @@
           roundName: '남자부 8강',
           matchNumber: 3,
           matchLabel: '남자부 8강 제3경기',
-          teamAId: shuffledMales[2].teamId, // 남 시드 3
-          teamBId: shuffledMales[5].teamId, // 남 시드 6
+          teamAId: shuffledMales[2].teamId,
+          teamBId: shuffledMales[5].teamId,
           status: '대기',
           scoreA: 0,
           scoreB: 0,
@@ -566,8 +571,8 @@
           roundName: '남자부 8강',
           matchNumber: 4,
           matchLabel: '남자부 8강 제4경기',
-          teamAId: shuffledMales[3].teamId, // 남 시드 4
-          teamBId: shuffledMales[4].teamId, // 남 시드 5
+          teamAId: shuffledMales[3].teamId,
+          teamBId: shuffledMales[4].teamId,
           status: '대기',
           scoreA: 0,
           scoreB: 0,
@@ -575,7 +580,6 @@
           nextMatchId: 'M_M6',
           nextSlot: 'B'
         },
-        // 남자부 4강 (준결승)
         {
           matchId: 'M_M5',
           division: '남자부',
@@ -614,7 +618,6 @@
           nextMatchId: 'M_M7',
           nextSlot: 'B'
         },
-        // 남자부 결승전
         {
           matchId: 'M_M7',
           division: '남자부',
@@ -636,7 +639,6 @@
         }
       ];
 
-      // ==================== 여자부 토너먼트 (4팀: 4강 2경기 -> 결승 1경기) ====================
       const femaleMatches = [
         {
           matchId: 'M_F1',
@@ -646,8 +648,8 @@
           roundName: '여자부 4강',
           matchNumber: 1,
           matchLabel: '여자부 4강 제1경기',
-          teamAId: shuffledFemales[0].teamId, // 여 시드 1
-          teamBId: shuffledFemales[3].teamId, // 여 시드 4
+          teamAId: shuffledFemales[0].teamId,
+          teamBId: shuffledFemales[3].teamId,
           status: '진행',
           scoreA: 0,
           scoreB: 0,
@@ -663,8 +665,8 @@
           roundName: '여자부 4강',
           matchNumber: 2,
           matchLabel: '여자부 4강 제2경기',
-          teamAId: shuffledFemales[1].teamId, // 여 시드 2
-          teamBId: shuffledFemales[2].teamId, // 여 시드 3
+          teamAId: shuffledFemales[1].teamId,
+          teamBId: shuffledFemales[2].teamId,
           status: '대기',
           scoreA: 0,
           scoreB: 0,
@@ -693,9 +695,6 @@
         }
       ];
 
-      const allTeams = [...shuffledMales, ...shuffledFemales];
-      const allMatches = [...maleMatches, ...femaleMatches];
-
       return {
         tournament: {
           tournamentId,
@@ -709,10 +708,10 @@
           maleSeedValue: seedValue + '_MALE',
           femaleSeedValue: seedValue + '_FEMALE'
         },
-        teams: allTeams,
+        teams: [...shuffledMales, ...shuffledFemales],
         maleTeams: shuffledMales,
         femaleTeams: shuffledFemales,
-        matches: allMatches
+        matches: [...maleMatches, ...femaleMatches]
       };
     }
   };
@@ -738,7 +737,7 @@
       }
 
       if (!match.teamAId || !match.teamBId) {
-        throw new Error(`아직 대진 두 팀이 모두 결정되지 않은 경기입니다(${match.matchLabel}).`);
+        throw new Error(`아직 대진 추첨 전이거나 두 팀이 결정되지 않은 경기입니다(${match.matchLabel}).`);
       }
 
       const parsedA = Math.max(0, parseInt(scoreA, 10) || 0);
@@ -769,7 +768,6 @@
         return found ? found.teamName : '미정';
       };
 
-      // 1. 현재 경기 확정 반영
       match.scoreA = parsedA;
       match.scoreB = parsedB;
       match.winnerTeamId = winnerTeamId;
@@ -778,7 +776,6 @@
       match.status = '확정';
       match.confirmedAt = new Date().toISOString();
 
-      // 2. 다음 라운드 진출자 자동 배치
       let nextRoundMatch = null;
       let advancementText = '';
       if (match.nextMatchId && match.nextSlot) {
@@ -797,7 +794,6 @@
         advancementText = `🏆 ${match.division} 최종 우승: ${getTeamName(winnerTeamId)}!`;
       }
 
-      // 3. 같은 부문(남자부/여자부) 내 다음 대기 경기를 자동으로 '진행' 상태로 전이
       const divisionMatches = tournamentState.matches.filter(m => m.division === match.division);
       const nextDivisionActive = divisionMatches.find(m => m.status !== '확정' && m.teamAId && m.teamBId);
       divisionMatches.forEach(m => {
@@ -806,10 +802,12 @@
         }
       });
 
-      // 전체 토너먼트 기준 다음 진행 경기
       const anyActive = tournamentState.matches.find(m => m.status === '진행') ||
         tournamentState.matches.find(m => m.status !== '확정' && m.teamAId && m.teamBId);
 
+      if (!tournamentState.tournament) {
+        tournamentState.tournament = { tournamentId: 'TRN_' + Date.now(), status: '진행', currentMatchId: null };
+      }
       if (anyActive) {
         tournamentState.tournament.currentMatchId = anyActive.matchId;
         tournamentState.tournament.status = '진행';
@@ -875,6 +873,10 @@
 
     load() {
       try {
+        // 이전 버전의 가짜 샘플 캐시가 남아있지 않도록 정리
+        localStorage.removeItem('futsal_tournament_v1_state');
+        localStorage.removeItem('futsal_tournament_v2_gender_split');
+
         const raw = localStorage.getItem(TOURNAMENT_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
@@ -905,46 +907,44 @@
   };
 
   // ==========================================================================
-  // UI 컨트롤러 (남자부 8팀/여자부 4팀 정리 + 우측 추첨 콘솔 + 하단 남/여 분리 대진표)
+  // UI 컨트롤러
   // ==========================================================================
   const TournamentAppController = {
     async init() {
       RoleAuthModule.initFromLocation();
       TournamentStore.load();
 
-      // 최초 로드 시 기본 12팀(남8+여4) 및 남/여 분리 대진표 세팅 후 지정된 구글시트 자동 조회 시도
+      // ★ 최초 로드 시 가짜 팀을 임의로 채우지 않고, 구글시트의 실제 상태(현재 0팀이면 남 0/8팀, 여 0/4팀)와 빈 대진표 틀로 시작!
       if (!TournamentStore.state.validationResult) {
         const prevRole = RoleAuthModule.currentRole;
         RoleAuthModule.currentRole = 'teacher';
-        const initialValidation = SheetSyncModule.extractAndValidateTeams(
-          SheetSyncModule.SAMPLE_VALID_ROWS,
-          {},
-          '기본 12팀(남8+여4) 예시 로드됨'
-        );
-        TournamentStore.state.validationResult = initialValidation;
-        if (!TournamentStore.state.tournament && initialValidation.isValid) {
-          const generated = BracketGeneratorModule.generateTournament(initialValidation.teams);
-          Object.assign(TournamentStore.state, generated);
-          TournamentStore.save();
-        }
+        TournamentStore.state.validationResult = SheetSyncModule.extractAndValidateTeams([], {}, '구글시트 신청 대기 중');
+        TournamentStore.state.matches = BracketGeneratorModule.createEmptyBracketSkeleton();
         RoleAuthModule.currentRole = prevRole;
       }
 
       this.bindEvents();
       this.renderAll();
 
-      // 페이지 열릴 때 선생님이 지정한 구글시트에서 자동으로 최신 신청 현황 가져오기 시도 (조용히 백그라운드 시도)
+      // 페이지 열릴 때 지정된 구글시트에서 실제 신청 데이터 자동 조회
       if (RoleAuthModule.currentRole === 'teacher') {
         try {
           const sheetUrl = document.getElementById('googleSheetUrlInput')?.value || DEFAULT_GOOGLE_SHEET_URL;
           const liveRes = await SheetSyncModule.fetchFromGoogleSheetUrl(sheetUrl, this.readColumnMapInputs());
-          if (liveRes && liveRes.totalCount > 0) {
+          if (liveRes) {
             TournamentStore.state.validationResult = liveRes;
+            // 만약 시트에 실제로 신청한 팀이 0팀이면 대진표도 미추첨 빈 대진표 상태로 유지
+            if (liveRes.totalCount === 0 && !TournamentStore.state.seed) {
+              TournamentStore.state.teams = [];
+              TournamentStore.state.maleTeams = [];
+              TournamentStore.state.femaleTeams = [];
+              TournamentStore.state.matches = BracketGeneratorModule.createEmptyBracketSkeleton();
+            }
             TournamentStore.save();
             this.renderAll();
           }
         } catch (_) {
-          // 시트가 아직 비공개이거나 비어있으면 기본 화면 유지
+          // 시트가 비공개이거나 아직 응답이 없으면 0팀 대기 상태 유지
         }
       }
 
@@ -965,7 +965,6 @@
     },
 
     bindEvents() {
-      // 역할 전환
       document.getElementById('switchTeacherRoleBtn')?.addEventListener('click', () => {
         RoleAuthModule.setRole('teacher');
         this.renderAll();
@@ -986,6 +985,13 @@
             const rows = SheetSyncModule.parseCsvText(csvPasteInput.value.trim());
             const res = SheetSyncModule.extractAndValidateTeams(rows, colMap, '붙여넣은 시트 데이터 반영됨');
             TournamentStore.state.validationResult = res;
+            if (res.totalCount === 0) {
+              TournamentStore.state.seed = null;
+              TournamentStore.state.teams = [];
+              TournamentStore.state.maleTeams = [];
+              TournamentStore.state.femaleTeams = [];
+              TournamentStore.state.matches = BracketGeneratorModule.createEmptyBracketSkeleton();
+            }
             TournamentStore.save();
             this.renderAll();
             return;
@@ -993,6 +999,41 @@
           const targetUrl = (urlInput && urlInput.value.trim()) || DEFAULT_GOOGLE_SHEET_URL;
           const res = await SheetSyncModule.fetchFromGoogleSheetUrl(targetUrl, colMap);
           TournamentStore.state.validationResult = res;
+          if (res.totalCount === 0) {
+            TournamentStore.state.seed = null;
+            TournamentStore.state.teams = [];
+            TournamentStore.state.maleTeams = [];
+            TournamentStore.state.femaleTeams = [];
+            TournamentStore.state.matches = BracketGeneratorModule.createEmptyBracketSkeleton();
+          }
+          TournamentStore.save();
+          this.renderAll();
+        } catch (err) {
+          // 비공개 시트이거나 아직 신청한 팀이 없을 때 0팀 상태로 초기화하여 표시
+          const emptyRes = SheetSyncModule.extractAndValidateTeams([], colMap, '구글시트 신청 대기 중');
+          TournamentStore.state.validationResult = emptyRes;
+          TournamentStore.state.seed = null;
+          TournamentStore.state.teams = [];
+          TournamentStore.state.maleTeams = [];
+          TournamentStore.state.femaleTeams = [];
+          TournamentStore.state.matches = BracketGeneratorModule.createEmptyBracketSkeleton();
+          TournamentStore.save();
+          this.renderAll();
+          alert(err.message);
+        }
+      });
+
+      // 신청 목록 비우기 (0팀 초기 대기 상태로 복귀)
+      document.getElementById('clearSheetTeamsBtn')?.addEventListener('click', () => {
+        try {
+          const colMap = this.readColumnMapInputs();
+          const emptyRes = SheetSyncModule.extractAndValidateTeams([], colMap, '구글시트 신청 대기 중');
+          TournamentStore.state.validationResult = emptyRes;
+          TournamentStore.state.seed = null;
+          TournamentStore.state.teams = [];
+          TournamentStore.state.maleTeams = [];
+          TournamentStore.state.femaleTeams = [];
+          TournamentStore.state.matches = BracketGeneratorModule.createEmptyBracketSkeleton();
           TournamentStore.save();
           this.renderAll();
         } catch (err) {
@@ -1000,14 +1041,14 @@
         }
       });
 
-      // 샘플 12팀(남8+여4) 불러오기
+      // (선택) 샘플 12팀(남8+여4) 연습용 채우기
       document.getElementById('loadSample12TeamsBtn')?.addEventListener('click', () => {
         try {
           const colMap = this.readColumnMapInputs();
           const res = SheetSyncModule.extractAndValidateTeams(
             SheetSyncModule.SAMPLE_VALID_ROWS,
             colMap,
-            '정상 12팀(남8+여4) 샘플 데이터'
+            '연습용 샘플 12팀(남8+여4)'
           );
           TournamentStore.state.validationResult = res;
           TournamentStore.save();
@@ -1017,7 +1058,7 @@
         }
       });
 
-      // 오류 테스트(남7+여3) 불러오기
+      // (선택) 부족(남7+여3) 오류 테스트
       document.getElementById('loadInvalidTeamsTestBtn')?.addEventListener('click', () => {
         try {
           const colMap = this.readColumnMapInputs();
@@ -1034,18 +1075,17 @@
         }
       });
 
-      // 대진 추첨 실행 (전체 / 남자부만 / 여자부만)
+      // 대진 추첨 실행
       const executeDraw = (mode = 'ALL') => {
         try {
           const val = TournamentStore.state.validationResult;
           if (!val || !val.isValid) {
-            alert(val ? val.message : '먼저 신청 팀(남자 8팀, 여자 4팀)이 모두 준비되어야 합니다.');
+            alert(val ? val.message : '먼저 신청 팀(남자 8팀, 여자 4팀)이 모두 신청되어야 대진 추첨이 가능합니다.');
             return;
           }
           const generated = BracketGeneratorModule.generateTournament(val.teams);
 
           if (mode === 'MALE_ONLY' && TournamentStore.state.matches && TournamentStore.state.matches.length > 0) {
-            // 기존 여자부 대진 유지, 남자부만 새로 추첨 반영
             const existingFemaleMatches = TournamentStore.state.matches.filter(m => m.division === '여자부');
             const newMaleMatches = generated.matches.filter(m => m.division === '남자부');
             TournamentStore.state.maleTeams = generated.maleTeams;
@@ -1053,7 +1093,6 @@
             TournamentStore.state.matches = [...newMaleMatches, ...existingFemaleMatches];
             TournamentStore.state.seed = generated.seed;
           } else if (mode === 'FEMALE_ONLY' && TournamentStore.state.matches && TournamentStore.state.matches.length > 0) {
-            // 기존 남자부 대진 유지, 여자부만 새로 추첨 반영
             const existingMaleMatches = TournamentStore.state.matches.filter(m => m.division === '남자부');
             const newFemaleMatches = generated.matches.filter(m => m.division === '여자부');
             TournamentStore.state.femaleTeams = generated.femaleTeams;
@@ -1081,7 +1120,6 @@
       document.getElementById('drawMaleOnlyBtn')?.addEventListener('click', () => executeDraw('MALE_ONLY'));
       document.getElementById('drawFemaleOnlyBtn')?.addEventListener('click', () => executeDraw('FEMALE_ONLY'));
 
-      // 학생용 링크 복사
       document.getElementById('copyStudentLinkBtn')?.addEventListener('click', () => {
         const studentUrl = new URL(window.location.href);
         studentUrl.searchParams.set('role', 'student');
@@ -1093,7 +1131,6 @@
         }
       });
 
-      // 대진표 내 '🏁 경기 종료 확정' 클릭 이벤트 위임 (남자부 & 여자부 모두)
       const bracketRoot = document.getElementById('tournamentBracketContainer');
       if (bracketRoot) {
         bracketRoot.addEventListener('click', (e) => {
@@ -1105,7 +1142,6 @@
         });
       }
 
-      // 백업 / 초기화 / 테스트
       document.getElementById('exportTournamentJsonBtn')?.addEventListener('click', () => {
         try {
           RoleAuthModule.assertTeacherPermission('대진표 데이터 백업');
@@ -1124,10 +1160,17 @@
       document.getElementById('purgeTournamentDataBtn')?.addEventListener('click', () => {
         try {
           RoleAuthModule.assertTeacherPermission('대진표 초기화');
-          if (confirm('현재 대진표와 경기 확정 기록을 초기화하시겠습니까?')) {
-            localStorage.removeItem(TOURNAMENT_STORAGE_KEY);
-            location.reload();
-          }
+          localStorage.removeItem(TOURNAMENT_STORAGE_KEY);
+          TournamentStore.state.validationResult = SheetSyncModule.extractAndValidateTeams([], {}, '구글시트 신청 대기 중');
+          TournamentStore.state.tournament = null;
+          TournamentStore.state.seed = null;
+          TournamentStore.state.teams = [];
+          TournamentStore.state.maleTeams = [];
+          TournamentStore.state.femaleTeams = [];
+          TournamentStore.state.matches = BracketGeneratorModule.createEmptyBracketSkeleton();
+          TournamentStore.state.lastConfirmedSummary = null;
+          TournamentStore.save();
+          this.renderAll();
         } catch (err) {
           alert(err.message);
         }
@@ -1268,10 +1311,6 @@
       this.renderTeacherProgressDashboard();
     },
 
-    /**
-     * 상단 좌측: 구글시트 신청 팀 현황 (남자부 8팀 / 여자부 4팀 딱 정리해서 표시)
-     * 상단 우측: 남자부 / 여자부 대진 추첨 콘솔 및 1라운드 매치업 요약
-     */
     renderOrganizedTeamsAndDrawConsole() {
       const val = TournamentStore.state.validationResult;
       const statusBox = document.getElementById('teamValidationStatusBox');
@@ -1288,9 +1327,9 @@
       if (!val) return;
 
       if (statusBox) {
-        statusBox.className = 'validation-alert-box ' + (val.isValid ? 'valid' : 'invalid');
+        statusBox.className = 'validation-alert-box ' + (val.isValid ? 'valid' : (val.totalCount === 0 ? 'neutral' : 'invalid'));
         statusBox.innerHTML = `
-          <div class="val-title">${val.isValid ? '✅' : '⚠️'} ${val.message}</div>
+          <div class="val-title">${val.isValid ? '✅' : (val.totalCount === 0 ? '📋' : '⚠️')} ${val.message}</div>
           <div class="val-guide">${val.guide}</div>
         `;
       }
@@ -1308,7 +1347,6 @@
         femaleCountBadge.className = 'division-count-pill ' + (val.femaleCount === 4 ? 'count-ok' : 'count-warn');
       }
 
-      // 남자부 8팀 슬롯(1~8번) 딱 정리해서 표시
       if (maleListEl) {
         const seededMales = TournamentStore.state.maleTeams || [];
         const slotsHtml = [];
@@ -1337,7 +1375,6 @@
         maleListEl.innerHTML = slotsHtml.join('');
       }
 
-      // 여자부 4팀 슬롯(1~4번) 딱 정리해서 표시
       if (femaleListEl) {
         const seededFemales = TournamentStore.state.femaleTeams || [];
         const slotsHtml = [];
@@ -1366,14 +1403,18 @@
         femaleListEl.innerHTML = slotsHtml.join('');
       }
 
-      // 우측 대진 추첨 결과 요약 박스 렌더링
       if (drawSummaryEl) {
         const matches = TournamentStore.state.matches || [];
-        const maleR1 = matches.filter(m => m.division === '남자부' && m.roundNumber === 1);
-        const femaleR1 = matches.filter(m => m.division === '여자부' && m.roundNumber === 1);
+        const maleR1 = matches.filter(m => m.division === '남자부' && m.roundNumber === 1 && m.teamAId && m.teamBId);
+        const femaleR1 = matches.filter(m => m.division === '여자부' && m.roundNumber === 1 && m.teamAId && m.teamBId);
 
         if (maleR1.length === 0 && femaleR1.length === 0) {
-          drawSummaryEl.innerHTML = `<div class="empty-draw-msg">아직 대진 추첨 전입니다. 위 추첨 버튼을 누르면 남자부 8강(4경기)과 여자부 4강(2경기) 대진이 즉시 추첨됩니다.</div>`;
+          drawSummaryEl.innerHTML = `
+            <div class="empty-draw-msg">
+              <strong>🎲 대진 추첨 대기 중</strong><br>
+              구글시트에 남자부 8팀, 여자부 4팀 신청이 완료되면 위 추첨 버튼이 활성화되며, 추첨 시 남자부 8강(4경기)·여자부 4강(2경기) 대진 결과가 여기에 표시됩니다.
+            </div>
+          `;
         } else {
           drawSummaryEl.innerHTML = `
             <div class="draw-result-columns">
@@ -1429,37 +1470,33 @@
       `;
     },
 
-    /**
-     * 하단: 남자부 대진표(8강 -> 4강 -> 결승)와 여자부 대진표(4강 -> 결승)를 따로 구분하여 렌더링
-     */
     renderSeparateGenderBrackets() {
       const container = document.getElementById('tournamentBracketContainer');
       const seedBadge = document.getElementById('currentTournamentSeedBadge');
       if (!container) return;
 
-      const matches = TournamentStore.state.matches || [];
+      if (!TournamentStore.state.matches || TournamentStore.state.matches.length === 0) {
+        TournamentStore.state.matches = BracketGeneratorModule.createEmptyBracketSkeleton();
+      }
+      const matches = TournamentStore.state.matches;
+
       if (seedBadge) {
         seedBadge.textContent = TournamentStore.state.seed
           ? `추첨 코드: ${TournamentStore.state.seed.seedValue} (남자부 8팀 · 여자부 4팀)`
-          : '추첨 대기 중';
-      }
-
-      if (matches.length === 0) {
-        container.innerHTML = `<div class="empty-bracket-msg">상단 우측에서 [🎲 대진 추첨] 버튼을 누르면 남자부 대진표와 여자부 대진표가 각각 생성됩니다.</div>`;
-        return;
+          : '대진 추첨 대기 중 (남자부 8강 · 여자부 4강)';
       }
 
       const maleMatches = matches.filter(m => m.division === '남자부');
       const femaleMatches = matches.filter(m => m.division === '여자부');
 
       const maleRounds = [
-        { roundNumber: 1, title: '남자부 8강 (1라운드 · 4경기)', subtitle: '8팀 출전 · 승자 남자부 4강 진출' },
+        { roundNumber: 1, title: '남자부 8강 (1라운드 · 4경기)', subtitle: '남자 8팀 대진 · 승자 남자부 4강 진출' },
         { roundNumber: 2, title: '남자부 4강 (준결승 · 2경기)', subtitle: '8강 승자 대결 · 승자 결승 진출' },
         { roundNumber: 3, title: '남자부 결승전 (최종 1경기)', subtitle: '남자부 최종 우승팀 결정전' }
       ];
 
       const femaleRounds = [
-        { roundNumber: 1, title: '여자부 4강 (1라운드 · 2경기)', subtitle: '4팀 출전 · 승자 여자부 결승 진출' },
+        { roundNumber: 1, title: '여자부 4강 (1라운드 · 2경기)', subtitle: '여자 4팀 대진 · 승자 여자부 결승 진출' },
         { roundNumber: 2, title: '여자부 결승전 (최종 1경기)', subtitle: '여자부 최종 우승팀 결정전' }
       ];
 
@@ -1493,11 +1530,10 @@
         `;
       }).join('');
 
-      // 남자부 우승팀 / 여자부 우승팀 배지
       const maleFinal = maleMatches.find(m => m.matchId === 'M_M7');
       const femaleFinal = femaleMatches.find(m => m.matchId === 'M_F3');
-      const maleChamp = maleFinal && maleFinal.winnerTeamId ? `🏆 남자부 우승: ${TournamentStore.getTeamName(maleFinal.winnerTeamId)}` : '진행 중';
-      const femaleChamp = femaleFinal && femaleFinal.winnerTeamId ? `🏆 여자부 우승: ${TournamentStore.getTeamName(femaleFinal.winnerTeamId)}` : '진행 중';
+      const maleChamp = maleFinal && maleFinal.winnerTeamId ? `🏆 남자부 우승: ${TournamentStore.getTeamName(maleFinal.winnerTeamId)}` : (TournamentStore.state.seed ? '경기 진행 중' : '대진 추첨 대기');
+      const femaleChamp = femaleFinal && femaleFinal.winnerTeamId ? `🏆 여자부 우승: ${TournamentStore.getTeamName(femaleFinal.winnerTeamId)}` : (TournamentStore.state.seed ? '경기 진행 중' : '대진 추첨 대기');
 
       container.innerHTML = `
         <!-- 1. 남자부 토너먼트 대진표 (8팀) -->
@@ -1531,14 +1567,14 @@
     },
 
     createMatchCardHtml(m) {
-      const teamAName = m.teamAId ? TournamentStore.getTeamName(m.teamAId) : (m.teamASourceLabel || '미정(대기)');
-      const teamBName = m.teamBId ? TournamentStore.getTeamName(m.teamBId) : (m.teamBSourceLabel || '미정(대기)');
+      const teamAName = m.teamAId ? TournamentStore.getTeamName(m.teamAId) : (m.teamASourceLabel || '추첨 대기');
+      const teamBName = m.teamBId ? TournamentStore.getTeamName(m.teamBId) : (m.teamBSourceLabel || '추첨 대기');
       const seedA = m.teamAId ? TournamentStore.getSeedNumber(m.teamAId) : null;
       const seedB = m.teamBId ? TournamentStore.getSeedNumber(m.teamBId) : null;
 
       const isReady = Boolean(m.teamAId && m.teamBId);
       const isConfirmed = m.status === '확정';
-      const isInProgress = m.status === '진행';
+      const isInProgress = m.status === '진행' && isReady;
 
       let statusBadgeHtml = '';
       if (isConfirmed) {
@@ -1591,7 +1627,7 @@
       } else {
         advancementFooterHtml = `
           <div class="match-waiting-notice">
-            이전 라운드 경기 확정 시 진출팀이 자동으로 채워집니다.
+            ${m.roundNumber === 1 ? '대진 추첨 완료 시 팀명이 배정됩니다.' : '이전 라운드 경기 확정 시 진출팀이 자동으로 채워집니다.'}
           </div>
         `;
       }
@@ -1635,26 +1671,28 @@
 
       const matches = TournamentStore.state.matches || [];
       const confirmedCount = matches.filter(m => m.status === '확정').length;
-      const inProgressCount = matches.filter(m => m.status === '진행').length;
-      const waitingCount = matches.filter(m => m.status === '대기').length;
+      const inProgressCount = matches.filter(m => m.status === '진행' && m.teamAId && m.teamBId).length;
+      const waitingCount = matches.length - confirmedCount - inProgressCount;
 
       if (summaryStats) {
         summaryStats.textContent = `전체 ${matches.length}경기 (남자부 7경기 + 여자부 3경기) 중 확정 ${confirmedCount} / 진행 ${inProgressCount} / 대기 ${waitingCount}`;
       }
 
       tbody.innerHTML = matches.map(m => {
-        const tA = m.teamAId ? TournamentStore.getTeamName(m.teamAId) : (m.teamASourceLabel || '미정');
-        const tB = m.teamBId ? TournamentStore.getTeamName(m.teamBId) : (m.teamBSourceLabel || '미정');
+        const tA = m.teamAId ? TournamentStore.getTeamName(m.teamAId) : (m.teamASourceLabel || '추첨 대기');
+        const tB = m.teamBId ? TournamentStore.getTeamName(m.teamBId) : (m.teamBSourceLabel || '추첨 대기');
         const isConfirmed = m.status === '확정';
+        const isReady = Boolean(m.teamAId && m.teamBId);
+        const statusText = isConfirmed ? '확정' : (m.status === '진행' && isReady ? '진행' : '대기');
         const winnerName = isConfirmed ? TournamentStore.getTeamName(m.winnerTeamId) : '-';
         const scoreStr = isConfirmed ? `${m.scoreA} : ${m.scoreB}` : '-';
         const nextTarget = m.nextMatchId ? `${m.nextMatchId}(${m.nextSlot}슬롯)` : `${m.division} 최종 우승`;
 
         return `
-          <tr class="${m.status === '진행' ? 'dash-row-live' : ''} ${isConfirmed ? 'dash-row-done' : ''}">
+          <tr class="${statusText === '진행' ? 'dash-row-live' : ''} ${isConfirmed ? 'dash-row-done' : ''}">
             <td><span class="gender-tag ${m.division === '남자부' ? 'gender-m' : 'gender-f'}">${m.division}</span> <strong>${m.matchLabel}</strong></td>
             <td>${tA} vs ${tB}</td>
-            <td><span class="m-status-pill ${isConfirmed ? 'status-confirmed' : (m.status === '진행' ? 'status-live' : 'status-waiting')}">${m.status}</span></td>
+            <td><span class="m-status-pill ${isConfirmed ? 'status-confirmed' : (statusText === '진행' ? 'status-live' : 'status-waiting')}">${statusText}</span></td>
             <td><strong>${scoreStr}</strong></td>
             <td>${isConfirmed ? `🏆 ${winnerName}` : '-'}</td>
             <td>${isConfirmed ? `🚀 ${winnerName} → ${nextTarget}` : `대기 (${nextTarget})`}</td>
