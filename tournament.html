@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>풋살 대회 대진표·일정 자동 생성 및 경기 결과 확정 | 학교폭력예방 풋살대회</title>
-  <meta name="description" content="구글시트 12팀(남8+여4) 불러오기, 교사 시드 추첨 및 12팀 토너먼트 대진/일정 자동 생성, 학생용 경기 종료 확정(승패·점수·다음 라운드 진출자 표시)">
+  <title>풋살대회 대진표</title>
+  <meta name="description" content="풋살대회 대진표 - 구글시트 남자부(8팀)·여자부(4팀) 신청 팀 정리, 남·여 대진 추첨, 남자부·여자부 토너먼트 대진표 및 경기 종료 확정">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -12,24 +12,23 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- 1. 최상단 헤더 (교사/학생 역할 분리 및 포털 복귀) -->
+    <!-- 1. 최상단 헤더 (앱/웹 이름: 풋살대회 대진표) -->
     <header class="app-header">
       <div class="header-left">
         <div class="brand-badge">
           <span class="live-dot"></span>
-          <span class="brand-sub">TOURNAMENT BRACKET &amp; MATCH CONFIRMATION</span>
+          <span class="brand-sub">FUTSAL TOURNAMENT BRACKET</span>
         </div>
-        <h1 class="main-title">풋살 대회 대진표·일정 자동 생성 &amp; 경기 결과 확정</h1>
+        <h1 class="main-title">풋살대회 대진표</h1>
         <span id="currentRoleIndicatorBadge" class="role-indicator-pill role-teacher">👨‍🏫 교사(운영자) 화면</span>
       </div>
 
       <div class="header-right">
-        <!-- 교사/학생 화면 전환기 (권한 분리 확인 및 미리보기용) -->
         <div class="role-switch-group" role="group" aria-label="화면 역할 전환">
-          <button type="button" id="switchTeacherRoleBtn" class="btn-role-switch active-role-btn" title="교사 전용 대회 운영 화면">
+          <button type="button" id="switchTeacherRoleBtn" class="btn-role-switch active-role-btn">
             👨‍🏫 교사 운영 화면
           </button>
-          <button type="button" id="switchStudentRoleBtn" class="btn-role-switch" title="학생 전용 결과 확인/확정 화면 (교사 기능 차단)">
+          <button type="button" id="switchStudentRoleBtn" class="btn-role-switch">
             🙋‍♂️ 학생 확인 화면
           </button>
         </div>
@@ -38,169 +37,175 @@
           ← 운영 포털
         </a>
 
-        <a href="match.html" target="_blank" class="btn-secondary" title="기존 경기 기록 운영원 앱 열기">
+        <a href="match.html" target="_blank" class="btn-secondary" title="경기 기록 운영원 앱 열기">
           ⚽ 경기 기록 앱 ↗
         </a>
 
-        <a href="scoreboard.html" target="_blank" class="btn-secondary" title="학생들이 보는 전광판 새 창 열기">
+        <a href="scoreboard.html" target="_blank" class="btn-secondary" title="학생 전광판 새 창 열기">
           🖥️ 학생 전광판 ↗
         </a>
       </div>
     </header>
 
     <!-- =====================================================================
-         [교사 전용 화면 A] 범위/대상 설정 체크리스트 + 구글시트 12팀(남8+여4) 검증 + 시드 추첨
-         (학생용 링크 ?role=student 접속 시 RoleAuthModule에 의해 자동 차단/숨김)
+         [상단 영역] 좌측: 구글시트 신청 팀 정리 (남자부 8팀 / 여자부 4팀)
+                    우측: 남자부 · 여자부 대진 추첨 콘솔
          ===================================================================== -->
     <section class="teacher-only-section glass-card tournament-admin-panel" id="teacherOperationsSection">
       <div class="admin-panel-header">
         <div>
-          <span class="section-step-pill">교사 전용 운영 콘솔 (TEACHER ONLY)</span>
-          <h2 class="section-main-heading">1. 대회 범위 설정 · 구글시트 12팀(남8+여4) 불러오기 · 시드 추첨 대진 생성</h2>
-          <p class="section-sub-desc">구글폼 응답 시트에서 팀 목록을 불러와 남 8팀·여 4팀을 검증하고, 시드 추첨으로 12팀 토너먼트 대진표와 일정을 자동 생성합니다.</p>
+          <span class="section-step-pill">구글시트 실시간 연동 &amp; 남·여 대진 추첨</span>
+          <h2 class="section-main-heading">1. 신청 팀 현황 (남자부 8팀 · 여자부 4팀) 및 대진 추첨</h2>
+          <p class="section-sub-desc">
+            연결된 구글시트에 학생들이 신청하면 <strong>남자부(8팀)</strong>와 <strong>여자부(4팀)</strong>로 자동 정리되며, 우측에서 각 부문 대진을 추첨합니다.
+          </p>
         </div>
         <div class="admin-header-actions">
+          <a href="https://docs.google.com/spreadsheets/d/1c-_A-UnDxHvvDTFOLTwIyyV0trYpZ18j62o_BWRAue0/edit?resourcekey=&gid=541552316#gid=541552316" target="_blank" class="btn-secondary">
+            📊 신청 구글시트 열기 ↗
+          </a>
           <button type="button" id="copyStudentLinkBtn" class="btn-secondary">
-            🔗 학생용 전용 링크 복사
+            🔗 학생용 링크 복사
           </button>
           <button type="button" id="runAutomatedTestsBtn" class="btn-secondary">
-            🧪 필수 테스트 4종 검증
+            🧪 필수 테스트 검증
           </button>
         </div>
       </div>
       <div id="studentLinkCopyFeedback" class="copy-feedback-text"></div>
-
-      <!-- 심의 대응용 범위/대상 설정 체크리스트 -->
-      <div class="compliance-checklist-box">
-        <div class="checklist-title">📋 심의/운영 대응용 범위 및 대상 설정 체크리스트</div>
-        <div class="checklist-grid">
-          <label class="chk-item">
-            <input type="checkbox" checked disabled>
-            <span><strong>[x] 사용 목적:</strong> 교사용 대회 운영 + 학생용 결과 확인</span>
-          </label>
-          <label class="chk-item">
-            <input type="checkbox" checked disabled>
-            <span><strong>[x] 사용 장면:</strong> 학생은 수업/동아리 시간에 학생용 링크에서 결과만 확인</span>
-          </label>
-          <label class="chk-item">
-            <input type="checkbox" checked disabled>
-            <span><strong>[x] 교사만 운영:</strong> 시드 추첨/대진 생성/진행 상태 반영은 교사 화면에서만 수행</span>
-          </label>
-          <label class="chk-item chk-needs-confirm">
-            <input type="checkbox" id="chkHomeworkUse">
-            <span><strong>[ ] 가정/과제용 여부:</strong> <mark>(선생님 확인 필요 - 기본값 미설정)</mark></span>
-          </label>
-        </div>
-      </div>
-
-      <!-- 자동화 테스트 4종 실행 결과 표시 영역 -->
       <div id="automatedTestResultBox" class="test-result-panel hidden"></div>
 
-      <!-- 2단 구성: [좌] 구글시트 팀 불러오기 & 컬럼 매핑 / [우] 남8+여4 검증 결과 및 시드 추첨 -->
+      <!-- 2단 구성: [좌] 구글시트 남자부 8팀 / 여자부 4팀 정리 보드 | [우] 남자부 / 여자부 대진 추첨 -->
       <div class="teacher-two-col-grid">
-        <!-- 좌측: (1) 구글시트 연동 및 컬럼 매핑 -->
+        <!-- 좌측 카드: 구글시트 연동 + 남자부(8팀) / 여자부(4팀) 신청 팀 정리 -->
         <div class="teacher-sub-card">
-          <h3 class="sub-card-title">① 구글폼/구글시트 팀 목록 불러오기 (컬럼 매핑)</h3>
-          <p class="sub-card-help">
-            구글시트에 <code>이름, 학번, 팀명, 성별</code>이 있어도 개인정보 보호 모듈이 <strong>이름·학번은 즉시 폐기</strong>하고 화면에는 <strong>팀명만 표시</strong>합니다.
-          </p>
-
-          <div class="col-map-row">
-            <label>이름 컬럼명 <input type="text" id="colMapName" value="이름"></label>
-            <label>학번 컬럼명 <input type="text" id="colMapStudentId" value="학번"></label>
-            <label>팀명 컬럼명 <input type="text" id="colMapTeamName" value="팀명"></label>
-            <label>성별 컬럼명 <input type="text" id="colMapGender" value="성별"></label>
+          <div class="sub-card-header-line">
+            <h3 class="sub-card-title">📋 구글시트 신청 팀 정리 (남자 8팀 · 여자 4팀)</h3>
+            <button type="button" id="fetchGoogleSheetBtn" class="btn-primary">
+              🔄 구글시트에서 팀 불러오기
+            </button>
           </div>
 
           <div class="sheet-url-row">
-            <input type="url" id="googleSheetUrlInput" class="sheet-url-input" placeholder="구글시트 공유 URL 입력 (미입력 시 가짜 테스트 데이터 12팀 즉시 로드)">
-            <button type="button" id="fetchGoogleSheetBtn" class="btn-primary">
-              📥 구글시트에서 팀 불러오기
-            </button>
+            <input
+              type="url"
+              id="googleSheetUrlInput"
+              class="sheet-url-input"
+              value="https://docs.google.com/spreadsheets/d/1c-_A-UnDxHvvDTFOLTwIyyV0trYpZ18j62o_BWRAue0/edit?resourcekey=&gid=541552316#gid=541552316"
+              title="연동할 구글시트 주소"
+            >
+          </div>
+
+          <div id="teamValidationStatusBox" class="validation-alert-box valid"></div>
+
+          <!-- 남자부 8팀 / 여자부 4팀 나란히 딱 정리된 보드 -->
+          <div class="gender-organized-board">
+            <!-- 남자부 8팀 -->
+            <div class="gender-division-column male-division-box">
+              <div class="division-box-header">
+                <span class="division-title">🟦 남자부 신청 팀</span>
+                <span id="maleTeamCountBadge" class="division-count-pill count-ok">8 / 8팀</span>
+              </div>
+              <ul id="maleTeamsOrganizedList" class="organized-team-list"></ul>
+            </div>
+
+            <!-- 여자부 4팀 -->
+            <div class="gender-division-column female-division-box">
+              <div class="division-box-header">
+                <span class="division-title">🟥 여자부 신청 팀</span>
+                <span id="femaleTeamCountBadge" class="division-count-pill count-ok">4 / 4팀</span>
+              </div>
+              <ul id="femaleTeamsOrganizedList" class="organized-team-list"></ul>
+
+              <div class="sample-test-btns-row" style="margin-top: auto; padding-top: 0.5rem;">
+                <button type="button" id="loadSample12TeamsBtn" class="btn-chip">
+                  ✅ 샘플 12팀(남8·여4) 채우기
+                </button>
+                <button type="button" id="loadInvalidTeamsTestBtn" class="btn-chip btn-chip-warn">
+                  ⚠️ 부족(남7·여3) 테스트
+                </button>
+              </div>
+            </div>
           </div>
 
           <details class="csv-paste-details">
-            <summary>또는 구글시트 CSV 데이터 직접 붙여넣기 / 테스트 데이터 선택</summary>
-            <textarea id="googleSheetCsvPasteInput" rows="3" placeholder="이름,학번,팀명,성별&#10;홍길동,10101,청룡 FC,남"></textarea>
+            <summary>⚙️ 컬럼명 매핑 설정 또는 시트 복사(Ctrl+C) 직접 붙여넣기</summary>
+            <div class="col-map-row" style="margin-top: 0.45rem;">
+              <label>이름 컬럼 <input type="text" id="colMapName" value="이름"></label>
+              <label>학번 컬럼 <input type="text" id="colMapStudentId" value="학번"></label>
+              <label>팀명 컬럼 <input type="text" id="colMapTeamName" value="팀명"></label>
+              <label>성별 컬럼 <input type="text" id="colMapGender" value="성별"></label>
+            </div>
+            <textarea id="googleSheetCsvPasteInput" rows="3" placeholder="구글시트에서 신청 행들을 드래그 복사(Ctrl+C)한 뒤 여기에 붙여넣고(Ctrl+V) 위 [구글시트에서 팀 불러오기] 버튼을 누르면 즉시 반영됩니다."></textarea>
           </details>
-
-          <div class="sample-test-btns-row">
-            <button type="button" id="loadSample12TeamsBtn" class="btn-chip">
-              ✅ 정상 12팀 불러오기 (남 8팀 + 여 4팀)
-            </button>
-            <button type="button" id="loadInvalidTeamsTestBtn" class="btn-chip btn-chip-warn">
-              ⚠️ 부족/초과 오류 테스트 (남 7팀 + 여 3팀)
-            </button>
-          </div>
-
-          <!-- 검증 상태 알림 박스 -->
-          <div id="teamValidationStatusBox" class="validation-alert-box valid"></div>
         </div>
 
-        <!-- 우측: (2) 12팀 목록 확인(팀명만 노출) & 시드 추첨 후 대진 생성 -->
+        <!-- 우측 카드: 남자부 / 여자부 대진 추첨 콘솔 -->
         <div class="teacher-sub-card">
           <div class="sub-card-header-line">
-            <h3 class="sub-card-title">② 팀 수 검증 표 (남 8 + 여 4) &amp; 시드 추첨</h3>
-            <button type="button" id="drawSeedsAndGenerateBtn" class="btn-primary">
-              🎲 시드 추첨 후 대진 생성
+            <div>
+              <h3 class="sub-card-title">🎲 남자부 · 여자부 대진 추첨</h3>
+              <p class="sub-card-help">남자부(8팀)와 여자부(4팀)를 한 번에 추첨하거나 부문별로 따로 추첨할 수 있습니다.</p>
+            </div>
+          </div>
+
+          <!-- 추첨 액션 버튼 그룹 -->
+          <div class="draw-action-buttons-box">
+            <button type="button" id="drawSeedsAndGenerateBtn" class="btn-primary btn-draw-main">
+              🎲 남자부(8팀) + 여자부(4팀) 전체 대진 추첨
             </button>
+            <div class="draw-sub-buttons-row">
+              <button type="button" id="drawMaleOnlyBtn" class="btn-secondary btn-draw-male">
+                🟦 남자부(8팀) 대진만 다시 추첨
+              </button>
+              <button type="button" id="drawFemaleOnlyBtn" class="btn-secondary btn-draw-female">
+                🟥 여자부(4팀) 대진만 다시 추첨
+              </button>
+            </div>
           </div>
 
-          <div class="teams-preview-table-wrap">
-            <table class="teams-preview-table">
-              <thead>
-                <tr>
-                  <th>번호</th>
-                  <th>팀명 (화면 노출 항목)</th>
-                  <th>성별</th>
-                  <th>시드 추첨 결과</th>
-                </tr>
-              </thead>
-              <tbody id="loadedTeamsTableBody">
-                <!-- JS 렌더링 -->
-              </tbody>
-            </table>
-          </div>
+          <!-- 추첨된 1라운드 매치업 요약 (남자부 8강 4경기 + 여자부 4강 2경기) -->
+          <div id="drawnMatchupsSummaryBox" class="drawn-matchups-summary-box"></div>
 
-          <div class="data-safety-bar">
-            <span>보안/백업 관리:</span>
-            <button type="button" id="exportTournamentJsonBtn" class="btn-chip">💾 데이터 JSON 백업</button>
-            <button type="button" id="purgeTournamentDataBtn" class="btn-chip btn-chip-danger">🗑️ 대회 데이터 영구 파기</button>
+          <div class="data-safety-bar" style="margin-top: auto;">
+            <span>대진표 관리:</span>
+            <button type="button" id="exportTournamentJsonBtn" class="btn-chip">💾 대진표 JSON 백업</button>
+            <button type="button" id="purgeTournamentDataBtn" class="btn-chip btn-chip-danger">🗑️ 대진표 초기화</button>
           </div>
         </div>
       </div>
     </section>
 
     <!-- =====================================================================
-         [학생 & 교사 공통 화면 B] 현재 경기 안내 + 12팀 토너먼트 대진표/일정 + 경기 종료 확정
+         [하단 영역] 남자부 토너먼트 대진표 (8팀) & 여자부 토너먼트 대진표 (4팀) 분리 표시
          ===================================================================== -->
     <section class="glass-card tournament-bracket-section" id="studentAndTeacherBracketSection">
       <div class="bracket-section-header">
         <div>
-          <span class="section-step-pill">실시간 대진표 · 경기 일정 · 결과 확정 (TEAM NAMES ONLY)</span>
-          <h2 class="section-main-heading">2. 12팀 토너먼트 대진표 및 경기 종료 확정</h2>
+          <span class="section-step-pill">남자부(8강) · 여자부(4강) 분리 토너먼트</span>
+          <h2 class="section-main-heading">2. 남자부 / 여자부 토너먼트 대진표 및 경기 결과 확정</h2>
           <p class="section-sub-desc">
-            각 경기에서 <strong>‘🏁 경기 종료 확정’</strong> 버튼을 누르면 해당 경기의 <strong>승패 · 점수 · 다음 라운드 진출자(누가 올라가는지)</strong>가 5초 이내 즉시 표시되고 다음 경기로 자동 이동합니다.
+            각 경기에서 점수를 입력하고 <strong>‘🏁 경기 종료 확정’</strong> 버튼을 누르면 <strong>승패 · 점수 · 다음 라운드 진출자</strong>가 즉시 표시되고 다음 라운드로 자동 진출합니다.
           </p>
         </div>
-        <div class="seed-audit-chip" id="currentTournamentSeedBadge">추첨 시드값 대기 중</div>
+        <div class="seed-audit-chip" id="currentTournamentSeedBadge">추첨 대기 중</div>
       </div>
 
-      <!-- 현재 진행 중인 경기 강조 스포트라이트 & 최근 확정 결과 요약 바 -->
+      <!-- 최근 확정 결과 요약 바 -->
       <div id="currentTournamentMatchBanner"></div>
 
-      <!-- 4라운드(12강 -> 8강[부전승 4팀 포함] -> 4강 -> 결승) 전체 대진표 컨테이너 -->
+      <!-- 남자부 대진표 (8강->4강->결승) + 여자부 대진표 (4강->결승) 렌더링 영역 -->
       <div id="tournamentBracketContainer" class="tournament-bracket-container"></div>
     </section>
 
     <!-- =====================================================================
-         [교사 전용 화면 C] 토너먼트 진행 상태 대시보드
+         [교사용 진행 상태 대시보드]
          ===================================================================== -->
     <section class="teacher-only-section glass-card tournament-dashboard-section">
       <div class="bracket-section-header">
         <div>
-          <span class="section-step-pill">교사용 진행 상태 대시보드</span>
-          <h2 class="section-main-heading">3. 전체 경기 진행 상태 (대기 / 진행 / 확정) 및 진출자 현황</h2>
+          <span class="section-step-pill">교사용 진행 상태 요약</span>
+          <h2 class="section-main-heading">3. 남자부 · 여자부 전체 경기 진행 현황</h2>
         </div>
         <span id="teacherDashboardSummaryStats" class="seed-audit-chip">집계 중</span>
       </div>
@@ -208,12 +213,12 @@
         <table class="teams-preview-table">
           <thead>
             <tr>
-              <th>경기 ID (라운드)</th>
-              <th>매치업 (팀명만 표시)</th>
+              <th>부문 · 경기명</th>
+              <th>대진 매치업 (팀명)</th>
               <th>진행 상태</th>
               <th>확정 점수</th>
               <th>승리 팀</th>
-              <th>다음 라운드 진출자 반영</th>
+              <th>다음 라운드 진출 현황</th>
             </tr>
           </thead>
           <tbody id="teacherProgressTableBody"></tbody>
@@ -221,9 +226,7 @@
       </div>
     </section>
 
-    <!-- =====================================================================
-         [푸터] 심의/운영 대응 필수 5대 링크 (개인정보 처리방침, 이용약관, 문의/담당자, 기관명, 시행일/변경일)
-         ===================================================================== -->
+    <!-- 푸터 -->
     <footer class="app-footer compliance-footer">
       <div class="footer-content">
         <div class="footer-policy-links">
@@ -238,15 +241,13 @@
           <span class="footer-date-info">시행일/변경일: 2026-11-06</span>
         </div>
         <div class="footer-meta">
-          <span>개인정보 보호 원칙 준수: 화면에는 <strong>팀명</strong>만 노출되며, 이름·학번은 수집·표시하지 않습니다.</span>
+          <span>개인정보 보호 원칙 준수: 화면에는 <strong>팀명</strong>만 노출됩니다.</span>
         </div>
       </div>
     </footer>
   </div>
 
-  <!-- =====================================================================
-       [핵심 모달 1] 경기 종료 확정 시 승패 · 점수 · 다음 라운드 진출자 즉시 표시 모달
-       ===================================================================== -->
+  <!-- 경기 종료 확정 시 승패 · 점수 · 다음 라운드 진출자 즉시 표시 모달 -->
   <div class="modal-backdrop hidden" id="tournamentConfirmResultModal">
     <div class="modal-dialog glass-card confirm-result-modal-card">
       <div class="modal-header">
@@ -257,7 +258,6 @@
         <button class="modal-close" id="closeConfirmResultModalBtn" aria-label="닫기">&times;</button>
       </div>
       <div class="modal-body">
-        <!-- 승패 및 점수 대조 보드 -->
         <div class="confirm-scoreboard-compare">
           <div class="confirm-team-col">
             <span id="confirmModalBadgeA" class="result-wl-badge wl-win">🏆 승리</span>
@@ -272,23 +272,21 @@
           </div>
         </div>
 
-        <!-- 다음 라운드 진출자 강조 박스 -->
         <div class="confirm-advancement-highlight" id="confirmModalAdvancementText">
-          🚀 다음 라운드 진출: 청룡 FC → 2라운드(8강) 진출!
+          🚀 다음 라운드 진출: 청룡 FC → 남자부 4강 진출!
         </div>
 
-        <!-- 다음 경기로 자동 이동 안내 -->
         <div class="confirm-next-match-guide" id="confirmModalNextMatchGuide"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-primary" onclick="document.getElementById('tournamentConfirmResultModal').classList.add('hidden')">
-          확인 및 다음 경기 진행 →
+          확인 →
         </button>
       </div>
     </div>
   </div>
 
-  <!-- [모달 2] 개인정보 처리방침 / 이용약관 / 기관 정보 열람 모달 -->
+  <!-- 정책 문서 열람 모달 -->
   <div class="modal-backdrop hidden" id="policyDocModal">
     <div class="modal-dialog glass-card" style="max-width: 680px;">
       <div class="modal-header">

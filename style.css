@@ -1680,3 +1680,248 @@ body {
   border-radius: 3px;
 }
 
+/* ==========================================================================
+   11. 남자부(8팀) / 여자부(4팀) 신청 정리 보드 & 분리 대진표 스타일
+   ========================================================================== */
+.gender-organized-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (max-width: 640px) {
+  .gender-organized-board { grid-template-columns: 1fr; }
+}
+.gender-division-column {
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px solid var(--tesla-cloud-gray);
+  background: var(--tesla-light-ash);
+}
+.male-division-box {
+  border-top: 3px solid var(--tesla-blue);
+}
+.female-division-box {
+  border-top: 3px solid #db2777;
+}
+.division-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--tesla-cloud-gray);
+}
+.division-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tesla-carbon-dark);
+}
+.division-count-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.division-count-pill.count-ok {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.division-count-pill.count-warn {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.organized-team-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.organized-team-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  font-size: 12px;
+}
+.organized-team-slot.empty-slot {
+  opacity: 0.6;
+  border-style: dashed;
+}
+.slot-index {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--tesla-pewter);
+  min-width: 54px;
+}
+.slot-team-name {
+  flex: 1;
+  color: var(--tesla-carbon-dark);
+}
+.slot-seed-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(62, 106, 225, 0.12);
+  color: var(--tesla-blue);
+}
+.slot-seed-badge.female-seed {
+  background: #fce7f3;
+  color: #be185d;
+}
+.slot-seed-badge.unseeded {
+  background: var(--tesla-light-ash);
+  color: var(--tesla-silver-fog);
+}
+
+/* 우측 추첨 콘솔 */
+.draw-action-buttons-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.btn-draw-main {
+  width: 100%;
+  height: 42px;
+  font-size: 13.5px;
+  font-weight: 600;
+  justify-content: center;
+}
+.draw-sub-buttons-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.btn-draw-male, .btn-draw-female {
+  justify-content: center;
+  font-weight: 600;
+}
+
+.drawn-matchups-summary-box {
+  background: var(--tesla-light-ash);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+.draw-result-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (max-width: 640px) {
+  .draw-result-columns { grid-template-columns: 1fr; }
+}
+.draw-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--tesla-pale-silver);
+}
+.draw-group-title.male-title { color: var(--tesla-blue); }
+.draw-group-title.female-title { color: #be185d; }
+.draw-matchup-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.draw-matchup-list li {
+  background: var(--tesla-white);
+  border: 1px solid var(--tesla-cloud-gray);
+  border-radius: 5px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.dm-label {
+  font-size: 10.5px;
+  color: var(--tesla-pewter);
+  width: 100%;
+}
+.dm-vs {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--tesla-silver-fog);
+}
+
+/* 하단 남자부 / 여자부 분리 대진표 블록 */
+.division-bracket-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.division-bracket-block:last-child {
+  margin-bottom: 0;
+}
+.division-bracket-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 8px;
+  color: var(--tesla-white);
+}
+.division-bracket-banner.male-banner {
+  background: linear-gradient(90deg, #171a20 0%, #1e3a8a 100%);
+}
+.division-bracket-banner.female-banner {
+  background: linear-gradient(90deg, #171a20 0%, #831843 100%);
+}
+.div-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  margin-bottom: 0.2rem;
+}
+.div-badge.male-badge { background: rgba(62, 106, 225, 0.35); color: #bfdbfe; }
+.div-badge.female-badge { background: rgba(219, 39, 119, 0.35); color: #fbcfe8; }
+.division-bracket-banner h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.div-champ-status {
+  font-size: 12.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.14);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.bracket-three-columns-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+}
+.bracket-two-columns-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+}
+@media (max-width: 900px) {
+  .bracket-three-columns-grid,
+  .bracket-two-columns-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
