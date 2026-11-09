@@ -66,7 +66,8 @@
       }
       if (!rawTeamName) {
         for (const k of keys) {
-          if (/타임스탬프|timestamp|학번|이름|성명|연락처|전화|성별|부문/i.test(k)) continue;
+          // 대표 선수, 선수1~7, 이름, 학번 등은 팀명 후보에서 제외
+          if (/타임스탬프|timestamp|학번|이름|성명|연락처|전화|성별|부문|대표|선수/i.test(k)) continue;
           const v = String(rawRow[k] ?? '').trim();
           if (v && this.normalizeGender(v) === '미분류' && !/^\d{4,}/.test(v)) {
             rawTeamName = v;
@@ -83,11 +84,71 @@
 
       if (!safeTeamName) return null;
 
+      // ★ 선수 명단 추출 규칙: '대표 선수' 컬럼은 제외하고 '선수1' ~ '선수7'만 선수로 등록 (대표 선수도 선수1~7에 포함됨)
+      const rosterPlayers = this.extractPlayers1To7Only(rawRow);
+
       return {
         teamId: `TEAM_${String(index + 1).padStart(2, '0')}`,
         teamName: safeTeamName,
-        gender: normalizedGender
+        gender: normalizedGender,
+        rosterPlayers
       };
+    },
+
+    /**
+     * 구글시트 행에서 '대표 선수(대표자)' 컬럼은 제외하고 오직 '선수1' ~ '선수7' 컬럼만 선수로 추출합니다.
+     * (대표 선수도 선수1~7 안에 포함되어 있으므로 중복 등록 방지)
+     */
+    extractPlayers1To7Only(rawRow) {
+      if (!rawRow || typeof rawRow !== 'object') return [];
+      const keys = Object.keys(rawRow);
+      const players = [];
+
+      for (let slot = 1; slot <= 7; slot++) {
+        // '대표 선수'가 포함된 컬럼명은 무조건 제외하고, 정확히 선수1 ~ 선수7 컬럼만 매칭
+        const slotRegex = new RegExp(`^(?!.*대표).*선수\\s*0?${slot}(?:\\b|[^0-9]|$)`, 'i');
+        const matchedKeys = keys.filter(k => slotRegex.test(k.trim()));
+
+        if (matchedKeys.length === 0) continue;
+
+        let playerName = '';
+        let studentNum = '';
+
+        for (const k of matchedKeys) {
+          const val = String(rawRow[k] ?? '').trim();
+          if (!val) continue;
+
+          if (/학번|번호|id/i.test(k) && !/이름|성명/i.test(k)) {
+            studentNum = val;
+          } else if (/이름|성명/i.test(k)) {
+            playerName = val;
+          } else {
+            // 단일 컬럼(예: "선수1" -> "10101 김민준" 또는 "김민준(10101)" 또는 "김민준") 파싱
+            const numMatch = val.match(/\b(\d{4,6})\b/);
+            if (numMatch) {
+              studentNum = studentNum || numMatch[1];
+              const cleanedName = val
+                .replace(numMatch[1], '')
+                .replace(/[()[\]\-\/,:]/g, ' ')
+                .trim();
+              if (cleanedName) playerName = cleanedName;
+            } else {
+              playerName = val;
+            }
+          }
+        }
+
+        if (playerName) {
+          players.push({
+            slotNumber: slot,
+            number: slot,
+            name: playerName.replace(/<[^>]*>?/gm, '').trim(),
+            studentNum: studentNum || ''
+          });
+        }
+      }
+
+      return players;
     },
 
     findMatchingKey(keys, candidates) {
@@ -363,7 +424,8 @@
             deduplicatedMap.set(key, {
               teamId: `TEAM_${String(deduplicatedMap.size + 1).padStart(2, '0')}`,
               teamName: sanitized.teamName,
-              gender: sanitized.gender
+              gender: sanitized.gender,
+              rosterPlayers: sanitized.rosterPlayers || [] // 대표 선수 제외, 선수1~7만 등록된 명단
             });
           }
         }
