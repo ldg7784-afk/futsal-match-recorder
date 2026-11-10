@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>배구 경기 수행 능력 평가 | 고등학교 체육 수행평가</title>
+  <meta name="description" content="배구 경기 수행 능력 평가 - 기본 5점 시작, 정확한 토스·스파이크·리시브·좋은 움직임 플러스/마이너스 3회 중복 시 1점씩 가감 및 학생 결과 확인">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="vb-app-container">
+    <!-- 1. 상단 헤더 -->
+    <header class="vb-header">
+      <div class="vb-header-left">
+        <div class="vb-brand-row">
+          <span class="vb-live-dot"></span>
+          <span class="vb-badge">VOLLEYBALL PERFORMANCE ASSESSMENT</span>
+          <span class="vb-role-pill" id="currentRoleBadge">교사용 평가 모드</span>
+        </div>
+        <h1 class="vb-title">🏐 배구 3. 경기 수행 능력 평가 시스템</h1>
+      </div>
+
+      <div class="vb-header-right">
+        <div class="vb-role-switch-group" role="group" aria-label="화면 역할 전환">
+          <button type="button" id="switchTeacherBtn" class="vb-role-btn active">
+            👨‍🏫 교사용 (+/- 체크 및 점수 부여)
+          </button>
+          <button type="button" id="switchStudentBtn" class="vb-role-btn">
+            🎓 학생용 (총점 · 아코디언 확인)
+          </button>
+        </div>
+        <button type="button" id="copyStudentViewLinkBtn" class="vb-btn vb-btn-secondary" title="학생 전용 결과 확인 링크 복사">
+          🔗 학생용 링크 복사
+        </button>
+      </div>
+    </header>
+
+    <div id="globalToastBanner" class="vb-toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- ==================================================================== -->
+    <!-- 2. 교사용 화면 (Teacher View) -->
+    <!-- ==================================================================== -->
+    <main id="teacherViewSection" class="vb-view-section">
+      <!-- 상단: 사진과 100% 동일한 [3. 경기 수행 능력] 루브릭 기준 안내 및 환산표 카드 -->
+      <section class="vb-card vb-rubric-reference-card">
+        <div class="vb-rubric-ref-top">
+          <div>
+            <h2 class="vb-section-title">📌 3. 경기 수행 능력 평가 기준 (기본점수 5점 시작 · 3회 중복 시 1점씩 가감)</h2>
+            <p class="vb-section-sub">
+              기본점수 <strong>5점</strong>에서 시작하여 아래 <strong>공격(정확한 토스·스파이크)</strong> 및 <strong>수비(리시브·좋은 움직임/위치 선정)</strong> 기준에 따라 플러스(+)·마이너스(-)를 체크하며, <strong>3회 중복(누적) 시 1점씩 가감</strong>하여 최종 점수로 평가합니다.
+            </p>
+          </div>
+          <div class="vb-compliance-actions">
+            <button type="button" id="runCalcTestSuiteBtn" class="vb-btn vb-btn-outline">
+              🧪 계산 정확성 테스트 (5케이스)
+            </button>
+            <button type="button" id="exportDataBackupBtn" class="vb-btn vb-btn-outline">
+              💾 백업 내보내기(JSON)
+            </button>
+          </div>
+        </div>
+
+        <!-- 가. 공격 / 나. 수비 기준 요약 & 사진 속 5점~1점 환산표 -->
+        <div class="vb-criteria-and-table-grid">
+          <div class="vb-criteria-boxes">
+            <div class="vb-criteria-item attack-box">
+              <div class="vb-criteria-title">가. 공격 (정확한 토스 · 스파이크)</div>
+              <ul class="vb-criteria-list">
+                <li><strong class="plus-txt">공격 +1점 (3회 누적 시 +1점)</strong> : 정확한 토스, 스파이크 등 효과적인 공격</li>
+                <li><strong class="minus-txt">공격 -1점 (3회 누적 시 -1점)</strong> : 부정확한 토스, 스파이크 등 비효과적인 공격</li>
+              </ul>
+            </div>
+            <div class="vb-criteria-item defense-box">
+              <div class="vb-criteria-title">나. 수비 (리시브 · 좋은 움직임/위치 선정)</div>
+              <ul class="vb-criteria-list">
+                <li><strong class="plus-txt">수비 +1점 (3회 누적 시 +1점)</strong> : 적절한 위치 선정(좋은 움직임), 리시브(수비 성공) 등 효과적인 수비</li>
+                <li><strong class="minus-txt">수비 -1점 (3회 누적 시 -1점)</strong> : 부적절한 위치 선정, 리시브(수비) 실패 등 비효과적인 수비</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="vb-conversion-table-wrap">
+            <div class="vb-table-caption">* 3회 중복 시 1점씩 가감하여 점수 부여 (기본 5점 시작 → 최종 환산표)</div>
+            <table class="vb-photo-score-table" aria-label="경기 수행 능력 점수 환산표">
+              <thead>
+                <tr>
+                  <th>5점 (만점)</th>
+                  <th>4점</th>
+                  <th class="default-start-col">3점 (기본 5점 시작)</th>
+                  <th>2점</th>
+                  <th>1점</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>9점 이상</strong></td>
+                  <td><strong>8점 ~ 7점</strong></td>
+                  <td class="default-start-col"><strong>6점 ~ 5점</strong></td>
+                  <td><strong>4점 ~ 3점</strong></td>
+                  <td><strong>2점 이하</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 심의 대응 사용 목적 체크리스트 -->
+        <div class="vb-purpose-checklist">
+          <label class="vb-check-chip">
+            <input type="checkbox" id="chkRuleEvery3" checked>
+            <span>⚡ <strong>3회 중복 시 1점씩 가감 규칙 적용</strong> (체크 해제 시 1회마다 즉시 ±1점)</span>
+          </label>
+          <label class="vb-check-chip">
+            <input type="checkbox" id="chkPurposeTeacher" checked>
+            <span>[교사 운영] 교사만 +/- 체크 및 저장 가능</span>
+          </label>
+          <label class="vb-check-chip">
+            <input type="checkbox" id="chkPurposeClass" checked>
+            <span>[학생 열람] 학생은 총점(큰 숫자)과 아코디언만 확인</span>
+          </label>
+          <label class="vb-check-chip">
+            <input type="checkbox" id="chkPrivacyMaskMode">
+            <span>🔒 개인정보 보호(학번/이름 마스킹) 모드</span>
+          </label>
+        </div>
+
+        <div id="calcTestResultPanel" class="vb-test-panel hidden"></div>
+      </section>
+
+      <!-- 학생 추가 및 일괄 관리 바 -->
+      <section class="vb-card vb-toolbar-card">
+        <div class="vb-toolbar-left">
+          <h3 class="vb-card-title">👥 학생별 실시간 플러스(+) · 마이너스(-) 체크 보드</h3>
+          <span class="vb-count-badge" id="studentCountBadge">총 6명 (기본점수 5점 시작)</span>
+        </div>
+
+        <div class="vb-toolbar-right">
+          <input type="text" id="newStudentNumberInput" class="vb-input vb-input-sm" placeholder="학번 (예: 20107)" maxlength="10">
+          <input type="text" id="newStudentNameInput" class="vb-input vb-input-sm" placeholder="이름 (예: 홍배구)" maxlength="20">
+          <button type="button" id="addStudentBtn" class="vb-btn vb-btn-primary vb-btn-sm">+ 학생 추가</button>
+          <button type="button" id="resetAllScoresBtn" class="vb-btn vb-btn-secondary vb-btn-sm">🔄 전원 기본 5점 초기화</button>
+        </div>
+      </section>
+
+      <!-- 핵심: 학번·이름 옆에 플러스/마이너스 + 요소(정확한 토스, 스파이크, 리시브, 좋은 움직임) 체크 리스트 -->
+      <section id="teacherStudentRowsContainer" class="vb-student-eval-stack" aria-label="학생별 경기 수행 능력 평가 목록"></section>
+    </main>
+
+    <!-- ==================================================================== -->
+    <!-- 3. 학생용 화면 (Student View): 본인 총점(큰 숫자) + 아코디언 항목별 세부 -->
+    <!-- ==================================================================== -->
+    <main id="studentViewSection" class="vb-view-section hidden">
+      <!-- 학생 본인 선택 바 -->
+      <section class="vb-card vb-student-lookup-card">
+        <div class="vb-student-lookup-row">
+          <div class="vb-lookup-info">
+            <h2 class="vb-section-title">🎓 내 배구 경기 수행 능력 결과 확인</h2>
+            <p class="vb-section-sub">본인의 학번과 이름을 선택(또는 입력)하면 총점(큰 숫자)과 항목별 세부 아코디언을 확인할 수 있습니다.</p>
+          </div>
+          <div class="vb-lookup-controls">
+            <select id="studentSelfSelect" class="vb-select" aria-label="본인 학번 및 이름 선택"></select>
+            <input type="text" id="studentDirectNumInput" class="vb-input vb-input-sm" placeholder="학번 또는 이름 검색">
+            <button type="button" id="studentLookupBtn" class="vb-btn vb-btn-primary vb-btn-sm">조회</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="vb-student-result-wrap">
+        <!-- (1) 학생용 총점 큰 숫자 카드 -->
+        <div class="vb-card vb-hero-score-card">
+          <div class="vb-hero-top-meta">
+            <span class="vb-student-identity-pill" id="studentResultIdentity">20101 김배구</span>
+            <span class="vb-updated-time-pill" id="studentResultUpdatedAt">실시간 반영됨</span>
+          </div>
+
+          <p class="vb-hero-eyebrow">3. 경기 수행 능력 점수 (기본 5점 시작 · 3회 중복 시 ±1점 가감)</p>
+
+          <div class="vb-hero-dual-score-row">
+            <!-- 가감 누적 점수 (기본 5점 시작) -->
+            <div class="vb-hero-score-block">
+              <span class="vb-hero-block-label">현재 가감 점수 (기본 5점 ± 가감)</span>
+              <div class="vb-hero-big-score-box">
+                <span id="studentBigRawScore" class="vb-hero-big-number">5</span>
+                <span class="vb-hero-score-unit">점</span>
+              </div>
+              <span id="studentDeltaBreakdownBadge" class="vb-hero-sub-pill">기본 5점 + 가산 0점 - 감점 0점</span>
+            </div>
+
+            <div class="vb-hero-arrow">➔</div>
+
+            <!-- 표 기준 최종 환산 점수 (5점 ~ 1점) -->
+            <div class="vb-hero-score-block final-block">
+              <span class="vb-hero-block-label">수행평가 최종 환산 점수 (5점 만점)</span>
+              <div class="vb-hero-big-score-box">
+                <span id="studentBigFinalGradeScore" class="vb-hero-big-number final-gold">3</span>
+                <span class="vb-hero-score-unit">/ 5점</span>
+              </div>
+              <span id="studentBracketRangeBadge" class="vb-hero-sub-pill gold-pill">현재 구간: 6~5점 구간 (3점)</span>
+            </div>
+          </div>
+
+          <p id="studentScoreSummaryText" class="vb-hero-summary-text">
+            아래 항목을 1번 클릭하면 [가. 공격], [나. 수비] 요소별 체크 횟수와 점수 환산표를 자세히 볼 수 있습니다.
+          </p>
+        </div>
+
+        <!-- (2) 학생용 아코디언 항목별 세부 (1번 클릭 시 즉시 접기/펼치기) -->
+        <div class="vb-card vb-accordion-section-card">
+          <div class="vb-accordion-header-bar">
+            <div>
+              <h3 class="vb-card-title">📌 항목별 세부 내역 (아코디언 접기/펼치기)</h3>
+              <p class="vb-card-sub">각 항목을 1번 클릭하면 정확한 토스·스파이크·리시브·좋은 움직임 체크 내역과 루브릭 기준이 펼쳐집니다.</p>
+            </div>
+            <div class="vb-accordion-bulk-btns">
+              <button type="button" id="expandAllAccordionBtn" class="vb-btn-chip">전체 펼치기</button>
+              <button type="button" id="collapseAllAccordionBtn" class="vb-btn-chip">전체 접기</button>
+            </div>
+          </div>
+
+          <div id="studentAccordionList" class="vb-accordion-list" role="region" aria-label="항목별 세부 평가 아코디언"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 4. 공통 푸터 (개인정보 처리방침 · 이용약관 · 문의/담당자 · 기관명 · 시행일) -->
+    <footer class="vb-footer">
+      <div class="vb-footer-links">
+        <button type="button" class="vb-footer-link-btn" data-doc="privacy">개인정보 처리방침</button>
+        <span class="vb-footer-divider">|</span>
+        <button type="button" class="vb-footer-link-btn" data-doc="terms">이용약관</button>
+        <span class="vb-footer-divider">|</span>
+        <button type="button" class="vb-footer-link-btn" data-doc="spec">서비스 설명서 및 루브릭 안내</button>
+        <span class="vb-footer-divider">|</span>
+        <button type="button" class="vb-footer-link-btn" data-doc="audit">접근/감사 로그 확인(교사용)</button>
+      </div>
+      <div class="vb-footer-meta">
+        <span><strong>기관명</strong>: ○○고등학교 체육교육부</span>
+        <span><strong>문의/담당자</strong>: 체육교과 담당교사 (내선 000 / pe-teacher@school.edu.kr)</span>
+        <span><strong>시행일/변경일</strong>: 시행일 2026-03-02 (최종 변경일 2026-11-10)</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 정책 및 심의 문서 모달 -->
+  <div id="policyModalBackdrop" class="vb-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
+    <div class="vb-modal-dialog">
+      <div class="vb-modal-header">
+        <h3 id="policyModalTitle">정책 문서</h3>
+        <button type="button" id="closePolicyModalBtn" class="vb-modal-close" aria-label="모달 닫기">&times;</button>
+      </div>
+      <div id="policyModalBody" class="vb-modal-body"></div>
+      <div class="vb-modal-footer">
+        <button type="button" id="confirmPolicyModalBtn" class="vb-btn vb-btn-primary">확인 및 닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
