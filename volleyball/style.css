@@ -614,6 +614,87 @@ background: rgba(255, 255, 255, 0.05);
 }
 
 /* 평가 일자 피커 그룹 */
+/* 평가 일자 피커 및 내보내기 버튼 클러스터 */
+.vb-top-actions-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.vb-export-btns-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.vb-btn-success {
+  background: #059669;
+  color: #ffffff;
+  border: 1px solid #047857;
+}
+
+.vb-btn-success:hover {
+  background: #047857;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+/* 1반부터 9반 학급 선택 탭 */
+.vb-class-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: #f8fafc;
+  border: 1px solid var(--vb-border);
+  border-radius: var(--vb-radius-md);
+  flex-wrap: wrap;
+}
+
+.vb-class-nav-label {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.vb-class-nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.vb-class-tab-btn {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.38rem 0.75rem;
+  border-radius: var(--vb-radius-sm);
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid var(--vb-border-strong);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.vb-class-tab-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.vb-class-tab-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #1d4ed8;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
 .vb-eval-date-group {
   display: inline-flex;
   align-items: center;
@@ -714,7 +795,7 @@ background: rgba(255, 255, 255, 0.05);
 }
 
 .vb-horizontal-table-body {
-  min-width: 960px;
+  min-width: 1380px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -953,8 +1034,8 @@ background: rgba(255, 255, 255, 0.05);
   text-align: center;
 }
 
-/* 가감 점수: 잡다한 글씨 없이 깔끔하게 점수만 표시 */
-.col-raw {
+/* 5. 가감 점수: 누를 때마다 실시간으로 +1, -1 즉시 변동 */
+.col-delta {
   flex: 0 0 75px;
   min-width: 75px;
   display: flex;
@@ -985,10 +1066,32 @@ background: rgba(255, 255, 255, 0.05);
   color: #64748b;
 }
 
-/* 최종 환산 점수: 잡다한 구간 글씨 없이 환산 점수만 표시 */
-.col-grade {
+/* 6. 최종 환산 점수: 기본 5점에서 3회 가감 누적 점수 (예: 5점, 6점, 7점...) */
+.col-raw {
   flex: 0 0 85px;
   min-width: 85px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vb-converted-score-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #1e293b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  text-align: center;
+}
+
+/* 7. 사진 기준 수행평가 점수: 최종 환산 점수에 따른 1~5점 배점 */
+.col-eval-score,
+.col-grade {
+  flex: 0 0 95px;
+  min-width: 95px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1034,9 +1137,10 @@ background: rgba(255, 255, 255, 0.05);
   border: 1px solid #fecaca;
 }
 
+/* 8. 취소(되돌리기) 버튼 */
 .col-action {
-  flex: 0 0 38px;
-  min-width: 38px;
+  flex: 0 0 42px;
+  min-width: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1059,9 +1163,48 @@ background: rgba(255, 255, 255, 0.05);
   color: var(--vb-text);
 }
 
-.vb-btn-undo-mini:hover {
-  background: #e2e8f0;
+/* 9. 기타 사항 입력 필드 (취소 버튼 옆) */
+.col-note {
+  flex: 1 1 180px;
+  min-width: 170px;
+  display: flex;
+  align-items: center;
+}
+
+.vb-tbl-note-input {
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--vb-border-strong);
+  border-radius: var(--vb-radius-sm);
+  background: #ffffff;
   color: var(--vb-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.vb-tbl-note-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.vb-card-note-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8fafc;
+  border-radius: var(--vb-radius-sm);
+  border: 1px solid var(--vb-border);
+}
+
+.vb-card-note-lbl {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #475569;
+  white-space: nowrap;
 }
 
 /* ==========================================================================

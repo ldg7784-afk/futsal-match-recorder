@@ -128,7 +128,10 @@
   // ==========================================================================
   // (2) 루브릭/계산 모듈 (RubricCalcModule)
   // - 사진 기준: 기본점수 5점 시작, 플러스/마이너스 3회 중복 시 1점씩 가감
-  // - 최종 5점~1점 환산표 매핑 및 5대 계산 정확성 테스트 케이스 내장
+  // - 점수 체계:
+  //   1) 실시간 가감 점수: 누를 때마다 바로 +1점/-1점 실시간 상승 (instantCheckDelta)
+  //   2) 최종 환산 점수: 기본 5점에서 3회 누적 가감된 점수 (rawScore: 5점 시작)
+  //   3) 수행평가 점수: 사진 기준 5점 만점 환산 (9점이상=5, 8~7=4, 6~5=3, 4~3=2, 2이하=1)
   // ==========================================================================
   const RubricCalcModule = {
     BASE_SCORE: 5,
@@ -187,10 +190,10 @@
       const totalPlusChecks = attackPlusCount + defensePlusCount;
       const totalMinusChecks = attackMinusCount + defenseMinusCount;
 
-      // [1] 가감 점수: 잘할 때 누를 때마다 바로바로 실시간 올라가는 누적 체크 점수
+      // [1] 실시간 가감 점수: 누를 때마다 바로 실시간으로 +1점, -1점 즉시 상승
       const instantCheckDelta = totalPlusChecks - totalMinusChecks;
 
-      // [2] 최종 환산 점수: 기본점수 5점에서 계산(3회 누적 규칙)에 따라 가감되는 최종 평가 점수 (5점 ~ 1점)
+      // [2] 최종 환산 점수: 기본 5점에서 3회 누적 가감된 점수 (기본 5점 시작)
       const divisor = ruleEvery3 ? 3 : 1;
       const addedPoints = Math.floor(totalPlusChecks / divisor);
       const deductedPoints = Math.floor(totalMinusChecks / divisor);
@@ -198,16 +201,19 @@
       const plusRemainder = ruleEvery3 ? (totalPlusChecks % 3) : 0;
       const minusRemainder = ruleEvery3 ? (totalMinusChecks % 3) : 0;
 
-      // 기본점수 5점에서 시작하여 3회 중복 계산에 따라 가감 (최고 5점 만점, 최저 1점)
-      const finalGradePoint = Math.min(5, Math.max(1, 5 + addedPoints - deductedPoints));
+      // 기본점수 5점에서 3회 가감 계산 (5점 시작: 5, 6, 7, 8, 9... 또는 감점 시 4, 3, 2, 1)
+      const rawScore = this.BASE_SCORE + addedPoints - deductedPoints;
 
-      // 사진 환산표 구간 라벨 매칭 (참조용)
-      let rangeLabel = `${finalGradePoint}점 구간`;
-      if (finalGradePoint === 5) rangeLabel = '5점 (만점)';
-      else if (finalGradePoint === 4) rangeLabel = '4점 구간';
-      else if (finalGradePoint === 3) rangeLabel = '3점 구간';
-      else if (finalGradePoint === 2) rangeLabel = '2점 구간';
-      else rangeLabel = '1점 구간';
+      // [3] 사진 기준 최종 수행평가 점수 매핑 (5점 ~ 1점)
+      let finalGradePoint = 1;
+      let matchedBracket = this.CONVERSION_TABLE[this.CONVERSION_TABLE.length - 1];
+      for (const row of this.CONVERSION_TABLE) {
+        if (rawScore >= row.minRaw && rawScore <= row.maxRaw) {
+          finalGradePoint = row.finalPoint;
+          matchedBracket = row;
+          break;
+        }
+      }
 
       return {
         baseScore: this.BASE_SCORE,
@@ -218,14 +224,14 @@
         defenseMinusCount,
         totalPlusChecks,
         totalMinusChecks,
-        instantCheckDelta,  // 누를 때마다 바로 오르내리는 실시간 가감 점수
+        instantCheckDelta,  // 누를 때마다 바로 오르내리는 실시간 가감 점수 (+1, +2, -1...)
         addedPoints,
         deductedPoints,
         plusRemainder,
         minusRemainder,
-        rawScore: instantCheckDelta, // 체크보드 가감 점수 칼럼에 표시
-        finalGradePoint,    // 기본 5점에서 가감된 최종 점수 (초기: 5점)
-        rangeLabel,
+        rawScore,           // 기본 5점 시작 최종 환산 점수 (5점, 6점, 7점...)
+        finalGradePoint,    // 사진 기준 수행평가 점수 (5점, 4점, 3점, 2점, 1점)
+        rangeLabel: matchedBracket.rangeLabel,
         ruleEvery3,
         isVerified: true
       };
@@ -237,16 +243,16 @@
     runMandatoryFiveTestCases() {
       const results = [];
 
-      // 케이스 1: 초기 기본 상태 (플러스 0회, 마이너스 0회 -> 가감 0점, 최종 5점 시작)
+      // 케이스 1: 초기 기본 상태 (플러스 0회, 마이너스 0회 -> 가감 0점, 환산 5점, 수행평가 3점(6~5점 구간))
       const c1 = this.calculateStudentPerformance({}, true);
       results.push({
         name: '케이스 1: 초기 기본점수 확인 (플러스 0회·마이너스 0회)',
-        expected: '실시간 가감 0점 / 최종 5점 시작',
-        actual: `실시간 가감 ${c1.instantCheckDelta}점 / 최종 ${c1.finalGradePoint}점(${c1.rangeLabel})`,
-        passed: c1.instantCheckDelta === 0 && c1.finalGradePoint === 5 && c1.isVerified
+        expected: '가감 0점 / 환산 5점 / 수행평가 3점(6~5점 구간)',
+        actual: `가감 ${c1.instantCheckDelta}점 / 환산 ${c1.rawScore}점 / 수행평가 ${c1.finalGradePoint}점(${c1.rangeLabel})`,
+        passed: c1.instantCheckDelta === 0 && c1.rawScore === 5 && c1.finalGradePoint === 3
       });
 
-      // 케이스 2: 최고 등급(5점 만점) 유지 (플러스가 12회 누적 -> 가감 +12점 -> 최종 5점 만점)
+      // 케이스 2: 최고 등급(수행평가 5점 만점) 달성 (플러스가 12회 누적 -> 가감 +12점 -> 환산 5+4=9점 -> 9점 이상 = 수행평가 5점)
       const c2 = this.calculateStudentPerformance({
         toss_plus: 4,
         spike_plus: 3,
@@ -254,23 +260,23 @@
         move_plus: 2
       }, true);
       results.push({
-        name: '케이스 2: 플러스 12회 누적 (실시간 가감 +12점 → 최종 5점 만점 유지)',
-        expected: '실시간 가감 +12점 / 최종 5점',
-        actual: `실시간 가감 +${c2.instantCheckDelta}점 / 최종 ${c2.finalGradePoint}점(${c2.rangeLabel})`,
-        passed: c2.instantCheckDelta === 12 && c2.finalGradePoint === 5 && c2.isVerified
+        name: '케이스 2: 최고 점수 달성 (플러스 12회 = 환산 9점 → 수행평가 5점 만점)',
+        expected: '가감 +12점 / 환산 9점 / 수행평가 5점(9점 이상)',
+        actual: `가감 +${c2.instantCheckDelta}점 / 환산 ${c2.rawScore}점 / 수행평가 ${c2.finalGradePoint}점(${c2.rangeLabel})`,
+        passed: c2.instantCheckDelta === 12 && c2.rawScore === 9 && c2.finalGradePoint === 5
       });
 
-      // 케이스 3: 감점 누적 (마이너스 9회 누적 -> 실시간 가감 -9점 -> 3회당 -1점이므로 5-3=2점)
+      // 케이스 3: 최저 점수(수행평가 1점) 달성 (마이너스 9회 누적 -> 환산 5-3=2점 -> 2점 이하 = 1점)
       const c3 = this.calculateStudentPerformance({
         toss_minus: 3,
         spike_minus: 3,
         receive_minus: 3
       }, true);
       results.push({
-        name: '케이스 3: 마이너스 9회 누적 (실시간 가감 -9점 → 3회당 -1점 감점 → 최종 2점)',
-        expected: '실시간 가감 -9점 / 최종 2점',
-        actual: `실시간 가감 ${c3.instantCheckDelta}점 / 최종 ${c3.finalGradePoint}점(${c3.rangeLabel})`,
-        passed: c3.instantCheckDelta === -9 && c3.finalGradePoint === 2 && c3.isVerified
+        name: '케이스 3: 최저 점수 구간 (마이너스 9회 = 환산 2점 → 수행평가 1점)',
+        expected: '가감 -9점 / 환산 2점 / 수행평가 1점(2점 이하)',
+        actual: `가감 ${c3.instantCheckDelta}점 / 환산 ${c3.rawScore}점 / 수행평가 ${c3.finalGradePoint}점(${c3.rangeLabel})`,
+        passed: c3.instantCheckDelta === -9 && c3.rawScore === 2 && c3.finalGradePoint === 1
       });
 
       // 케이스 4: 실시간 가감 즉시 상승 검증 (플러스 1회=가감+1점 / 플러스 2회=가감+2점)
@@ -278,23 +284,23 @@
       const c4_2 = this.calculateStudentPerformance({ toss_plus: 2 }, true);
       results.push({
         name: '케이스 4: 누를 때마다 실시간 가감 즉시 상승 (1회→+1점, 2회→+2점)',
-        expected: '1회→가감 +1점, 2회→가감 +2점 (최종 5점 유지)',
+        expected: '1회→가감 +1점, 2회→가감 +2점 (환산 5점 유지)',
         actual: `1회→+${c4_1.instantCheckDelta}점, 2회→+${c4_2.instantCheckDelta}점`,
-        passed: c4_1.instantCheckDelta === 1 && c4_2.instantCheckDelta === 2 && c4_1.finalGradePoint === 5
+        passed: c4_1.instantCheckDelta === 1 && c4_2.instantCheckDelta === 2 && c4_1.rawScore === 5
       });
 
-      // 케이스 5: 플러스/마이너스 혼합 (플러스 6회=+6점, 마이너스 6회=-6점 -> 가감 0점, 최종 5점 유지)
+      // 케이스 5: 공격·수비 플러스 9회(+3점), 마이너스 3회(-1점) -> 환산 5+3-1=7점 -> 수행평가 4점(8~7점)
       const c5 = this.calculateStudentPerformance({
         toss_plus: 3,
         spike_plus: 3,
-        toss_minus: 3,
-        receive_minus: 3
+        receive_plus: 3,
+        toss_minus: 3
       }, true);
       results.push({
-        name: '케이스 5: 플러스 6회·마이너스 6회 혼합 (가감 0점, 최종 5점 유지)',
-        expected: '실시간 가감 0점 / 최종 5점',
-        actual: `실시간 가감 ${c5.instantCheckDelta}점 / 최종 ${c5.finalGradePoint}점`,
-        passed: c5.instantCheckDelta === 0 && c5.finalGradePoint === 5 && c5.isVerified
+        name: '케이스 5: 플러스 9회·마이너스 3회 (환산 7점 → 수행평가 4점)',
+        expected: '환산 7점 / 수행평가 4점(8~7점)',
+        actual: `환산 ${c5.rawScore}점 / 수행평가 ${c5.finalGradePoint}점`,
+        passed: c5.rawScore === 7 && c5.finalGradePoint === 4
       });
 
       return {
@@ -327,29 +333,17 @@
 
   // ==========================================================================
   // (4) 데이터 모델 모듈 (DataModelModule)
+  // - 엑셀 학생명렬표(1반~9반, 20101 이동규 형식) 완벽 연동
+  // - 기타 사항(note) 및 구글 시트 내보내기 지원
   // ==========================================================================
   const DataModelModule = {
-    SAMPLE_STUDENTS: [
-      { id: 'STU_01', studentNumber: '20101', name: '김배구' },
-      { id: 'STU_02', studentNumber: '20102', name: '이토스' },
-      { id: 'STU_03', studentNumber: '20103', name: '박리시브' },
-      { id: 'STU_04', studentNumber: '20104', name: '최스파이크' },
-      { id: 'STU_05', studentNumber: '20105', name: '정수비' },
-      { id: 'STU_06', studentNumber: '20106', name: '강세터' },
-      { id: 'STU_07', studentNumber: '20107', name: '조블록' },
-      { id: 'STU_08', studentNumber: '20108', name: '윤디그' },
-      { id: 'STU_09', studentNumber: '20109', name: '장서브' },
-      { id: 'STU_10', studentNumber: '20110', name: '임어택' },
-      { id: 'STU_11', studentNumber: '20111', name: '손토스' },
-      { id: 'STU_12', studentNumber: '20112', name: '배네트' },
-      { id: 'STU_13', studentNumber: '20113', name: '신코트' },
-      { id: 'STU_14', studentNumber: '20114', name: '오수비' },
-      { id: 'STU_15', studentNumber: '20115', name: '한리베로' }
-    ],
+    roster: null,
 
     state: {
-      students: [],
-      records: {}, // { [studentId]: { counts: {}, selectedPlusKey, selectedMinusKey, history: [], evalDate, updatedAt } }
+      currentClass: 1, // 현재 선택된 반 (1 ~ 9)
+      classes: {},     // { [classNum]: [ 학생 목록 ] }
+      students: [],    // 현재 반의 학생 목록
+      records: {},     // { [studentId]: { counts: {}, selectedPlusKey, selectedMinusKey, history: [], evalDate, updatedAt, note: '' } }
       evalDate: new Date().toISOString().slice(0, 10),
       viewMode: 'table', // 'table' (가로형 빠른 체크보드) | 'card' (상세 카드)
       ruleEvery3: true,
@@ -357,20 +351,49 @@
     },
 
     init() {
-      const loaded = this.loadFromStorage();
-      if (!loaded) {
-        this.resetAllToDefaultFive(false);
+      // 1. roster_data.js 에서 1반부터 9반 명단 불러오기
+      if (typeof window !== 'undefined' && window.VOLLEYBALL_ROSTER && window.VOLLEYBALL_ROSTER.classes) {
+        this.roster = window.VOLLEYBALL_ROSTER;
       }
+      this.initClassesFromRoster();
+
+      // 2. 로컬스토리지에서 기존 평가 기록 복원
+      this.loadFromStorage();
+
       if (!this.state.evalDate) {
         this.state.evalDate = new Date().toISOString().slice(0, 10);
       }
-      // 최소 15명 보장: 학생 수가 15명 미만인 경우 15명 샘플로 보강
-      if (this.state.students.length < 15) {
-        this.loadSample15(false);
-      }
+      this.loadClass(this.state.currentClass || 1, false);
     },
 
-    createEmptyRecord() {
+    initClassesFromRoster() {
+      const rosterClasses = this.roster ? this.roster.classes : {};
+      const nextClasses = {};
+      for (let c = 1; c <= 9; c++) {
+        const list = rosterClasses[String(c)] || rosterClasses[c] || [];
+        if (list.length > 0) {
+          nextClasses[c] = JSON.parse(JSON.stringify(list));
+        } else {
+          // 기본 샘플 15명 생성 (20000대 번호)
+          nextClasses[c] = Array.from({ length: 15 }, (_, i) => {
+            const num = i + 1;
+            const stuNum = `20${c}${num < 10 ? '0' + num : num}`;
+            return {
+              id: `STU_${stuNum}`,
+              studentNumber: stuNum,
+              name: `학생${stuNum}`,
+              classNum: c,
+              grade: 2,
+              number: num,
+              note: ''
+            };
+          });
+        }
+      }
+      this.state.classes = nextClasses;
+    },
+
+    createEmptyRecord(studentId = '') {
       return {
         counts: {
           toss_plus: 0,
@@ -382,12 +405,29 @@
           receive_minus: 0,
           move_minus: 0
         },
-        selectedPlusKey: 'toss_plus',   // 학번·이름 옆 [+ 플러스] 클릭 시 기본 체크될 요소
-        selectedMinusKey: 'toss_minus', // 학번·이름 옆 [- 마이너스] 클릭 시 기본 체크될 요소
-        history: [],                    // 되돌리기(취소)용 스택
+        selectedPlusKey: 'toss_plus',
+        selectedMinusKey: 'toss_minus',
+        history: [],
+        note: '',
         evalDate: this.state.evalDate || new Date().toISOString().slice(0, 10),
         updatedAt: new Date().toLocaleString('ko-KR', { hour12: false })
       };
+    },
+
+    loadClass(classNum, broadcast = true) {
+      const c = Number(classNum) || 1;
+      this.state.currentClass = c;
+      const classStudents = this.state.classes[c] || [];
+      this.state.students = classStudents;
+
+      // 해당 반 학생들의 레코드 확인/생성
+      this.state.students.forEach(stu => {
+        if (!this.state.records[stu.id]) {
+          this.state.records[stu.id] = this.createEmptyRecord(stu.id);
+        }
+      });
+
+      if (broadcast) this.saveToStorage();
     },
 
     loadFromStorage() {
@@ -395,20 +435,17 @@
         const raw = localStorage.getItem(VB_STORAGE_KEY);
         if (!raw) return false;
         const parsed = JSON.parse(raw);
-        if (parsed && Array.isArray(parsed.students) && parsed.students.length > 0) {
-          this.state.students = parsed.students;
+        if (parsed) {
+          if (parsed.classes && Object.keys(parsed.classes).length > 0) {
+            this.state.classes = parsed.classes;
+          }
+          this.state.currentClass = Number(parsed.currentClass) || 1;
           this.state.records = parsed.records || {};
           this.state.evalDate = parsed.evalDate || new Date().toISOString().slice(0, 10);
           this.state.viewMode = parsed.viewMode || 'table';
           this.state.ruleEvery3 = parsed.ruleEvery3 !== undefined ? !!parsed.ruleEvery3 : true;
           this.state.privacyMaskMode = !!parsed.privacyMaskMode;
           PrivacyGuardModule.maskMode = this.state.privacyMaskMode;
-
-          this.state.students.forEach(stu => {
-            if (!this.state.records[stu.id]) {
-              this.state.records[stu.id] = this.createEmptyRecord();
-            }
-          });
           return true;
         }
       } catch (_) {}
@@ -417,7 +454,8 @@
 
     saveToStorage() {
       const payload = {
-        students: this.state.students,
+        classes: this.state.classes,
+        currentClass: this.state.currentClass,
         records: this.state.records,
         evalDate: this.state.evalDate,
         viewMode: this.state.viewMode,
@@ -429,35 +467,32 @@
       SyncBus.post('VB_PERFORMANCE_UPDATED', payload);
     },
 
-    loadSample15(broadcast = true) {
-      this.state.students = JSON.parse(JSON.stringify(this.SAMPLE_STUDENTS));
-      const nextRecords = {};
-      this.state.students.forEach(stu => {
-        nextRecords[stu.id] = this.createEmptyRecord();
-      });
-      this.state.records = nextRecords;
-      if (broadcast) this.saveToStorage();
-    },
-
-    resetAllToDefaultFive(broadcast = true) {
-      if (this.state.students.length === 0) {
-        this.state.students = JSON.parse(JSON.stringify(this.SAMPLE_STUDENTS));
+    updateStudentNote(studentId, noteText) {
+      AuthAccessModule.assertTeacherPermission('기타 사항 수정');
+      if (!this.state.records[studentId]) {
+        this.state.records[studentId] = this.createEmptyRecord(studentId);
       }
-      const nextRecords = {};
+      this.state.records[studentId].note = String(noteText || '').trim();
+      this.state.records[studentId].updatedAt = new Date().toLocaleString('ko-KR', { hour12: false });
+      this.saveToStorage();
+    },
+
+    resetCurrentClassScores(broadcast = true) {
       this.state.students.forEach(stu => {
-        nextRecords[stu.id] = this.createEmptyRecord();
+        this.state.records[stu.id] = this.createEmptyRecord(stu.id);
       });
-      this.state.records = nextRecords;
       if (broadcast) this.saveToStorage();
     },
 
-    /**
-     * 특정 학생의 플러스/마이너스 요소 체크 횟수 1회 추가
-     */
+    reSyncCurrentClassFromRoster(broadcast = true) {
+      this.initClassesFromRoster();
+      this.loadClass(this.state.currentClass, broadcast);
+    },
+
     incrementFactor(studentId, factorKey) {
       AuthAccessModule.assertTeacherPermission('플러스/마이너스 요소 체크');
       if (!this.state.records[studentId]) {
-        this.state.records[studentId] = this.createEmptyRecord();
+        this.state.records[studentId] = this.createEmptyRecord(studentId);
       }
       const rec = this.state.records[studentId];
       rec.counts[factorKey] = (rec.counts[factorKey] || 0) + 1;
@@ -593,7 +628,113 @@
       clearTimeout(this._toastTimer);
       this._toastTimer = setTimeout(() => {
         banner.classList.add('hidden');
-      }, 2800);
+      }, 3000);
+    },
+
+    fallbackCopyText(text, mode) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        this.showToast(`📋 ${mode === 'all' ? '1~9반 전교생' : '현재 반'} 기록 복사 완료! 구글 시트에서 Ctrl+V 를 누르세요.`);
+      } catch (e) {
+        alert('클립보드 복사 권한이 없어 수동 복사가 필요합니다.');
+      }
+      document.body.removeChild(ta);
+    },
+
+    copyGoogleSheet(mode = 'current') {
+      const st = DataModelModule.state;
+      let targetStudents = [];
+      if (mode === 'all') {
+        for (let c = 1; c <= 9; c++) {
+          const list = st.classes[c] || [];
+          targetStudents = targetStudents.concat(list);
+        }
+      } else {
+        targetStudents = st.students;
+      }
+
+      const rows = [
+        ['학년', '반', '번호', '학번', '성명', '가감점수(실시간)', '최종환산점수(기본5점시작)', '수행평가점수(사진기준)', '기타사항', '평가일자']
+      ];
+
+      targetStudents.forEach(stu => {
+        const rec = st.records[stu.id] || DataModelModule.createEmptyRecord(stu.id);
+        const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
+        const dStr = calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}` : String(calc.instantCheckDelta);
+        rows.push([
+          stu.grade || 2,
+          stu.classNum || st.currentClass,
+          stu.number || '',
+          stu.studentNumber,
+          stu.name,
+          dStr,
+          calc.rawScore,
+          calc.finalGradePoint,
+          rec.note || '',
+          rec.evalDate || st.evalDate
+        ]);
+      });
+
+      const tsv = rows.map(r => r.join('\t')).join('\n');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(tsv).then(() => {
+          this.showToast(`📋 ${mode === 'all' ? '1~9반 전교생' : `${st.currentClass}반`} 평가 기록이 복사되었습니다! 구글 시트에서 Ctrl+V 를 누르세요.`);
+        }).catch(() => {
+          this.fallbackCopyText(tsv, mode);
+        });
+      } else {
+        this.fallbackCopyText(tsv, mode);
+      }
+    },
+
+    downloadCsv(mode = 'all') {
+      const st = DataModelModule.state;
+      let targetStudents = [];
+      if (mode === 'all') {
+        for (let c = 1; c <= 9; c++) {
+          targetStudents = targetStudents.concat(st.classes[c] || []);
+        }
+      } else {
+        targetStudents = st.students;
+      }
+
+      const rows = [
+        ['학년', '반', '번호', '학번', '성명', '가감점수(실시간)', '최종환산점수(기본5점시작)', '수행평가점수(사진기준)', '기타사항', '평가일자']
+      ];
+
+      targetStudents.forEach(stu => {
+        const rec = st.records[stu.id] || DataModelModule.createEmptyRecord(stu.id);
+        const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
+        const dStr = calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}` : String(calc.instantCheckDelta);
+        rows.push([
+          stu.grade || 2,
+          stu.classNum || st.currentClass,
+          stu.number || '',
+          stu.studentNumber,
+          stu.name,
+          dStr,
+          calc.rawScore,
+          calc.finalGradePoint,
+          `"${(rec.note || '').replace(/"/g, '""')}"`,
+          rec.evalDate || st.evalDate
+        ]);
+      });
+
+      const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `배구_수행평가_${mode === 'all' ? '전체1-9반' : `${st.currentClass}반`}_${st.evalDate}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      this.showToast('📥 엑셀용 CSV 파일이 다운로드되었습니다.');
     },
 
     bindEvents() {
@@ -608,12 +749,37 @@
       });
 
       document.getElementById('copyStudentViewLinkBtn')?.addEventListener('click', () => {
-        const firstId = DataModelModule.state.students[0]?.id || 'STU_01';
+        const firstId = DataModelModule.state.students[0]?.id || 'STU_20101';
         const url = `${window.location.origin}${window.location.pathname}?role=student&studentId=${encodeURIComponent(firstId)}`;
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url).catch(() => {});
         }
         this.showToast(`🔗 학생용 결과 확인 링크가 복사되었습니다: ${url}`);
+      });
+
+      // 구글 시트 복사 버튼 이벤트 (현재 반 / 1~9반 전체)
+      document.getElementById('copyGoogleSheetCurrentBtn')?.addEventListener('click', () => {
+        this.copyGoogleSheet('current');
+      });
+
+      document.getElementById('copyGoogleSheetAllBtn')?.addEventListener('click', () => {
+        this.copyGoogleSheet('all');
+      });
+
+      document.getElementById('downloadCsvBtn')?.addEventListener('click', () => {
+        this.downloadCsv('all');
+      });
+
+      // 1반부터 9반 탭 클릭 이벤트
+      document.querySelectorAll('.vb-class-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cls = Number(btn.getAttribute('data-class'));
+          if (cls >= 1 && cls <= 9) {
+            DataModelModule.loadClass(cls, true);
+            this.renderAll();
+            this.showToast(`🏫 ${cls}반 학생 명단이 로드되었습니다.`);
+          }
+        });
       });
 
       // 평가 일자 피커 이벤트
@@ -654,13 +820,13 @@
         this.renderTeacherStudentRows();
       });
 
-      // 최소 15명 일괄 불러오기
+      // 현재 반 명단 재동기화 (불러오기)
       document.getElementById('loadSample15Btn')?.addEventListener('click', () => {
         try {
-          AuthAccessModule.assertTeacherPermission('15명 일괄 불러오기');
-          DataModelModule.loadSample15(true);
+          AuthAccessModule.assertTeacherPermission('명단 재동기화');
+          DataModelModule.reSyncCurrentClassFromRoster(true);
           this.renderAll();
-          this.showToast('👥 15명 학생 명단(기본 5점 초기화)을 성공적으로 불러왔습니다.');
+          this.showToast(`🔄 ${DataModelModule.state.currentClass}반 학생 명렬표가 재동기화되었습니다.`);
         } catch (err) {
           alert(err.message);
         }
@@ -724,28 +890,41 @@
             alert(val.message);
             return;
           }
-          const newId = 'STU_' + Date.now();
           const studentNumber = String(numEl.value).trim();
           const name = String(nameEl.value).trim();
-          DataModelModule.state.students.push({ id: newId, studentNumber, name });
-          DataModelModule.state.records[newId] = DataModelModule.createEmptyRecord();
+          const newId = 'STU_' + studentNumber;
+          const newStu = {
+            id: newId,
+            studentNumber,
+            name,
+            classNum: DataModelModule.state.currentClass,
+            grade: 2,
+            number: studentNumber.slice(-2),
+            note: ''
+          };
+          DataModelModule.state.students.push(newStu);
+          if (!DataModelModule.state.classes[DataModelModule.state.currentClass]) {
+            DataModelModule.state.classes[DataModelModule.state.currentClass] = [];
+          }
+          DataModelModule.state.classes[DataModelModule.state.currentClass].push(newStu);
+          DataModelModule.state.records[newId] = DataModelModule.createEmptyRecord(newId);
           DataModelModule.saveToStorage();
           numEl.value = '';
           nameEl.value = '';
           this.renderAll();
-          this.showToast(`✅ [${studentNumber} ${name}] 학생이 기본점수 5점으로 등록되었습니다.`);
+          this.showToast(`✅ [${studentNumber} ${name}] 학생이 ${DataModelModule.state.currentClass}반에 등록되었습니다.`);
         } catch (err) {
           alert(err.message);
         }
       });
 
-      // 전원 기본 5점 초기화
+      // 현재 반 0점 초기화
       document.getElementById('resetAllScoresBtn')?.addEventListener('click', () => {
         try {
-          AuthAccessModule.assertTeacherPermission('전원 5점 초기화');
-          DataModelModule.resetAllToDefaultFive(true);
+          AuthAccessModule.assertTeacherPermission('현재 반 초기화');
+          DataModelModule.resetCurrentClassScores(true);
           this.renderAll();
-          this.showToast('🔄 모든 학생의 점수가 기본점수 5점(체크 0회)으로 초기화되었습니다.');
+          this.showToast(`🔄 ${DataModelModule.state.currentClass}반 학생 전원의 점수가 0점(체크 내역 없음)으로 초기화되었습니다.`);
         } catch (err) {
           alert(err.message);
         }
@@ -794,6 +973,17 @@
       const closeModal = () => document.getElementById('policyModalBackdrop')?.classList.add('hidden');
       document.getElementById('closePolicyModalBtn')?.addEventListener('click', closeModal);
       document.getElementById('confirmPolicyModalBtn')?.addEventListener('click', closeModal);
+    },
+
+    updateClassTabs() {
+      const curCls = DataModelModule.state.currentClass || 1;
+      document.querySelectorAll('.vb-class-tab-btn').forEach(btn => {
+        const c = Number(btn.getAttribute('data-class'));
+        const isActive = c === curCls;
+        btn.classList.toggle('active', isActive);
+        const count = (DataModelModule.state.classes[c] || []).length;
+        btn.textContent = `${c}반 (${count}명)`;
+      });
     },
 
     updateEvalDateBadge() {
@@ -852,6 +1042,7 @@
       if (maskChk) maskChk.checked = DataModelModule.state.privacyMaskMode;
 
       this.updateEvalDateBadge();
+      this.updateClassTabs();
       this.updateViewModeBtns();
 
       if (isTeacher) {
@@ -879,16 +1070,18 @@
       }
 
       if (isTableMode) {
-        // [1] 가로형 빠른 체크보드 모드: 학생(학번 성명), 가감 점수, 최종 환산 점수 제외하고 불필요한 글씨 완전 제거
+        // [1] 가로형 빠른 체크보드 모드: 학생(학번 성명), 가감 점수, 최종 환산 점수, 수행평가 점수, 취소, 기타 사항
         let headerHtml = `
           <div class="vb-tbl-head-row">
             <div class="vb-tbl-th col-stu">학생 (학번 성명)</div>
             <div class="vb-tbl-th col-quick">빠른 ±</div>
             <div class="vb-tbl-th col-plus-factors">플러스 (+)</div>
             <div class="vb-tbl-th col-minus-factors">마이너스 (-)</div>
-            <div class="vb-tbl-th col-raw">가감 점수</div>
-            <div class="vb-tbl-th col-grade">최종 환산 점수</div>
+            <div class="vb-tbl-th col-delta">가감 점수</div>
+            <div class="vb-tbl-th col-raw">최종 환산 점수</div>
+            <div class="vb-tbl-th col-eval-score">수행평가 점수</div>
             <div class="vb-tbl-th col-action">취소</div>
+            <div class="vb-tbl-th col-note">기타 사항</div>
           </div>
         `;
 
@@ -985,18 +1178,23 @@
               </div>
 
               <!-- 5. 가감 점수 (누를 때마다 즉시 오르내림) -->
-              <div class="vb-tbl-cell col-raw">
+              <div class="vb-tbl-cell col-delta">
                 <span class="vb-raw-score-badge ${deltaClass}">${deltaDisplay}</span>
               </div>
 
-              <!-- 6. 최종 환산 점수 (기본 5점에서 가감 계산) -->
-              <div class="vb-tbl-cell col-grade">
+              <!-- 6. 최종 환산 점수 (기본 5점에서 3회 가감 계산) -->
+              <div class="vb-tbl-cell col-raw">
+                <span class="vb-converted-score-badge">${calc.rawScore}점</span>
+              </div>
+
+              <!-- 7. 수행평가 점수 (사진 기준 환산 1~5점) -->
+              <div class="vb-tbl-cell col-eval-score">
                 <span class="vb-final-grade-badge grade-${calc.finalGradePoint}">
                   ${calc.finalGradePoint}점
                 </span>
               </div>
 
-              <!-- 7. 취소(되돌리기) -->
+              <!-- 8. 취소(되돌리기) -->
               <div class="vb-tbl-cell col-action">
                 <button
                   type="button"
@@ -1006,6 +1204,17 @@
                 >
                   ↩
                 </button>
+              </div>
+
+              <!-- 9. 기타 사항 (취소 옆) -->
+              <div class="vb-tbl-cell col-note">
+                <input
+                  type="text"
+                  class="vb-tbl-note-input"
+                  data-note-stu-id="${stu.id}"
+                  value="${String(rec.note || '').replace(/"/g, '&quot;')}"
+                  placeholder="기타 사항 입력..."
+                />
               </div>
             </div>
           `;
@@ -1126,14 +1335,29 @@
                     ${st.ruleEvery3 ? `➔ 남은횟수 ${calc.minusRemainder}/3` : ''}
                   </span>
                 </div>
+                <div class="vb-card-note-row">
+                  <span class="vb-card-note-lbl">📝 기타 사항:</span>
+                  <input
+                    type="text"
+                    class="vb-tbl-note-input"
+                    data-note-stu-id="${stu.id}"
+                    value="${String(rec.note || '').replace(/"/g, '&quot;')}"
+                    placeholder="기타 사항 입력..."
+                  />
+                </div>
                 <div class="vb-bottom-score-group">
                   <div class="vb-score-box">
                     <span class="lbl">가감 점수(실시간)</span>
                     <strong class="val">${calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}점` : (calc.instantCheckDelta < 0 ? `${calc.instantCheckDelta}점` : `0점`)}</strong>
                   </div>
                   <span class="arrow">➔</span>
+                  <div class="vb-score-box">
+                    <span class="lbl">최종 환산 점수</span>
+                    <strong class="val">${calc.rawScore}점</strong>
+                  </div>
+                  <span class="arrow">➔</span>
                   <div class="vb-score-box highlight">
-                    <span class="lbl">최종 점수 (기본 5점 시작)</span>
+                    <span class="lbl">수행평가 점수 (사진 기준)</span>
                     <strong class="val final">${calc.finalGradePoint}점</strong>
                     <span class="range">(${calc.rangeLabel})</span>
                   </div>
@@ -1185,6 +1409,15 @@
             return;
           }
           this.renderTeacherStudentRows();
+        });
+      });
+
+      // 5. 기타 사항 입력 필드 실시간 저장 (블러 시 렌더하지 않고 조용히 저장)
+      container.querySelectorAll('.vb-tbl-note-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const stuId = input.getAttribute('data-note-stu-id');
+          if (!stuId) return;
+          DataModelModule.updateStudentNote(stuId, e.target.value);
         });
       });
     },
