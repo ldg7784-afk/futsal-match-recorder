@@ -147,16 +147,19 @@
               <span class="vb-date-status-pill" id="currentEvalDateBadge">2026-11-10 평가 진행 중</span>
             </div>
 
-            <!-- 구글 시트 복사 및 내보내기 버튼들 -->
+            <!-- 구글 시트 복사 및 엑셀 내보내기 버튼들 (전체 날짜별 / 현재 날짜별) -->
             <div class="vb-export-btns-group">
-              <button type="button" id="copyGoogleSheetCurrentBtn" class="vb-btn vb-btn-success vb-btn-sm" title="현재 반의 전체 평가 기록을 구글 시트/엑셀에 바로 붙여넣을 수 있게 복사합니다">
-                📋 구글시트용 복사 (현재 반)
+              <button type="button" id="copyGoogleSheetAllDatesBtn" class="vb-btn vb-btn-success vb-btn-sm" title="모든 평가 날짜의 1~9반 기록을 날짜별/반별/학번순으로 정렬하여 구글 시트에 바로 붙여넣을 수 있게 복사합니다">
+                📋 구글시트 복사 (전체 날짜별 정리)
               </button>
-              <button type="button" id="copyGoogleSheetAllBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="1반부터 9반까지 전교생 기록을 한 번에 복사합니다">
-                🌐 전교생(1~9반) 복사
+              <button type="button" id="copyGoogleSheetCurrentBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="선택된 날짜의 현재 반 평가 기록을 구글시트용으로 복사합니다">
+                📋 구글시트 (현재 날짜)
               </button>
-              <button type="button" id="downloadCsvBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="엑셀 CSV 파일로 다운로드합니다">
-                📥 엑셀 CSV 다운로드
+              <button type="button" id="downloadCsvAllDatesBtn" class="vb-btn vb-btn-primary vb-btn-sm" title="모든 날짜별 평가 기록이 정리된 엑셀(CSV) 파일을 다운로드합니다">
+                📥 엑셀 다운로드 (전체 날짜별)
+              </button>
+              <button type="button" id="downloadCsvCurrentBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="현재 날짜의 1~9반 평가 기록을 엑셀(CSV) 파일로 다운로드합니다">
+                📥 엑셀 (현재 날짜)
               </button>
             </div>
           </div>

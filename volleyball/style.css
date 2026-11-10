@@ -795,7 +795,7 @@ background: rgba(255, 255, 255, 0.05);
 }
 
 .vb-horizontal-table-body {
-  min-width: 1380px;
+  min-width: 1260px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -1163,18 +1163,19 @@ background: rgba(255, 255, 255, 0.05);
   color: var(--vb-text);
 }
 
-/* 9. 기타 사항 입력 필드 (취소 버튼 옆) */
+/* 9. 기타 사항 입력 필드 (취소 버튼 옆: 슬림하게 단축) */
 .col-note {
-  flex: 1 1 180px;
-  min-width: 170px;
+  flex: 0 0 100px;
+  min-width: 100px;
+  max-width: 110px;
   display: flex;
   align-items: center;
 }
 
 .vb-tbl-note-input {
   width: 100%;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.8rem;
+  padding: 0.26rem 0.45rem;
+  font-size: 0.76rem;
   border: 1px solid var(--vb-border-strong);
   border-radius: var(--vb-radius-sm);
   background: #ffffff;

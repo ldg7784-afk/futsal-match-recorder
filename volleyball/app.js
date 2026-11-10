@@ -33,7 +33,7 @@
       if (this.channel) {
         try {
           this.channel.postMessage({ type, payload, timestamp: Date.now() });
-        } catch (_) {}
+        } catch (_) { }
       }
     }
   };
@@ -112,7 +112,7 @@
           detail: PrivacyGuardModule.sanitizeLogText(detail)
         });
         localStorage.setItem(VB_AUDIT_KEY, JSON.stringify(list.slice(0, 80)));
-      } catch (_) {}
+      } catch (_) { }
     },
 
     getAuditLogs() {
@@ -430,6 +430,33 @@
       if (broadcast) this.saveToStorage();
     },
 
+    setEvalDate(newDate) {
+      if (!newDate) return;
+      const cleanDate = String(newDate).trim();
+      const prevDate = this.state.evalDate || cleanDate;
+
+      if (!this.state.dateHistory) this.state.dateHistory = {};
+      this.state.dateHistory[prevDate] = Object.assign({}, this.state.dateHistory[prevDate] || {}, this.state.records);
+
+      this.state.evalDate = cleanDate;
+
+      if (this.state.dateHistory[cleanDate] && Object.keys(this.state.dateHistory[cleanDate]).length > 0) {
+        this.state.records = this.state.dateHistory[cleanDate];
+      } else {
+        const freshRecords = {};
+        for (let c = 1; c <= 9; c++) {
+          const list = this.state.classes[c] || [];
+          list.forEach(stu => {
+            freshRecords[stu.id] = this.createEmptyRecord(stu.id);
+          });
+        }
+        this.state.records = freshRecords;
+        this.state.dateHistory[cleanDate] = freshRecords;
+      }
+
+      this.saveToStorage();
+    },
+
     loadFromStorage() {
       try {
         const raw = localStorage.getItem(VB_STORAGE_KEY);
@@ -440,23 +467,39 @@
             this.state.classes = parsed.classes;
           }
           this.state.currentClass = Number(parsed.currentClass) || 1;
-          this.state.records = parsed.records || {};
           this.state.evalDate = parsed.evalDate || new Date().toISOString().slice(0, 10);
+          this.state.dateHistory = parsed.dateHistory || {};
+          this.state.records = parsed.records || {};
+
+          // 날짜별 이력과 현재 레코드 동기화
+          if (!this.state.dateHistory[this.state.evalDate]) {
+            this.state.dateHistory[this.state.evalDate] = this.state.records;
+          } else if (Object.keys(this.state.records).length > 0) {
+            this.state.dateHistory[this.state.evalDate] = Object.assign({}, this.state.dateHistory[this.state.evalDate], this.state.records);
+          } else {
+            this.state.records = this.state.dateHistory[this.state.evalDate];
+          }
+
           this.state.viewMode = parsed.viewMode || 'table';
           this.state.ruleEvery3 = parsed.ruleEvery3 !== undefined ? !!parsed.ruleEvery3 : true;
           this.state.privacyMaskMode = !!parsed.privacyMaskMode;
           PrivacyGuardModule.maskMode = this.state.privacyMaskMode;
           return true;
         }
-      } catch (_) {}
+      } catch (_) { }
       return false;
     },
 
     saveToStorage() {
+      const curDate = this.state.evalDate || new Date().toISOString().slice(0, 10);
+      if (!this.state.dateHistory) this.state.dateHistory = {};
+      this.state.dateHistory[curDate] = Object.assign({}, this.state.dateHistory[curDate] || {}, this.state.records);
+
       const payload = {
         classes: this.state.classes,
         currentClass: this.state.currentClass,
         records: this.state.records,
+        dateHistory: this.state.dateHistory,
         evalDate: this.state.evalDate,
         viewMode: this.state.viewMode,
         ruleEvery3: this.state.ruleEvery3,
@@ -473,6 +516,7 @@
         this.state.records[studentId] = this.createEmptyRecord(studentId);
       }
       this.state.records[studentId].note = String(noteText || '').trim();
+      this.state.records[studentId].evalDate = this.state.evalDate;
       this.state.records[studentId].updatedAt = new Date().toLocaleString('ko-KR', { hour12: false });
       this.saveToStorage();
     },
@@ -631,7 +675,7 @@
       }, 3000);
     },
 
-    fallbackCopyText(text, mode) {
+    fallbackCopyText(text, label) {
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
@@ -640,101 +684,129 @@
       ta.select();
       try {
         document.execCommand('copy');
-        this.showToast(`📋 ${mode === 'all' ? '1~9반 전교생' : '현재 반'} 기록 복사 완료! 구글 시트에서 Ctrl+V 를 누르세요.`);
+        this.showToast(`📋 [${label}] 기록 복사 완료! 구글 시트에서 Ctrl+V 를 누르세요.`);
       } catch (e) {
         alert('클립보드 복사 권한이 없어 수동 복사가 필요합니다.');
       }
       document.body.removeChild(ta);
     },
 
-    copyGoogleSheet(mode = 'current') {
+    /**
+     * 전체 날짜별 / 현재 날짜별 평가 데이터 세트 생성
+     * @param {'allDates'|'currentDate'} scope
+     */
+    buildExportRows(scope = 'allDates') {
       const st = DataModelModule.state;
-      let targetStudents = [];
-      if (mode === 'all') {
-        for (let c = 1; c <= 9; c++) {
-          const list = st.classes[c] || [];
-          targetStudents = targetStudents.concat(list);
-        }
-      } else {
-        targetStudents = st.students;
-      }
+      const curDate = st.evalDate || new Date().toISOString().slice(0, 10);
 
-      const rows = [
-        ['학년', '반', '번호', '학번', '성명', '가감점수(실시간)', '최종환산점수(기본5점시작)', '수행평가점수(사진기준)', '기타사항', '평가일자']
+      if (!st.dateHistory) st.dateHistory = {};
+      st.dateHistory[curDate] = Object.assign({}, st.dateHistory[curDate] || {}, st.records);
+
+      const header = [
+        '평가일자',
+        '학년',
+        '반',
+        '번호',
+        '학번',
+        '성명',
+        '가감점수(실시간)',
+        '최종환산점수(기본5점시작)',
+        '수행평가점수(사진기준)',
+        '기타사항',
+        '플러스누적',
+        '마이너스누적'
       ];
 
-      targetStudents.forEach(stu => {
-        const rec = st.records[stu.id] || DataModelModule.createEmptyRecord(stu.id);
-        const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
-        const dStr = calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}` : String(calc.instantCheckDelta);
-        rows.push([
-          stu.grade || 2,
-          stu.classNum || st.currentClass,
-          stu.number || '',
-          stu.studentNumber,
-          stu.name,
-          dStr,
-          calc.rawScore,
-          calc.finalGradePoint,
-          rec.note || '',
-          rec.evalDate || st.evalDate
-        ]);
+      const dataRows = [];
+      let datesToExport = [];
+
+      if (scope === 'allDates') {
+        datesToExport = Object.keys(st.dateHistory).sort();
+        if (datesToExport.length === 0) datesToExport = [curDate];
+      } else {
+        datesToExport = [curDate];
+      }
+
+      datesToExport.forEach(d => {
+        const recordsMap = st.dateHistory[d] || {};
+        for (let c = 1; c <= 9; c++) {
+          const classStudents = st.classes[c] || [];
+          classStudents.forEach(stu => {
+            const rec = recordsMap[stu.id] || DataModelModule.createEmptyRecord(stu.id);
+            const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
+            const dStr = calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}` : String(calc.instantCheckDelta);
+            dataRows.push([
+              d,
+              stu.grade || 2,
+              stu.classNum || c,
+              stu.number || '',
+              stu.studentNumber,
+              stu.name,
+              dStr,
+              calc.rawScore,
+              calc.finalGradePoint,
+              rec.note || '',
+              `${calc.totalPlusChecks}회`,
+              `${calc.totalMinusChecks}회`
+            ]);
+          });
+        }
       });
 
-      const tsv = rows.map(r => r.join('\t')).join('\n');
+      return { header, dataRows, datesCount: datesToExport.length, totalCount: dataRows.length };
+    },
+
+    /**
+     * 구글 스프레드시트용 TSV 클립보드 복사
+     * @param {'allDates'|'currentDate'} scope
+     */
+    copyGoogleSheet(scope = 'allDates') {
+      const exp = this.buildExportRows(scope);
+      const allRows = [exp.header, ...exp.dataRows];
+      const tsv = allRows.map(r => r.join('\t')).join('\n');
+      const label = scope === 'allDates' ? `전체 날짜(${exp.datesCount}개 일자 종합)` : `현재 날짜(${DataModelModule.state.evalDate})`;
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(tsv).then(() => {
-          this.showToast(`📋 ${mode === 'all' ? '1~9반 전교생' : `${st.currentClass}반`} 평가 기록이 복사되었습니다! 구글 시트에서 Ctrl+V 를 누르세요.`);
+          this.showToast(`📋 [${label}] 총 ${exp.totalCount}명의 평가 기록이 복사되었습니다! 구글 시트에서 Ctrl+V 를 누르세요.`);
         }).catch(() => {
-          this.fallbackCopyText(tsv, mode);
+          this.fallbackCopyText(tsv, label);
         });
       } else {
-        this.fallbackCopyText(tsv, mode);
+        this.fallbackCopyText(tsv, label);
       }
     },
 
-    downloadCsv(mode = 'all') {
-      const st = DataModelModule.state;
-      let targetStudents = [];
-      if (mode === 'all') {
-        for (let c = 1; c <= 9; c++) {
-          targetStudents = targetStudents.concat(st.classes[c] || []);
-        }
-      } else {
-        targetStudents = st.students;
-      }
+    /**
+     * 엑셀 호환 CSV 파일 다운로드 (UTF-8 BOM 탑재)
+     * @param {'allDates'|'currentDate'} scope
+     */
+    downloadCsv(scope = 'allDates') {
+      const exp = this.buildExportRows(scope);
+      const allRows = [exp.header, ...exp.dataRows];
 
-      const rows = [
-        ['학년', '반', '번호', '학번', '성명', '가감점수(실시간)', '최종환산점수(기본5점시작)', '수행평가점수(사진기준)', '기타사항', '평가일자']
-      ];
-
-      targetStudents.forEach(stu => {
-        const rec = st.records[stu.id] || DataModelModule.createEmptyRecord(stu.id);
-        const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
-        const dStr = calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}` : String(calc.instantCheckDelta);
-        rows.push([
-          stu.grade || 2,
-          stu.classNum || st.currentClass,
-          stu.number || '',
-          stu.studentNumber,
-          stu.name,
-          dStr,
-          calc.rawScore,
-          calc.finalGradePoint,
-          `"${(rec.note || '').replace(/"/g, '""')}"`,
-          rec.evalDate || st.evalDate
-        ]);
+      const csvLines = allRows.map(r => {
+        return r.map(cell => {
+          const str = String(cell !== undefined && cell !== null ? cell : '');
+          if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`;
+          }
+          return str;
+        }).join(',');
       });
 
-      const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
+      const csvContent = '\uFEFF' + csvLines.join('\r\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
+      const curDate = DataModelModule.state.evalDate;
       a.href = url;
-      a.download = `배구_수행평가_${mode === 'all' ? '전체1-9반' : `${st.currentClass}반`}_${st.evalDate}.csv`;
+      a.download = scope === 'allDates'
+        ? `배구_수행평가_전체날짜별종합_${curDate}.csv`
+        : `배구_수행평가_${curDate}_기록.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      this.showToast('📥 엑셀용 CSV 파일이 다운로드되었습니다.');
+      this.showToast(`📥 [${scope === 'allDates' ? '전체 날짜별 종합' : '현재 날짜'}] 엑셀 CSV 파일이 다운로드되었습니다.`);
     },
 
     bindEvents() {
@@ -752,22 +824,27 @@
         const firstId = DataModelModule.state.students[0]?.id || 'STU_20101';
         const url = `${window.location.origin}${window.location.pathname}?role=student&studentId=${encodeURIComponent(firstId)}`;
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(url).catch(() => {});
+          navigator.clipboard.writeText(url).catch(() => { });
         }
         this.showToast(`🔗 학생용 결과 확인 링크가 복사되었습니다: ${url}`);
       });
 
-      // 구글 시트 복사 버튼 이벤트 (현재 반 / 1~9반 전체)
+      // 구글 시트 복사 버튼 이벤트 (전체 날짜별 정리 / 현재 날짜)
+      document.getElementById('copyGoogleSheetAllDatesBtn')?.addEventListener('click', () => {
+        this.copyGoogleSheet('allDates');
+      });
+
       document.getElementById('copyGoogleSheetCurrentBtn')?.addEventListener('click', () => {
-        this.copyGoogleSheet('current');
+        this.copyGoogleSheet('currentDate');
       });
 
-      document.getElementById('copyGoogleSheetAllBtn')?.addEventListener('click', () => {
-        this.copyGoogleSheet('all');
+      // 엑셀 CSV 다운로드 버튼 이벤트 (전체 날짜별 / 현재 날짜)
+      document.getElementById('downloadCsvAllDatesBtn')?.addEventListener('click', () => {
+        this.downloadCsv('allDates');
       });
 
-      document.getElementById('downloadCsvBtn')?.addEventListener('click', () => {
-        this.downloadCsv('all');
+      document.getElementById('downloadCsvCurrentBtn')?.addEventListener('click', () => {
+        this.downloadCsv('currentDate');
       });
 
       // 1반부터 9반 탭 클릭 이벤트
@@ -782,26 +859,24 @@
         });
       });
 
-      // 평가 일자 피커 이벤트
+      // 평가 일자 피커 이벤트 (날짜 변경 시 해당 날짜 기록으로 안전하게 전환)
       const dateInput = document.getElementById('evalDateInput');
       if (dateInput) {
         dateInput.value = DataModelModule.state.evalDate;
         dateInput.addEventListener('change', (e) => {
           const val = e.target.value || new Date().toISOString().slice(0, 10);
-          DataModelModule.state.evalDate = val;
-          DataModelModule.saveToStorage();
-          this.updateEvalDateBadge();
-          this.showToast(`📅 평가 일자가 [${val}] 로 설정되었습니다.`);
+          DataModelModule.setEvalDate(val);
+          this.renderAll();
+          this.showToast(`📅 평가 일자가 [${val}] 로 설정되었으며 해당 일자 기록이 로드되었습니다.`);
         });
       }
 
       // 오늘 날짜로 즉시 설정
       document.getElementById('setTodayDateBtn')?.addEventListener('click', () => {
         const today = new Date().toISOString().slice(0, 10);
-        DataModelModule.state.evalDate = today;
+        DataModelModule.setEvalDate(today);
         if (dateInput) dateInput.value = today;
-        DataModelModule.saveToStorage();
-        this.updateEvalDateBadge();
+        this.renderAll();
         this.showToast(`📅 평가 일자를 오늘(${today})로 설정했습니다.`);
       });
 
@@ -1081,7 +1156,7 @@
             <div class="vb-tbl-th col-raw">최종 환산 점수</div>
             <div class="vb-tbl-th col-eval-score">수행평가 점수</div>
             <div class="vb-tbl-th col-action">취소</div>
-            <div class="vb-tbl-th col-note">기타 사항</div>
+            <div class="vb-tbl-th col-note">기타</div>
           </div>
         `;
 
@@ -1213,7 +1288,7 @@
                   class="vb-tbl-note-input"
                   data-note-stu-id="${stu.id}"
                   value="${String(rec.note || '').replace(/"/g, '&quot;')}"
-                  placeholder="기타 사항 입력..."
+                  placeholder="기타..."
                 />
               </div>
             </div>
@@ -1342,7 +1417,7 @@
                     class="vb-tbl-note-input"
                     data-note-stu-id="${stu.id}"
                     value="${String(rec.note || '').replace(/"/g, '&quot;')}"
-                    placeholder="기타 사항 입력..."
+                    placeholder="기타..."
                   />
                 </div>
                 <div class="vb-bottom-score-group">
@@ -1598,15 +1673,15 @@
               </thead>
               <tbody>
                 ${RubricCalcModule.CONVERSION_TABLE.map(row => {
-                  const isMine = row.finalPoint === calc.finalGradePoint;
-                  return `
+            const isMine = row.finalPoint === calc.finalGradePoint;
+            return `
                     <tr class="${isMine ? 'my-grade-row' : ''}">
                       <td><strong>${row.finalPoint}점</strong></td>
                       <td>${row.rangeLabel}</td>
                       <td>${isMine ? `✅ 내 현재 점수 (${calc.rawScore}점 → ${row.finalPoint}점)` : '-'}</td>
                     </tr>
                   `;
-                }).join('')}
+          }).join('')}
               </tbody>
             </table>
           `
