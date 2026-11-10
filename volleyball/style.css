@@ -964,10 +964,25 @@ background: rgba(255, 255, 255, 0.05);
 
 .vb-raw-score-badge {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 1.12rem;
+  font-size: 1.15rem;
   font-weight: 900;
   color: #0f172a;
   line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.vb-raw-score-badge.delta-pos {
+  color: #2563eb;
+  text-shadow: 0 1px 2px rgba(37, 99, 235, 0.18);
+}
+
+.vb-raw-score-badge.delta-neg {
+  color: #dc2626;
+  text-shadow: 0 1px 2px rgba(220, 38, 38, 0.18);
+}
+
+.vb-raw-score-badge.delta-zero {
+  color: #64748b;
 }
 
 /* 최종 환산 점수: 잡다한 구간 글씨 없이 환산 점수만 표시 */

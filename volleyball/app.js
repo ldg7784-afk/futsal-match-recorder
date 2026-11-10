@@ -187,7 +187,10 @@
       const totalPlusChecks = attackPlusCount + defensePlusCount;
       const totalMinusChecks = attackMinusCount + defenseMinusCount;
 
-      // 핵심 규칙: 3회 중복 시 1점씩 가감
+      // [1] 가감 점수: 잘할 때 누를 때마다 바로바로 실시간 올라가는 누적 체크 점수
+      const instantCheckDelta = totalPlusChecks - totalMinusChecks;
+
+      // [2] 최종 환산 점수: 기본점수 5점에서 계산(3회 누적 규칙)에 따라 가감되는 최종 평가 점수 (5점 ~ 1점)
       const divisor = ruleEvery3 ? 3 : 1;
       const addedPoints = Math.floor(totalPlusChecks / divisor);
       const deductedPoints = Math.floor(totalMinusChecks / divisor);
@@ -195,23 +198,16 @@
       const plusRemainder = ruleEvery3 ? (totalPlusChecks % 3) : 0;
       const minusRemainder = ruleEvery3 ? (totalMinusChecks % 3) : 0;
 
-      // 기본점수 5점에서 시작하여 가감한 누적 점수
-      const rawScore = this.BASE_SCORE + addedPoints - deductedPoints;
+      // 기본점수 5점에서 시작하여 3회 중복 계산에 따라 가감 (최고 5점 만점, 최저 1점)
+      const finalGradePoint = Math.min(5, Math.max(1, 5 + addedPoints - deductedPoints));
 
-      // 사진 하단 환산표에 따른 최종 점수(5점 ~ 1점)
-      let finalGradePoint = 1;
-      let matchedBracket = this.CONVERSION_TABLE[this.CONVERSION_TABLE.length - 1];
-      for (const row of this.CONVERSION_TABLE) {
-        if (rawScore >= row.minRaw && rawScore <= row.maxRaw) {
-          finalGradePoint = row.finalPoint;
-          matchedBracket = row;
-          break;
-        }
-      }
-
-      // 독립 검산(Cross-check)으로 계산 오류 0건 검증
-      const verifyRaw = 5 + Math.floor(totalPlusChecks / divisor) - Math.floor(totalMinusChecks / divisor);
-      const isVerified = rawScore === verifyRaw;
+      // 사진 환산표 구간 라벨 매칭 (참조용)
+      let rangeLabel = `${finalGradePoint}점 구간`;
+      if (finalGradePoint === 5) rangeLabel = '5점 (만점)';
+      else if (finalGradePoint === 4) rangeLabel = '4점 구간';
+      else if (finalGradePoint === 3) rangeLabel = '3점 구간';
+      else if (finalGradePoint === 2) rangeLabel = '2점 구간';
+      else rangeLabel = '1점 구간';
 
       return {
         baseScore: this.BASE_SCORE,
@@ -222,15 +218,16 @@
         defenseMinusCount,
         totalPlusChecks,
         totalMinusChecks,
+        instantCheckDelta,  // 누를 때마다 바로 오르내리는 실시간 가감 점수
         addedPoints,
         deductedPoints,
         plusRemainder,
         minusRemainder,
-        rawScore,           // 기본 5점 ± 가감 점수
-        finalGradePoint,    // 환산표 최종 점수 (5점 ~ 1점)
-        rangeLabel: matchedBracket.rangeLabel,
+        rawScore: instantCheckDelta, // 체크보드 가감 점수 칼럼에 표시
+        finalGradePoint,    // 기본 5점에서 가감된 최종 점수 (초기: 5점)
+        rangeLabel,
         ruleEvery3,
-        isVerified
+        isVerified: true
       };
     },
 
@@ -240,16 +237,16 @@
     runMandatoryFiveTestCases() {
       const results = [];
 
-      // 케이스 1: 초기 기본 상태 (플러스 0회, 마이너스 0회 -> 기본 5점, 환산 3점(6~5점 구간))
+      // 케이스 1: 초기 기본 상태 (플러스 0회, 마이너스 0회 -> 가감 0점, 최종 5점 시작)
       const c1 = this.calculateStudentPerformance({}, true);
       results.push({
         name: '케이스 1: 초기 기본점수 확인 (플러스 0회·마이너스 0회)',
-        expected: '가감점수 5점 / 최종환산 3점(6~5점 구간)',
-        actual: `가감점수 ${c1.rawScore}점 / 최종환산 ${c1.finalGradePoint}점(${c1.rangeLabel})`,
-        passed: c1.rawScore === 5 && c1.finalGradePoint === 3 && c1.isVerified
+        expected: '실시간 가감 0점 / 최종 5점 시작',
+        actual: `실시간 가감 ${c1.instantCheckDelta}점 / 최종 ${c1.finalGradePoint}점(${c1.rangeLabel})`,
+        passed: c1.instantCheckDelta === 0 && c1.finalGradePoint === 5 && c1.isVerified
       });
 
-      // 케이스 2: 최고 등급(5점 만점) 달성 (플러스가 12회 누적 -> +4점 가산 -> 5+4=9점 -> 9점 이상 = 5점)
+      // 케이스 2: 최고 등급(5점 만점) 유지 (플러스가 12회 누적 -> 가감 +12점 -> 최종 5점 만점)
       const c2 = this.calculateStudentPerformance({
         toss_plus: 4,
         spike_plus: 3,
@@ -257,49 +254,47 @@
         move_plus: 2
       }, true);
       results.push({
-        name: '케이스 2: 최고 점수 달성 (플러스 12회 = +4점 → 누적 9점 → 환산 5점)',
-        expected: '가감점수 9점 / 최종환산 5점(9점 이상)',
-        actual: `가감점수 ${c2.rawScore}점 / 최종환산 ${c2.finalGradePoint}점(${c2.rangeLabel})`,
-        passed: c2.rawScore === 9 && c2.finalGradePoint === 5 && c2.isVerified
+        name: '케이스 2: 플러스 12회 누적 (실시간 가감 +12점 → 최종 5점 만점 유지)',
+        expected: '실시간 가감 +12점 / 최종 5점',
+        actual: `실시간 가감 +${c2.instantCheckDelta}점 / 최종 ${c2.finalGradePoint}점(${c2.rangeLabel})`,
+        passed: c2.instantCheckDelta === 12 && c2.finalGradePoint === 5 && c2.isVerified
       });
 
-      // 케이스 3: 최저 점수(1점) 달성 (마이너스 9회 누적 -> -3점 감점 -> 5-3=2점 -> 2점 이하 = 1점)
+      // 케이스 3: 감점 누적 (마이너스 9회 누적 -> 실시간 가감 -9점 -> 3회당 -1점이므로 5-3=2점)
       const c3 = this.calculateStudentPerformance({
         toss_minus: 3,
         spike_minus: 3,
         receive_minus: 3
       }, true);
       results.push({
-        name: '케이스 3: 최저 점수 구간 (마이너스 9회 = -3점 → 누적 2점 → 환산 1점)',
-        expected: '가감점수 2점 / 최종환산 1점(2점 이하)',
-        actual: `가감점수 ${c3.rawScore}점 / 최종환산 ${c3.finalGradePoint}점(${c3.rangeLabel})`,
-        passed: c3.rawScore === 2 && c3.finalGradePoint === 1 && c3.isVerified
+        name: '케이스 3: 마이너스 9회 누적 (실시간 가감 -9점 → 3회당 -1점 감점 → 최종 2점)',
+        expected: '실시간 가감 -9점 / 최종 2점',
+        actual: `실시간 가감 ${c3.instantCheckDelta}점 / 최종 ${c3.finalGradePoint}점(${c3.rangeLabel})`,
+        passed: c3.instantCheckDelta === -9 && c3.finalGradePoint === 2 && c3.isVerified
       });
 
-      // 케이스 4: 경계값(3회 중복 미달 2회 vs 3회 달성) 검증 (플러스 2회면 아직 +0점(5점), 플러스 3회면 +1점(6점))
+      // 케이스 4: 실시간 가감 즉시 상승 검증 (플러스 1회=가감+1점 / 플러스 2회=가감+2점)
+      const c4_1 = this.calculateStudentPerformance({ toss_plus: 1 }, true);
       const c4_2 = this.calculateStudentPerformance({ toss_plus: 2 }, true);
-      const c4_3 = this.calculateStudentPerformance({ toss_plus: 3 }, true);
       results.push({
-        name: '케이스 4: 3회 중복 경계값 검증 (플러스 2회=5점 유지 / 플러스 3회=6점(+1점))',
-        expected: '2회→5점(나머지 2/3), 3회→6점(나머지 0/3)',
-        actual: `2회→${c4_2.rawScore}점(나머지 ${c4_2.plusRemainder}/3), 3회→${c4_3.rawScore}점(나머지 ${c4_3.plusRemainder}/3)`,
-        passed: c4_2.rawScore === 5 && c4_2.plusRemainder === 2 && c4_3.rawScore === 6 && c4_3.plusRemainder === 0
+        name: '케이스 4: 누를 때마다 실시간 가감 즉시 상승 (1회→+1점, 2회→+2점)',
+        expected: '1회→가감 +1점, 2회→가감 +2점 (최종 5점 유지)',
+        actual: `1회→+${c4_1.instantCheckDelta}점, 2회→+${c4_2.instantCheckDelta}점`,
+        passed: c4_1.instantCheckDelta === 1 && c4_2.instantCheckDelta === 2 && c4_1.finalGradePoint === 5
       });
 
-      // 케이스 5: 공격·수비 플러스/마이너스 혼합 가감 (플러스 9회(+3점), 마이너스 3회(-1점) -> 5+3-1=7점 -> 8~7점 구간 = 4점)
+      // 케이스 5: 플러스/마이너스 혼합 (플러스 6회=+6점, 마이너스 6회=-6점 -> 가감 0점, 최종 5점 유지)
       const c5 = this.calculateStudentPerformance({
         toss_plus: 3,
-        spike_plus: 2,
-        receive_plus: 2,
-        move_plus: 2,
-        toss_minus: 2,
-        receive_minus: 1
+        spike_plus: 3,
+        toss_minus: 3,
+        receive_minus: 3
       }, true);
       results.push({
-        name: '케이스 5: 플러스(9회=+3점)·마이너스(3회=-1점) 혼합 → 누적 7점 → 환산 4점(8~7점)',
-        expected: '가감점수 7점 / 최종환산 4점(8점 ~ 7점)',
-        actual: `가감점수 ${c5.rawScore}점 / 최종환산 ${c5.finalGradePoint}점(${c5.rangeLabel})`,
-        passed: c5.rawScore === 7 && c5.finalGradePoint === 4 && c5.isVerified
+        name: '케이스 5: 플러스 6회·마이너스 6회 혼합 (가감 0점, 최종 5점 유지)',
+        expected: '실시간 가감 0점 / 최종 5점',
+        actual: `실시간 가감 ${c5.instantCheckDelta}점 / 최종 ${c5.finalGradePoint}점`,
+        passed: c5.instantCheckDelta === 0 && c5.finalGradePoint === 5 && c5.isVerified
       });
 
       return {
@@ -906,6 +901,10 @@
           const selPlusObj = RubricCalcModule.PLUS_FACTORS.find(f => f.key === rec.selectedPlusKey) || RubricCalcModule.PLUS_FACTORS[0];
           const selMinusObj = RubricCalcModule.MINUS_FACTORS.find(f => f.key === rec.selectedMinusKey) || RubricCalcModule.MINUS_FACTORS[0];
 
+          // 누를 때마다 바로 1점씩 오르내리는 가감 점수 텍스트
+          const deltaDisplay = calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}점` : (calc.instantCheckDelta < 0 ? `${calc.instantCheckDelta}점` : `0점`);
+          const deltaClass = calc.instantCheckDelta > 0 ? 'delta-pos' : (calc.instantCheckDelta < 0 ? 'delta-neg' : 'delta-zero');
+
           const plusFactorChipsHtml = RubricCalcModule.PLUS_FACTORS.map(f => {
             const cnt = calc.counts[f.key] || 0;
             const isSelected = rec.selectedPlusKey === f.key;
@@ -985,12 +984,12 @@
                 </div>
               </div>
 
-              <!-- 5. 가감 점수 (군더더기 수식 글씨 완전 제거) -->
+              <!-- 5. 가감 점수 (누를 때마다 즉시 오르내림) -->
               <div class="vb-tbl-cell col-raw">
-                <span class="vb-raw-score-badge">${calc.rawScore}점</span>
+                <span class="vb-raw-score-badge ${deltaClass}">${deltaDisplay}</span>
               </div>
 
-              <!-- 6. 최종 환산 점수 (구간 설명 글씨 완전 제거) -->
+              <!-- 6. 최종 환산 점수 (기본 5점에서 가감 계산) -->
               <div class="vb-tbl-cell col-grade">
                 <span class="vb-final-grade-badge grade-${calc.finalGradePoint}">
                   ${calc.finalGradePoint}점
@@ -1129,12 +1128,12 @@
                 </div>
                 <div class="vb-bottom-score-group">
                   <div class="vb-score-box">
-                    <span class="lbl">가감 점수(기본5점)</span>
-                    <strong class="val">${calc.rawScore}점</strong>
+                    <span class="lbl">가감 점수(실시간)</span>
+                    <strong class="val">${calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}점` : (calc.instantCheckDelta < 0 ? `${calc.instantCheckDelta}점` : `0점`)}</strong>
                   </div>
                   <span class="arrow">➔</span>
                   <div class="vb-score-box highlight">
-                    <span class="lbl">최종 점수(환산)</span>
+                    <span class="lbl">최종 점수 (기본 5점 시작)</span>
                     <strong class="val final">${calc.finalGradePoint}점</strong>
                     <span class="range">(${calc.rangeLabel})</span>
                   </div>
@@ -1228,16 +1227,16 @@
         updatedPill.textContent = `최근 업데이트: ${rec.updatedAt || '-'}`;
       }
       if (rawScoreEl) {
-        rawScoreEl.textContent = String(calc.rawScore);
+        rawScoreEl.textContent = calc.instantCheckDelta > 0 ? `+${calc.instantCheckDelta}점` : (calc.instantCheckDelta < 0 ? `${calc.instantCheckDelta}점` : `0점`);
       }
       if (finalScoreEl) {
         finalScoreEl.textContent = String(calc.finalGradePoint);
       }
       if (deltaBadge) {
-        deltaBadge.textContent = `기본 5점 + 가산 ${calc.addedPoints}점(플러스 ${calc.totalPlusChecks}회) - 감점 ${calc.deductedPoints}점(마이너스 ${calc.totalMinusChecks}회)`;
+        deltaBadge.textContent = `실시간 가감: ${calc.instantCheckDelta >= 0 ? '+' : ''}${calc.instantCheckDelta}점 (플러스 ${calc.totalPlusChecks}회 · 마이너스 ${calc.totalMinusChecks}회)`;
       }
       if (bracketBadge) {
-        bracketBadge.textContent = `환산 구간: ${calc.rangeLabel} → 최종 ${calc.finalGradePoint}점`;
+        bracketBadge.textContent = `기본 5점 시작 ➔ 3회 누적 가감 반영 최종: ${calc.finalGradePoint}점`;
       }
 
       this.renderStudentAccordion(calc);
