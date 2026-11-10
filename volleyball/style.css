@@ -1,272 +1,377 @@
+/* ==========================================================================
+   배구(Volleyball) 경기 수행 능력 평가 전용 스타일시트
+   - Impeccable Design System: Out-of-Distribution Craft
+   - Mode: Operate & Evaluate (교사 신속 평가 + 학생 한눈 확인)
+   - Principles: Bold Hierarchy, Generous Spacing, Robust Typography & Anti-Overflow
+   ========================================================================== */
+
 :root {
-  --vb-bg: #f1f5f9;
+  /* Color Palette: Deep Slate Canvas with Electric Cobalt & Amber Gold Accents */
+  --vb-bg: #f8fafc;
+  --vb-bg-alt: #f1f5f9;
   --vb-surface: #ffffff;
-  --vb-surface-soft: #f8fafc;
+  --vb-surface-hover: #f8fafc;
+  --vb-surface-active: #f1f5f9;
   --vb-border: #e2e8f0;
   --vb-border-strong: #cbd5e1;
-  --vb-text: #0f172a;
-  --vb-text-sub: #475569;
+  --vb-border-focus: #3b82f6;
+
+  /* Typography Colors */
+  --vb-text: #090d16;
+  --vb-text-sub: #334155;
   --vb-text-muted: #64748b;
-  --vb-primary: #2563eb;
-  --vb-primary-dark: #1d4ed8;
+  --vb-text-on-dark: #f8fafc;
+
+  /* Brand Accents */
+  --vb-primary: #1d4ed8;
+  --vb-primary-hover: #1e40af;
   --vb-primary-light: #eff6ff;
-  --vb-success: #059669;
-  --vb-success-bg: #ecfdf5;
-  --vb-warn: #d97706;
-  --vb-warn-bg: #fffbeb;
-  --vb-danger: #dc2626;
-  --vb-danger-bg: #fef2f2;
-  --vb-radius-lg: 14px;
-  --vb-radius-md: 10px;
-  --vb-radius-sm: 6px;
-  --vb-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+  --vb-primary-subtle: #dbeafe;
+
+  /* State Colors */
+  --vb-plus: #1e40af;
+  --vb-plus-bg: #eff6ff;
+  --vb-plus-border: #bfdbfe;
+  --vb-minus: #b91c1c;
+  --vb-minus-bg: #fef2f2;
+  --vb-minus-border: #fecaca;
+  --vb-gold: #eab308;
+  --vb-gold-light: #fef9c3;
+  --vb-gold-border: #fef08a;
+
+  /* Radii & Shadows */
+  --vb-radius-sm: 8px;
+  --vb-radius-md: 12px;
+  --vb-radius-lg: 18px;
+  --vb-radius-xl: 24px;
+  --vb-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --vb-shadow-md: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --vb-shadow-lg: 0 12px 28px -4px rgba(15, 23, 42, 0.09), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+
+  /* Spacing Rhythm */
+  --vb-space-unit: 1.25rem;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
-  background: var(--vb-bg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', 'Malgun Gothic', sans-serif;
+  background-color: var(--vb-bg);
   color: var(--vb-text);
+  line-height: 1.55;
   min-height: 100vh;
-  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .hidden {
   display: none !important;
 }
 
+/* ==========================================================================
+   1. 컨테이너 & 레이아웃 여백 (시원하고 여유로운 간격 확보)
+   ========================================================================== */
 .vb-app-container {
-  max-width: 1380px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 1.2rem 1.4rem 2.5rem;
+  padding: 1.75rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* 헤더 */
+@media (max-width: 768px) {
+  .vb-app-container {
+    padding: 1rem 1rem 3rem;
+    gap: 1.2rem;
+  }
+}
+
+/* ==========================================================================
+   2. 최상단 헤더 배너: 과감하고 세련된(Bolder) 다크 인디고 & 코발트 그라디언트
+   ========================================================================== */
 .vb-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
-  background: var(--vb-surface);
-  border: 1px solid var(--vb-border);
-  border-radius: var(--vb-radius-lg);
-  padding: 1rem 1.35rem;
-  box-shadow: var(--vb-shadow);
-  margin-bottom: 1rem;
+  gap: 1.25rem;
+  background: linear-gradient(135deg, #090d16 0%, #0f172a 45%, #1e293b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--vb-radius-xl);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.vb-header::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.28) 0%, rgba(59, 130, 246, 0) 70%);
+  pointer-events: none;
+}
+
+.vb-header-left {
+  position: relative;
+  z-index: 1;
 }
 
 .vb-brand-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
+  gap: 0.65rem;
+  margin-bottom: 0.45rem;
+  flex-wrap: wrap;
 }
 
 .vb-live-dot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: var(--vb-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  background: #38bdf8;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.28);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.92); }
 }
 
 .vb-badge {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--vb-primary);
-  background: var(--vb-primary-light);
-  border: 1px solid #bfdbfe;
-  padding: 2px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  padding: 3px 10px;
   border-radius: 999px;
+  text-transform: uppercase;
 }
 
 .vb-role-pill {
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--vb-success);
-  background: var(--vb-success-bg);
-  border: 1px solid #a7f3d0;
-  padding: 2px 8px;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  padding: 3px 10px;
   border-radius: 999px;
 }
 
 .vb-role-pill.student-mode {
-  color: #7c3aed;
-  background: #f5f3ff;
-  border-color: #ddd6fe;
+  color: #c084fc;
+  background: rgba(192, 132, 252, 0.14);
+  border-color: rgba(192, 132, 252, 0.35);
 }
 
 .vb-title {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--vb-text);
+  font-size: 1.65rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+@media (max-width: 640px) {
+  .vb-title {
+    font-size: 1.35rem;
+  }
 }
 
 .vb-header-right {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.85rem;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
 }
 
+/* 역할 전환 탭 컨트롤 */
 .vb-role-switch-group {
   display: inline-flex;
-  background: #f1f5f9;
-  border: 1px solid var(--vb-border);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--vb-radius-md);
-  padding: 3px;
+  padding: 4px;
 }
 
 .vb-role-btn {
   border: none;
   background: transparent;
-  padding: 0.45rem 0.9rem;
-  border-radius: 7px;
-  font-size: 0.85rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--vb-radius-sm);
+  font-size: 0.88rem;
   font-weight: 700;
-  color: var(--vb-text-sub);
+  color: #cbd5e1;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+}
+
+.vb-role-btn:hover {
+  color: #ffffff;
 }
 
 .vb-role-btn.active {
-  background: var(--vb-surface);
-  color: var(--vb-primary);
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-/* 버튼 공통 */
+/* 버튼 공통 사양 */
 .vb-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  font-size: 0.85rem;
+  gap: 0.4rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  padding: 0.52rem 0.95rem;
+  padding: 0.6rem 1.15rem;
   border-radius: var(--vb-radius-md);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.14s ease;
+  transition: all 0.16s ease;
+  white-space: nowrap;
 }
 
 .vb-btn-sm {
-  padding: 0.42rem 0.78rem;
-  font-size: 0.8rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  border-radius: var(--vb-radius-sm);
 }
 
 .vb-btn-primary {
-  background: var(--vb-primary);
+  background: #2563eb;
   color: #ffffff;
+  border-color: #1d4ed8;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
 }
 
 .vb-btn-primary:hover {
-  background: var(--vb-primary-dark);
+  background: #1d4ed8;
+  transform: translateY(-1px);
 }
 
 .vb-btn-secondary {
-  background: #f8fafc;
-  color: var(--vb-text);
-  border-color: var(--vb-border-strong);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
 }
 
 .vb-btn-secondary:hover {
-  background: #e2e8f0;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
 .vb-btn-outline {
   background: var(--vb-surface);
   color: var(--vb-primary);
-  border-color: #93c5fd;
+  border-color: #bfdbfe;
 }
 
 .vb-btn-outline:hover {
   background: var(--vb-primary-light);
+  border-color: var(--vb-primary);
 }
 
 .vb-btn-chip {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  padding: 0.32rem 0.7rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
   border: 1px solid var(--vb-border-strong);
-  background: var(--vb-surface-soft);
+  background: var(--vb-surface);
   color: var(--vb-text-sub);
   cursor: pointer;
+  transition: all 0.14s ease;
 }
 
 .vb-btn-chip:hover {
   background: #e2e8f0;
-}
-
-/* 토스트 */
-.vb-toast {
-  background: #0f172a;
-  color: #ffffff;
-  padding: 0.75rem 1.1rem;
-  border-radius: var(--vb-radius-md);
-  font-size: 0.88rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  box-shadow: var(--vb-shadow);
-}
-
-/* 카드 공통 */
-.vb-card {
-  background: var(--vb-surface);
-  border: 1px solid var(--vb-border);
-  border-radius: var(--vb-radius-lg);
-  padding: 1.2rem;
-  box-shadow: var(--vb-shadow);
-}
-
-.vb-section-title {
-  font-size: 1.02rem;
-  font-weight: 800;
   color: var(--vb-text);
 }
 
-.vb-section-sub {
-  font-size: 0.84rem;
-  color: var(--vb-text-sub);
-  margin-top: 0.2rem;
+/* ==========================================================================
+   3. 카드 공통 컴포넌트: 깔끔한 여백과 명확한 경계선
+   ========================================================================== */
+.vb-card {
+  background: var(--vb-surface);
+  border: 1px solid var(--vb-border);
+  border-radius: var(--vb-radius-xl);
+  padding: 1.6rem 1.85rem;
+  box-shadow: var(--vb-shadow-md);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* 사진 참조 루브릭 상단 안내 및 환산표 */
+.vb-section-title {
+  font-size: 1.18rem;
+  font-weight: 900;
+  color: var(--vb-text);
+  letter-spacing: -0.01em;
+}
+
+.vb-section-sub {
+  font-size: 0.9rem;
+  color: var(--vb-text-sub);
+  margin-top: 0.35rem;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   4. 상단 루브릭 기준 카드 & 5점~1점 환산표 (시각적 계층 강화)
+   ========================================================================== */
 .vb-rubric-reference-card {
-  margin-bottom: 1rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
 }
 
 .vb-rubric-ref-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--vb-border);
 }
 
 .vb-compliance-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
   flex-wrap: wrap;
 }
 
 .vb-criteria-and-table-grid {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: 1rem;
-  margin-top: 0.9rem;
-  align-items: center;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+  align-items: stretch;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1040px) {
   .vb-criteria-and-table-grid {
     grid-template-columns: 1fr;
   }
@@ -275,7 +380,7 @@ body {
 .vb-criteria-boxes {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 @media (max-width: 640px) {
@@ -285,205 +390,271 @@ body {
 }
 
 .vb-criteria-item {
-  border: 1px solid var(--vb-border);
   border-radius: var(--vb-radius-md);
-  padding: 0.75rem 0.9rem;
-  background: var(--vb-surface-soft);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.vb-criteria-item.attack-box {
+  background: #f0f7ff;
+  border: 1px solid #bfdbfe;
+}
+
+.vb-criteria-item.defense-box {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
 }
 
 .vb-criteria-title {
-  font-size: 0.88rem;
+  font-size: 0.96rem;
   font-weight: 800;
-  color: var(--vb-text);
-  margin-bottom: 0.35rem;
+  color: #0f172a;
+  margin-bottom: 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .vb-criteria-list {
   list-style: none;
-  font-size: 0.79rem;
+  font-size: 0.84rem;
   color: var(--vb-text-sub);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  line-height: 1.5;
 }
 
 .plus-txt {
-  color: var(--vb-primary-dark);
+  color: #1e40af;
+  font-weight: 800;
 }
 
 .minus-txt {
-  color: var(--vb-danger);
+  color: #b91c1c;
+  font-weight: 800;
 }
 
+/* 5점 ~ 1점 환산표 */
 .vb-conversion-table-wrap {
-  background: #f8fafc;
-  border: 1px solid var(--vb-border-strong);
+  background: #0f172a;
+  color: #ffffff;
   border-radius: var(--vb-radius-md);
-  padding: 0.75rem 0.9rem;
+  padding: 1.2rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.2);
 }
 
 .vb-table-caption {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--vb-text-sub);
-  margin-bottom: 0.45rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-bottom: 0.75rem;
 }
 
 .vb-photo-score-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: center;
-  font-size: 0.84rem;
-  background: #ffffff;
+  font-size: 0.88rem;
+  border-radius: var(--vb-radius-sm);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .vb-photo-score-table th,
 .vb-photo-score-table td {
-  border: 1px solid #94a3b8;
-  padding: 0.45rem 0.35rem;
+  padding: 0.65rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .vb-photo-score-table th {
-  background: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
   font-weight: 800;
-  color: var(--vb-text);
+  color: #cbd5e1;
+  font-size: 0.85rem;
 }
 
 .vb-photo-score-table .default-start-col {
-  background: #eff6ff;
-  color: var(--vb-primary-dark);
+  background: rgba(56, 189, 248, 0.22);
+  color: #7dd3fc;
+  font-weight: 800;
 }
 
+.vb-photo-score-table td strong {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+/* 심의 설정 체크리스트 */
 .vb-purpose-checklist {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 0.85rem;
-  padding-top: 0.85rem;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
   border-top: 1px dashed var(--vb-border);
 }
 
 .vb-check-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.79rem;
+  gap: 0.5rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--vb-text-sub);
-  background: var(--vb-surface-soft);
-  border: 1px solid var(--vb-border);
-  padding: 0.32rem 0.7rem;
-  border-radius: 8px;
+  background: var(--vb-bg);
+  border: 1px solid var(--vb-border-strong);
+  padding: 0.42rem 0.9rem;
+  border-radius: var(--vb-radius-sm);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.vb-check-chip:hover {
+  background: #e2e8f0;
+}
+
+.vb-check-chip input[type="checkbox"] {
+  accent-color: var(--vb-primary);
+  width: 16px;
+  height: 16px;
   cursor: pointer;
 }
 
 .vb-test-panel {
-  margin-top: 0.85rem;
-  padding: 0.85rem 1rem;
+  margin-top: 1rem;
+  padding: 1rem 1.2rem;
   border-radius: var(--vb-radius-md);
-  background: #0f172a;
+  background: #090d16;
   color: #f8fafc;
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-family: 'JetBrains Mono', monospace;
+  line-height: 1.7;
 }
 
-/* 툴바 카드 */
+/* ==========================================================================
+   5. 툴바 카드 (학생 추가 & 전원 초기화)
+   ========================================================================== */
 .vb-toolbar-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.85rem;
-  padding: 0.9rem 1.2rem;
-  margin-bottom: 0.9rem;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  background: #ffffff;
+  border: 1px solid var(--vb-border);
 }
 
 .vb-toolbar-left {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.vb-card-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--vb-text);
+}
+
+.vb-count-badge {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--vb-primary);
+  background: var(--vb-primary-light);
+  border: 1px solid #bfdbfe;
+  padding: 0.28rem 0.85rem;
+  border-radius: 999px;
 }
 
 .vb-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.55rem;
   flex-wrap: wrap;
-}
-
-.vb-card-title {
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.vb-count-badge {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--vb-primary);
-  background: var(--vb-primary-light);
-  border: 1px solid #bfdbfe;
-  padding: 0.22rem 0.65rem;
-  border-radius: 999px;
 }
 
 .vb-input,
 .vb-select {
   border: 1px solid var(--vb-border-strong);
   border-radius: var(--vb-radius-sm);
-  padding: 0.42rem 0.65rem;
-  font-size: 0.84rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.88rem;
   color: var(--vb-text);
-  background: var(--vb-surface);
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vb-input:focus,
+.vb-select:focus {
+  outline: none;
+  border-color: var(--vb-border-focus);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
 }
 
 .vb-input-sm {
-  padding: 0.38rem 0.58rem;
-  font-size: 0.8rem;
+  padding: 0.44rem 0.7rem;
+  font-size: 0.84rem;
 }
 
-/* ========================================================================= */
-/* 핵심: 학생별 행 (학번·이름 옆 플러스/마이너스 + 토스/스파이크/리시브/좋은 움직임 체크) */
-/* ========================================================================= */
+/* ==========================================================================
+   6. 핵심: 학생별 실시간 평가 행 (학번·이름 옆 빠른 +/- 버튼 & 요소 체크)
+   ========================================================================== */
 .vb-student-eval-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 1.15rem;
 }
 
 .vb-student-eval-row {
   background: var(--vb-surface);
   border: 1px solid var(--vb-border);
-  border-radius: var(--vb-radius-lg);
-  padding: 1rem 1.15rem;
-  box-shadow: var(--vb-shadow);
+  border-radius: var(--vb-radius-xl);
+  padding: 1.35rem 1.6rem;
+  box-shadow: var(--vb-shadow-sm);
   display: grid;
-  grid-template-columns: 230px 1fr 270px;
-  gap: 1rem;
+  grid-template-columns: 260px 1fr 290px;
+  gap: 1.5rem;
   align-items: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-@media (max-width: 1120px) {
+.vb-student-eval-row:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--vb-shadow-md);
+}
+
+@media (max-width: 1200px) {
   .vb-student-eval-row {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 }
 
-/* [좌측] 학번 · 이름 + 바로 옆 대표 +/- 버튼 */
+/* [좌측] 학번·이름 + 바로 옆 빠른 +/- 버튼 */
 .vb-stu-left-identity {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  padding-right: 0.75rem;
+  gap: 0.75rem;
+  padding-right: 1.2rem;
   border-right: 1px solid var(--vb-border);
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1200px) {
   .vb-stu-left-identity {
     border-right: none;
     border-bottom: 1px solid var(--vb-border);
     padding-right: 0;
-    padding-bottom: 0.75rem;
+    padding-bottom: 1.1rem;
   }
 }
 
@@ -491,31 +662,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .vb-stu-num-badge {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 800;
-  color: var(--vb-primary-dark);
+  color: var(--vb-primary);
   background: var(--vb-primary-light);
   border: 1px solid #bfdbfe;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 6px;
 }
 
 .vb-stu-name-strong {
-  font-size: 1.12rem;
-  font-weight: 800;
+  font-size: 1.22rem;
+  font-weight: 900;
   color: var(--vb-text);
+  letter-spacing: -0.01em;
 }
 
-/* 학번·이름 바로 옆 빠른 플러스 / 마이너스 버튼 바 */
+/* 빠른 플러스/마이너스 바 */
 .vb-quick-pm-bar {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .vb-btn-quick-plus,
@@ -524,19 +696,21 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.6rem;
-  border-radius: 8px;
-  font-size: 0.86rem;
+  gap: 0.3rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--vb-radius-sm);
+  font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: transform 0.08s ease, background 0.12s ease;
+  transition: transform 0.08s ease, background-color 0.12s ease;
+  white-space: nowrap;
 }
 
 .vb-btn-quick-plus {
   background: #2563eb;
   color: #ffffff;
+  border-color: #1d4ed8;
 }
 
 .vb-btn-quick-plus:hover {
@@ -546,6 +720,7 @@ body {
 .vb-btn-quick-minus {
   background: #dc2626;
   color: #ffffff;
+  border-color: #b91c1c;
 }
 
 .vb-btn-quick-minus:hover {
@@ -558,41 +733,44 @@ body {
 }
 
 .vb-btn-undo-mini {
-  padding: 0.48rem 0.55rem;
-  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--vb-radius-sm);
   border: 1px solid var(--vb-border-strong);
-  background: var(--vb-surface-soft);
-  font-size: 0.75rem;
+  background: var(--vb-bg);
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--vb-text-sub);
   cursor: pointer;
+  transition: all 0.12s ease;
 }
 
 .vb-btn-undo-mini:hover {
   background: #e2e8f0;
+  color: var(--vb-text);
 }
 
-/* [중앙] 플러스/마이너스 요소 체크 버튼 그리드 (정확한 토스, 스파이크, 리시브, 좋은 움직임) */
+/* [중앙] 플러스/마이너스 요소 체크 버튼 그룹 (토스, 스파이크, 리시브, 좋은 움직임) */
 .vb-stu-center-factors {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.75rem;
 }
 
 .vb-factor-group-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.42rem;
+  gap: 0.55rem;
 }
 
 .vb-factor-group-tag {
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 800;
-  padding: 0.22rem 0.55rem;
+  padding: 0.28rem 0.7rem;
   border-radius: 6px;
-  min-width: 84px;
+  min-width: 96px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .vb-factor-group-tag.plus-tag {
@@ -607,20 +785,20 @@ body {
   border: 1px solid #fecaca;
 }
 
-/* 요소 체크 버튼 (클릭할 때마다 해당 요소 카운트 +1 & 선택 표시) */
+/* 개별 요소 체크 버튼 */
 .vb-factor-check-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.38rem 0.68rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  gap: 0.45rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--vb-radius-sm);
+  font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
   border: 1px solid var(--vb-border-strong);
-  background: var(--vb-surface-soft);
+  background: #ffffff;
   color: var(--vb-text);
-  transition: all 0.12s ease;
+  transition: all 0.14s ease;
 }
 
 .vb-factor-check-btn.plus-factor:hover {
@@ -631,7 +809,8 @@ body {
 .vb-factor-check-btn.plus-factor.active-factor {
   border: 2px solid #2563eb;
   background: #dbeafe;
-  color: #1e3a8a;
+  color: #1e40af;
+  font-weight: 800;
 }
 
 .vb-factor-check-btn.minus-factor:hover {
@@ -643,28 +822,29 @@ body {
   border: 2px solid #dc2626;
   background: #fee2e2;
   color: #991b1b;
+  font-weight: 800;
 }
 
 .vb-factor-count-pill {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 800;
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.08);
 }
 
-/* 3회 중복 진행 상태 바 */
+/* 3회 중복 진행 안내 라인 */
 .vb-triple-progress-line {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.65rem;
-  font-size: 0.76rem;
+  gap: 0.85rem;
+  font-size: 0.82rem;
   color: var(--vb-text-sub);
-  background: #f8fafc;
-  padding: 0.35rem 0.65rem;
-  border-radius: 6px;
+  background: var(--vb-bg);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--vb-radius-sm);
   border: 1px dashed var(--vb-border-strong);
 }
 
@@ -681,16 +861,17 @@ body {
   color: #b91c1c;
 }
 
-/* [우측] 점수 표시 박스 (기본 5점 시작 가감 점수 -> 최종 5~1점 환산 점수) */
+/* [우측] 실시간 점수 패널 (기본 5점 가감 -> 최종 5점 만점 환산) */
 .vb-stu-right-score-panel {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.65rem;
-  background: #0f172a;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
   color: #ffffff;
-  padding: 0.75rem 0.95rem;
+  padding: 0.95rem 1.25rem;
   border-radius: var(--vb-radius-md);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
 }
 
 .vb-score-col {
@@ -701,18 +882,19 @@ body {
 }
 
 .vb-score-col-label {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 800;
   color: #94a3b8;
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
 }
 
 .vb-score-col-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 1.65rem;
-  font-weight: 800;
+  font-size: 1.85rem;
+  font-weight: 900;
   color: #38bdf8;
-  line-height: 1.1;
+  line-height: 1.05;
 }
 
 .vb-score-col-val.final-grade-val {
@@ -720,109 +902,113 @@ body {
 }
 
 .vb-score-col-sub {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: #cbd5e1;
-  margin-top: 0.1rem;
+  margin-top: 0.2rem;
+  white-space: nowrap;
 }
 
 .vb-score-divider-arrow {
-  color: #64748b;
-  font-weight: 800;
-  font-size: 1rem;
+  color: #475569;
+  font-weight: 900;
+  font-size: 1.25rem;
 }
 
-/* ========================================================================= */
-/* 학생용 화면: 총점(큰 숫자) + 아코디언 항목별 세부 */
-/* ========================================================================= */
+/* ==========================================================================
+   7. 학생용 화면: 총점 초대형 숫자 + 아코디언 컴포넌트
+   ========================================================================== */
 .vb-student-lookup-card {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .vb-student-lookup-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
 }
 
 .vb-lookup-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
   flex-wrap: wrap;
 }
 
 .vb-student-result-wrap {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 1.5rem;
 }
 
+/* 학생용 히어로 점수 카드 */
 .vb-hero-score-card {
   text-align: center;
-  padding: 2rem 1.5rem;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  padding: 2.75rem 2rem;
+  background: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e293b 100%);
   color: #ffffff;
-  border: none;
+  border-radius: var(--vb-radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.4);
 }
 
 .vb-hero-top-meta {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 0.85rem;
+  margin-bottom: 1.1rem;
 }
 
 .vb-student-identity-pill {
-  font-size: 0.92rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 900;
   background: rgba(56, 189, 248, 0.18);
   color: #7dd3fc;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  padding: 0.3rem 0.9rem;
+  border: 1px solid rgba(56, 189, 248, 0.38);
+  padding: 0.35rem 1.15rem;
   border-radius: 999px;
 }
 
 .vb-updated-time-pill {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   color: #94a3b8;
 }
 
 .vb-hero-eyebrow {
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
   color: #cbd5e1;
-  margin-bottom: 1rem;
+  margin-bottom: 1.35rem;
 }
 
 .vb-hero-dual-score-row {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
   flex-wrap: wrap;
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.5rem;
 }
 
 .vb-hero-score-block {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 1.1rem 1.6rem;
-  min-width: 260px;
+  border-radius: var(--vb-radius-lg);
+  padding: 1.35rem 2rem;
+  min-width: 280px;
 }
 
 .vb-hero-score-block.final-block {
   border-color: rgba(250, 204, 21, 0.45);
-  background: rgba(250, 204, 21, 0.07);
+  background: rgba(250, 204, 21, 0.08);
 }
 
 .vb-hero-block-label {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 800;
   color: #cbd5e1;
 }
 
@@ -830,80 +1016,96 @@ body {
   display: flex;
   justify-content: center;
   align-items: baseline;
-  gap: 0.35rem;
-  margin: 0.4rem 0 0.5rem;
+  gap: 0.45rem;
+  margin: 0.5rem 0 0.65rem;
 }
 
 .vb-hero-big-number {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 4.6rem;
-  font-weight: 800;
+  font-size: 5.2rem;
+  font-weight: 900;
   color: #38bdf8;
   line-height: 1;
+  text-shadow: 0 4px 28px rgba(56, 189, 248, 0.4);
 }
 
 .vb-hero-big-number.final-gold {
   color: #facc15;
+  text-shadow: 0 4px 28px rgba(250, 204, 21, 0.4);
 }
 
 .vb-hero-score-unit {
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: #94a3b8;
 }
 
 .vb-hero-sub-pill {
   display: inline-block;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
   color: #bae6fd;
   background: rgba(56, 189, 248, 0.15);
-  padding: 0.22rem 0.7rem;
+  padding: 0.28rem 0.85rem;
   border-radius: 999px;
 }
 
 .vb-hero-sub-pill.gold-pill {
   color: #fef08a;
-  background: rgba(250, 204, 21, 0.18);
+  background: rgba(250, 204, 21, 0.2);
 }
 
 .vb-hero-arrow {
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   color: #64748b;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .vb-hero-summary-text {
-  font-size: 0.88rem;
+  font-size: 0.94rem;
   color: #cbd5e1;
+  line-height: 1.6;
 }
 
-/* 아코디언 컴포넌트 */
+/* ==========================================================================
+   8. 아코디언 세부 섹션 (1회 클릭 즉시 반영)
+   ========================================================================== */
+.vb-accordion-section-card {
+  padding: 1.75rem 2rem;
+}
+
 .vb-accordion-header-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--vb-border);
 }
 
 .vb-accordion-bulk-btns {
   display: flex;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .vb-accordion-list {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.85rem;
 }
 
 .vb-accordion-item {
   border: 1px solid var(--vb-border-strong);
   border-radius: var(--vb-radius-md);
-  background: var(--vb-surface);
+  background: #ffffff;
   overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.vb-accordion-item:hover {
+  border-color: #94a3b8;
 }
 
 .vb-accordion-trigger {
@@ -911,41 +1113,43 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.15rem;
-  background: var(--vb-surface-soft);
+  gap: 1.25rem;
+  padding: 1.15rem 1.4rem;
+  background: #f8fafc;
   border: none;
   text-align: left;
   cursor: pointer;
+  transition: background-color 0.12s ease;
 }
 
 .vb-accordion-trigger:hover {
-  background: #eff6ff;
+  background: #f1f5f9;
 }
 
 .vb-accordion-trigger[aria-expanded="true"] {
-  background: var(--vb-primary-light);
+  background: #eff6ff;
   border-bottom: 1px solid #bfdbfe;
 }
 
 .vb-acc-title-wrap {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
 .vb-acc-index-badge {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
   background: var(--vb-primary);
   color: #ffffff;
-  padding: 0.2rem 0.55rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .vb-acc-item-name {
-  font-size: 0.98rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--vb-text);
 }
@@ -953,24 +1157,25 @@ body {
 .vb-acc-right-meta {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .vb-acc-grade-pill {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 800;
-  color: var(--vb-primary-dark);
+  color: var(--vb-primary);
   background: #dbeafe;
-  padding: 0.26rem 0.75rem;
+  padding: 0.32rem 0.9rem;
   border-radius: 999px;
+  white-space: nowrap;
 }
 
 .vb-acc-chevron {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--vb-text-muted);
-  transition: transform 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .vb-accordion-trigger[aria-expanded="true"] .vb-acc-chevron {
@@ -979,45 +1184,50 @@ body {
 }
 
 .vb-accordion-panel {
-  padding: 1.1rem 1.25rem;
-  background: var(--vb-surface);
-  font-size: 0.88rem;
+  padding: 1.35rem 1.5rem;
+  background: #ffffff;
+  font-size: 0.92rem;
   color: var(--vb-text-sub);
+  line-height: 1.65;
 }
 
 .vb-acc-rubric-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.83rem;
-  margin-top: 0.55rem;
+  font-size: 0.88rem;
+  margin-top: 0.75rem;
+  border-radius: var(--vb-radius-sm);
+  overflow: hidden;
 }
 
 .vb-acc-rubric-table th,
 .vb-acc-rubric-table td {
   border: 1px solid var(--vb-border);
-  padding: 0.5rem 0.65rem;
+  padding: 0.65rem 0.85rem;
   text-align: left;
 }
 
 .vb-acc-rubric-table th {
   background: #f8fafc;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--vb-text);
 }
 
 .vb-acc-rubric-table tr.my-grade-row {
   background: #eff6ff;
   font-weight: 800;
-  color: var(--vb-primary-dark);
+  color: var(--vb-primary);
 }
 
-/* 푸터 및 모달 */
+/* ==========================================================================
+   9. 공통 푸터 & 모달
+   ========================================================================== */
 .vb-footer {
-  margin-top: 2rem;
-  padding: 1.25rem;
+  margin-top: 2.5rem;
+  padding: 1.6rem 2rem;
   background: var(--vb-surface);
   border: 1px solid var(--vb-border);
-  border-radius: var(--vb-radius-lg);
+  border-radius: var(--vb-radius-xl);
   text-align: center;
 }
 
@@ -1026,15 +1236,15 @@ body {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-bottom: 0.6rem;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .vb-footer-link-btn {
   background: none;
   border: none;
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: 0.88rem;
+  font-weight: 800;
   color: var(--vb-primary);
   cursor: pointer;
   text-decoration: underline;
@@ -1048,65 +1258,66 @@ body {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 1.1rem;
-  font-size: 0.78rem;
+  gap: 1.25rem;
+  font-size: 0.82rem;
   color: var(--vb-text-muted);
 }
 
 .vb-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.25rem;
   z-index: 9999;
 }
 
 .vb-modal-dialog {
   background: var(--vb-surface);
-  border-radius: var(--vb-radius-lg);
-  max-width: 760px;
+  border-radius: var(--vb-radius-xl);
+  max-width: 800px;
   width: 100%;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
 }
 
 .vb-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.6rem;
   border-bottom: 1px solid var(--vb-border);
 }
 
 .vb-modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.65rem;
   cursor: pointer;
   color: var(--vb-text-muted);
 }
 
 .vb-modal-body {
-  padding: 1.25rem;
+  padding: 1.5rem 1.6rem;
   overflow-y: auto;
-  font-size: 0.88rem;
-  line-height: 1.65;
+  font-size: 0.92rem;
+  line-height: 1.7;
   color: var(--vb-text-sub);
 }
 
 .vb-modal-body h4 {
   color: var(--vb-text);
-  margin: 0.9rem 0 0.3rem;
-  font-size: 0.95rem;
+  margin: 1.1rem 0 0.4rem;
+  font-size: 1.05rem;
 }
 
 .vb-modal-footer {
-  padding: 0.85rem 1.25rem;
+  padding: 1rem 1.6rem;
   border-top: 1px solid var(--vb-border);
   text-align: right;
 }
