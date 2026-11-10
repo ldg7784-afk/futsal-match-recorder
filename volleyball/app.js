@@ -340,12 +340,23 @@
       { id: 'STU_03', studentNumber: '20103', name: '박리시브' },
       { id: 'STU_04', studentNumber: '20104', name: '최스파이크' },
       { id: 'STU_05', studentNumber: '20105', name: '정수비' },
-      { id: 'STU_06', studentNumber: '20106', name: '강세터' }
+      { id: 'STU_06', studentNumber: '20106', name: '강세터' },
+      { id: 'STU_07', studentNumber: '20107', name: '조블록' },
+      { id: 'STU_08', studentNumber: '20108', name: '윤디그' },
+      { id: 'STU_09', studentNumber: '20109', name: '장서브' },
+      { id: 'STU_10', studentNumber: '20110', name: '임어택' },
+      { id: 'STU_11', studentNumber: '20111', name: '손토스' },
+      { id: 'STU_12', studentNumber: '20112', name: '배네트' },
+      { id: 'STU_13', studentNumber: '20113', name: '신코트' },
+      { id: 'STU_14', studentNumber: '20114', name: '오수비' },
+      { id: 'STU_15', studentNumber: '20115', name: '한리베로' }
     ],
 
     state: {
       students: [],
-      records: {}, // { [studentId]: { counts: {}, selectedPlusKey, selectedMinusKey, history: [], updatedAt } }
+      records: {}, // { [studentId]: { counts: {}, selectedPlusKey, selectedMinusKey, history: [], evalDate, updatedAt } }
+      evalDate: new Date().toISOString().slice(0, 10),
+      viewMode: 'table', // 'table' (가로형 빠른 체크보드) | 'card' (상세 카드)
       ruleEvery3: true,
       privacyMaskMode: false
     },
@@ -354,6 +365,13 @@
       const loaded = this.loadFromStorage();
       if (!loaded) {
         this.resetAllToDefaultFive(false);
+      }
+      if (!this.state.evalDate) {
+        this.state.evalDate = new Date().toISOString().slice(0, 10);
+      }
+      // 최소 15명 보장: 학생 수가 15명 미만인 경우 15명 샘플로 보강
+      if (this.state.students.length < 15) {
+        this.loadSample15(false);
       }
     },
 
@@ -372,6 +390,7 @@
         selectedPlusKey: 'toss_plus',   // 학번·이름 옆 [+ 플러스] 클릭 시 기본 체크될 요소
         selectedMinusKey: 'toss_minus', // 학번·이름 옆 [- 마이너스] 클릭 시 기본 체크될 요소
         history: [],                    // 되돌리기(취소)용 스택
+        evalDate: this.state.evalDate || new Date().toISOString().slice(0, 10),
         updatedAt: new Date().toLocaleString('ko-KR', { hour12: false })
       };
     },
@@ -384,6 +403,8 @@
         if (parsed && Array.isArray(parsed.students) && parsed.students.length > 0) {
           this.state.students = parsed.students;
           this.state.records = parsed.records || {};
+          this.state.evalDate = parsed.evalDate || new Date().toISOString().slice(0, 10);
+          this.state.viewMode = parsed.viewMode || 'table';
           this.state.ruleEvery3 = parsed.ruleEvery3 !== undefined ? !!parsed.ruleEvery3 : true;
           this.state.privacyMaskMode = !!parsed.privacyMaskMode;
           PrivacyGuardModule.maskMode = this.state.privacyMaskMode;
@@ -403,12 +424,24 @@
       const payload = {
         students: this.state.students,
         records: this.state.records,
+        evalDate: this.state.evalDate,
+        viewMode: this.state.viewMode,
         ruleEvery3: this.state.ruleEvery3,
         privacyMaskMode: this.state.privacyMaskMode,
         savedAt: new Date().toISOString()
       };
       localStorage.setItem(VB_STORAGE_KEY, JSON.stringify(payload));
       SyncBus.post('VB_PERFORMANCE_UPDATED', payload);
+    },
+
+    loadSample15(broadcast = true) {
+      this.state.students = JSON.parse(JSON.stringify(this.SAMPLE_STUDENTS));
+      const nextRecords = {};
+      this.state.students.forEach(stu => {
+        nextRecords[stu.id] = this.createEmptyRecord();
+      });
+      this.state.records = nextRecords;
+      if (broadcast) this.saveToStorage();
     },
 
     resetAllToDefaultFive(broadcast = true) {
@@ -441,6 +474,7 @@
         rec.selectedMinusKey = factorKey;
       }
 
+      rec.evalDate = this.state.evalDate || new Date().toISOString().slice(0, 10);
       rec.history.push(factorKey);
       rec.updatedAt = new Date().toLocaleString('ko-KR', { hour12: false });
       this.saveToStorage();
@@ -587,6 +621,56 @@
         this.showToast(`🔗 학생용 결과 확인 링크가 복사되었습니다: ${url}`);
       });
 
+      // 평가 일자 피커 이벤트
+      const dateInput = document.getElementById('evalDateInput');
+      if (dateInput) {
+        dateInput.value = DataModelModule.state.evalDate;
+        dateInput.addEventListener('change', (e) => {
+          const val = e.target.value || new Date().toISOString().slice(0, 10);
+          DataModelModule.state.evalDate = val;
+          DataModelModule.saveToStorage();
+          this.updateEvalDateBadge();
+          this.showToast(`📅 평가 일자가 [${val}] 로 설정되었습니다.`);
+        });
+      }
+
+      // 오늘 날짜로 즉시 설정
+      document.getElementById('setTodayDateBtn')?.addEventListener('click', () => {
+        const today = new Date().toISOString().slice(0, 10);
+        DataModelModule.state.evalDate = today;
+        if (dateInput) dateInput.value = today;
+        DataModelModule.saveToStorage();
+        this.updateEvalDateBadge();
+        this.showToast(`📅 평가 일자를 오늘(${today})로 설정했습니다.`);
+      });
+
+      // 가로형 테이블 vs 카드 뷰 전환 토글
+      document.getElementById('viewModeTableBtn')?.addEventListener('click', () => {
+        DataModelModule.state.viewMode = 'table';
+        DataModelModule.saveToStorage();
+        this.updateViewModeBtns();
+        this.renderTeacherStudentRows();
+      });
+
+      document.getElementById('viewModeCardBtn')?.addEventListener('click', () => {
+        DataModelModule.state.viewMode = 'card';
+        DataModelModule.saveToStorage();
+        this.updateViewModeBtns();
+        this.renderTeacherStudentRows();
+      });
+
+      // 최소 15명 일괄 불러오기
+      document.getElementById('loadSample15Btn')?.addEventListener('click', () => {
+        try {
+          AuthAccessModule.assertTeacherPermission('15명 일괄 불러오기');
+          DataModelModule.loadSample15(true);
+          this.renderAll();
+          this.showToast('👥 15명 학생 명단(기본 5점 초기화)을 성공적으로 불러왔습니다.');
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+
       // 3회 중복 규칙 토글
       document.getElementById('chkRuleEvery3')?.addEventListener('change', (e) => {
         DataModelModule.state.ruleEvery3 = !!e.target.checked;
@@ -625,7 +709,7 @@
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `volleyball_performance_backup_${new Date().toISOString().slice(0, 10)}.json`;
+          a.download = `volleyball_performance_backup_${DataModelModule.state.evalDate || new Date().toISOString().slice(0, 10)}.json`;
           a.click();
           URL.revokeObjectURL(url);
           this.showToast('💾 배구 경기 수행 능력 평가 데이터가 JSON 파일로 백업되었습니다.');
@@ -717,6 +801,41 @@
       document.getElementById('confirmPolicyModalBtn')?.addEventListener('click', closeModal);
     },
 
+    updateEvalDateBadge() {
+      const badge = document.getElementById('currentEvalDateBadge');
+      const curDate = DataModelModule.state.evalDate || new Date().toISOString().slice(0, 10);
+      if (badge) {
+        badge.textContent = `📅 ${curDate} 평가 진행 중`;
+      }
+      const dateInput = document.getElementById('evalDateInput');
+      if (dateInput && dateInput.value !== curDate) {
+        dateInput.value = curDate;
+      }
+    },
+
+    updateViewModeBtns() {
+      const isTable = (DataModelModule.state.viewMode || 'table') === 'table';
+      const tblBtn = document.getElementById('viewModeTableBtn');
+      const crdBtn = document.getElementById('viewModeCardBtn');
+      const container = document.getElementById('teacherStudentRowsContainer');
+
+      if (tblBtn) {
+        tblBtn.classList.toggle('vb-btn-primary', isTable);
+        tblBtn.classList.toggle('vb-btn-outline', !isTable);
+        tblBtn.classList.toggle('active', isTable);
+      }
+      if (crdBtn) {
+        crdBtn.classList.toggle('vb-btn-primary', !isTable);
+        crdBtn.classList.toggle('vb-btn-outline', isTable);
+        crdBtn.classList.toggle('active', !isTable);
+      }
+      if (container) {
+        container.className = isTable
+          ? 'vb-student-board-view mode-horizontal-table'
+          : 'vb-student-board-view mode-card-stack';
+      }
+    },
+
     renderAll() {
       const isTeacher = AuthAccessModule.currentRole === 'teacher';
       document.getElementById('teacherViewSection')?.classList.toggle('hidden', !isTeacher);
@@ -737,6 +856,9 @@
       const maskChk = document.getElementById('chkPrivacyMaskMode');
       if (maskChk) maskChk.checked = DataModelModule.state.privacyMaskMode;
 
+      this.updateEvalDateBadge();
+      this.updateViewModeBtns();
+
       if (isTeacher) {
         this.renderTeacherStudentRows();
       } else {
@@ -746,8 +868,8 @@
 
     /**
      * 교사용 핵심 화면:
-     * 각 학생의 [학번 · 이름] 옆에 [+ 플러스] / [- 마이너스] 버튼과
-     * [정확한 토스, 스파이크, 리시브, 좋은 움직임] 체크 버튼 및 3회 중복 가감 점수를 렌더링
+     * 가로형 테이블 모드 (15명 동시 빠른 체크) / 카드형 모드
+     * 절대 겹치지 않는 구조 설계
      */
     renderTeacherStudentRows() {
       const st = DataModelModule.state;
@@ -755,141 +877,291 @@
       const countBadge = document.getElementById('studentCountBadge');
       if (!container) return;
 
+      const isTableMode = (st.viewMode || 'table') === 'table';
+
       if (countBadge) {
-        countBadge.textContent = `총 ${st.students.length}명 (기본점수 5점 시작 · ${st.ruleEvery3 ? '3회 중복 시 ±1점' : '1회당 ±1점'})`;
+        countBadge.textContent = `총 ${st.students.length}명 동시 평가 (기본점수 5점 시작 · ${st.ruleEvery3 ? '3회 중복 시 ±1점' : '1회당 ±1점'})`;
       }
 
-      container.innerHTML = st.students.map(stu => {
-        const rec = st.records[stu.id] || DataModelModule.createEmptyRecord();
-        const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
-        const dispNum = PrivacyGuardModule.maskStudentId(stu.studentNumber);
-        const dispName = PrivacyGuardModule.formatStudentName(stu.name);
+      if (isTableMode) {
+        // [1] 가로형 빠른 체크보드 모드
+        let headerHtml = `
+          <div class="vb-tbl-head-row">
+            <div class="vb-tbl-th col-stu">학생 (학번·성명)</div>
+            <div class="vb-tbl-th col-quick">빠른 ± 원터치</div>
+            <div class="vb-tbl-th col-plus-factors">➕ 플러스 요인 (가.공격:토스·스파이크 / 나.수비:리시브·움직임)</div>
+            <div class="vb-tbl-th col-minus-factors">➖ 마이너스 요인 (가.공격:토스·스파이크실책 / 나.수비:실패·미흡)</div>
+            <div class="vb-tbl-th col-progress">3회 누적 진행</div>
+            <div class="vb-tbl-th col-raw">가감 점수</div>
+            <div class="vb-tbl-th col-grade">최종 환산</div>
+            <div class="vb-tbl-th col-action">되돌리기</div>
+          </div>
+        `;
 
-        const selPlusObj = RubricCalcModule.PLUS_FACTORS.find(f => f.key === rec.selectedPlusKey) || RubricCalcModule.PLUS_FACTORS[0];
-        const selMinusObj = RubricCalcModule.MINUS_FACTORS.find(f => f.key === rec.selectedMinusKey) || RubricCalcModule.MINUS_FACTORS[0];
+        let rowsHtml = st.students.map((stu, idx) => {
+          const rec = st.records[stu.id] || DataModelModule.createEmptyRecord();
+          const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
+          const dispNum = PrivacyGuardModule.maskStudentId(stu.studentNumber);
+          const dispName = PrivacyGuardModule.formatStudentName(stu.name);
 
-        const plusFactorBtnsHtml = RubricCalcModule.PLUS_FACTORS.map(f => {
-          const cnt = calc.counts[f.key] || 0;
-          const isSelected = rec.selectedPlusKey === f.key;
+          const selPlusObj = RubricCalcModule.PLUS_FACTORS.find(f => f.key === rec.selectedPlusKey) || RubricCalcModule.PLUS_FACTORS[0];
+          const selMinusObj = RubricCalcModule.MINUS_FACTORS.find(f => f.key === rec.selectedMinusKey) || RubricCalcModule.MINUS_FACTORS[0];
+
+          const plusFactorChipsHtml = RubricCalcModule.PLUS_FACTORS.map(f => {
+            const cnt = calc.counts[f.key] || 0;
+            const isSelected = rec.selectedPlusKey === f.key;
+            return `
+              <button
+                type="button"
+                class="vb-factor-chip plus ${isSelected ? 'active-factor' : ''}"
+                data-stu-id="${stu.id}"
+                data-factor-key="${f.key}"
+                title="${f.desc} (클릭 시 +1회 체크)"
+              >
+                <span class="chip-label">${f.label}</span>
+                <span class="chip-cnt">${cnt}</span>
+              </button>
+            `;
+          }).join('');
+
+          const minusFactorChipsHtml = RubricCalcModule.MINUS_FACTORS.map(f => {
+            const cnt = calc.counts[f.key] || 0;
+            const isSelected = rec.selectedMinusKey === f.key;
+            return `
+              <button
+                type="button"
+                class="vb-factor-chip minus ${isSelected ? 'active-factor' : ''}"
+                data-stu-id="${stu.id}"
+                data-factor-key="${f.key}"
+                title="${f.desc} (클릭 시 -1회 체크)"
+              >
+                <span class="chip-label">${f.label}</span>
+                <span class="chip-cnt">${cnt}</span>
+              </button>
+            `;
+          }).join('');
+
           return `
-            <button
-              type="button"
-              class="vb-factor-check-btn plus-factor ${isSelected ? 'active-factor' : ''}"
-              data-stu-id="${stu.id}"
-              data-factor-key="${f.key}"
-              title="${f.desc} (클릭 시 +1회 체크)"
-            >
-              <span>➕ ${f.label}</span>
-              <span class="vb-factor-count-pill">${cnt}회</span>
-            </button>
-          `;
-        }).join('');
+            <div class="vb-tbl-row" data-row-stu-id="${stu.id}">
+              <!-- 1. 학생 식별자 -->
+              <div class="vb-tbl-cell col-stu">
+                <span class="vb-stu-index-num">${idx + 1}</span>
+                <span class="vb-stu-num-badge">${dispNum}</span>
+                <strong class="vb-stu-name-strong">${dispName}</strong>
+              </div>
 
-        const minusFactorBtnsHtml = RubricCalcModule.MINUS_FACTORS.map(f => {
-          const cnt = calc.counts[f.key] || 0;
-          const isSelected = rec.selectedMinusKey === f.key;
-          return `
-            <button
-              type="button"
-              class="vb-factor-check-btn minus-factor ${isSelected ? 'active-factor' : ''}"
-              data-stu-id="${stu.id}"
-              data-factor-key="${f.key}"
-              title="${f.desc} (클릭 시 -1회 체크)"
-            >
-              <span>➖ ${f.label}</span>
-              <span class="vb-factor-count-pill">${cnt}회</span>
-            </button>
-          `;
-        }).join('');
+              <!-- 2. 빠른 +/- 원터치 버튼 -->
+              <div class="vb-tbl-cell col-quick">
+                <button
+                  type="button"
+                  class="vb-quick-btn quick-plus"
+                  data-quick-plus-stu-id="${stu.id}"
+                  title="선택된 플러스 요소(${selPlusObj.label}) +1회 체크"
+                >
+                  ➕ +1
+                </button>
+                <button
+                  type="button"
+                  class="vb-quick-btn quick-minus"
+                  data-quick-minus-stu-id="${stu.id}"
+                  title="선택된 마이너스 요소(${selMinusObj.label}) -1회 체크"
+                >
+                  ➖ -1
+                </button>
+              </div>
 
-        return `
-          <article class="vb-student-eval-row" data-row-stu-id="${stu.id}">
-            <!-- [1] 좌측: 학번 · 이름 + 바로 옆 빠른 플러스(+) / 마이너스(-) 버튼 -->
-            <div class="vb-stu-left-identity">
-              <div class="vb-stu-id-name-line">
-                <div>
-                  <span class="vb-stu-num-badge">${dispNum}</span>
-                  <strong class="vb-stu-name-strong">${dispName}</strong>
+              <!-- 3. 플러스 요소 4종 -->
+              <div class="vb-tbl-cell col-plus-factors">
+                <div class="vb-chips-flex">
+                  ${plusFactorChipsHtml}
                 </div>
+              </div>
+
+              <!-- 4. 마이너스 요소 4종 -->
+              <div class="vb-tbl-cell col-minus-factors">
+                <div class="vb-chips-flex">
+                  ${minusFactorChipsHtml}
+                </div>
+              </div>
+
+              <!-- 5. 3회 누적 진행 상태 -->
+              <div class="vb-tbl-cell col-progress">
+                <div class="vb-progress-pills-col">
+                  <span class="vb-prog-pill plus">
+                    +${calc.totalPlusChecks}회 ➔ <strong>+${calc.addedPoints}점</strong>
+                    ${st.ruleEvery3 ? `<small>(${calc.plusRemainder}/3)</small>` : ''}
+                  </span>
+                  <span class="vb-prog-pill minus">
+                    -${calc.totalMinusChecks}회 ➔ <strong>-${calc.deductedPoints}점</strong>
+                    ${st.ruleEvery3 ? `<small>(${calc.minusRemainder}/3)</small>` : ''}
+                  </span>
+                </div>
+              </div>
+
+              <!-- 6. 가감 점수 (기본 5점) -->
+              <div class="vb-tbl-cell col-raw">
+                <span class="vb-raw-score-badge">${calc.rawScore}점</span>
+                <span class="vb-raw-formula">5+${calc.addedPoints}-${calc.deductedPoints}</span>
+              </div>
+
+              <!-- 7. 최종 환산 점수 (5~1점) -->
+              <div class="vb-tbl-cell col-grade">
+                <span class="vb-final-grade-badge grade-${calc.finalGradePoint}">
+                  ${calc.finalGradePoint}점
+                </span>
+                <span class="vb-grade-range-sub">${calc.rangeLabel}</span>
+              </div>
+
+              <!-- 8. 취소(되돌리기) -->
+              <div class="vb-tbl-cell col-action">
                 <button
                   type="button"
                   class="vb-btn-undo-mini"
                   data-undo-stu-id="${stu.id}"
-                  title="방금 체크한 항목 되돌리기(취소)"
+                  title="방금 체크한 항목 1단계 되돌리기"
                 >
-                  ↩ 취소
-                </button>
-              </div>
-
-              <!-- 학번·이름 바로 옆 플러스 / 마이너스 버튼 -->
-              <div class="vb-quick-pm-bar">
-                <button
-                  type="button"
-                  class="vb-btn-quick-plus"
-                  data-quick-plus-stu-id="${stu.id}"
-                  title="선택된 플러스 요소(${selPlusObj.label}) +1회 추가"
-                >
-                  ➕ 플러스 (${selPlusObj.label})
-                </button>
-                <button
-                  type="button"
-                  class="vb-btn-quick-minus"
-                  data-quick-minus-stu-id="${stu.id}"
-                  title="선택된 마이너스 요소(${selMinusObj.label}) -1회 추가"
-                >
-                  ➖ 마이너스 (${selMinusObj.label})
+                  ↩
                 </button>
               </div>
             </div>
+          `;
+        }).join('');
 
-            <!-- [2] 중앙: 플러스/마이너스 세부 요소 체크 버튼 (정확한 토스, 스파이크, 리시브, 좋은 움직임) -->
-            <div class="vb-stu-center-factors">
-              <div class="vb-factor-group-row">
-                <span class="vb-factor-group-tag plus-tag">플러스(+) 요소</span>
-                ${plusFactorBtnsHtml}
+        container.innerHTML = `<div class="vb-horizontal-table-body">${headerHtml}${rowsHtml}</div>`;
+      } else {
+        // [2] 카드형 모드 (상세 뷰)
+        container.innerHTML = st.students.map((stu, idx) => {
+          const rec = st.records[stu.id] || DataModelModule.createEmptyRecord();
+          const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
+          const dispNum = PrivacyGuardModule.maskStudentId(stu.studentNumber);
+          const dispName = PrivacyGuardModule.formatStudentName(stu.name);
+
+          const selPlusObj = RubricCalcModule.PLUS_FACTORS.find(f => f.key === rec.selectedPlusKey) || RubricCalcModule.PLUS_FACTORS[0];
+          const selMinusObj = RubricCalcModule.MINUS_FACTORS.find(f => f.key === rec.selectedMinusKey) || RubricCalcModule.MINUS_FACTORS[0];
+
+          const plusFactorBtnsHtml = RubricCalcModule.PLUS_FACTORS.map(f => {
+            const cnt = calc.counts[f.key] || 0;
+            const isSelected = rec.selectedPlusKey === f.key;
+            return `
+              <button
+                type="button"
+                class="vb-factor-check-btn plus-factor ${isSelected ? 'active-factor' : ''}"
+                data-stu-id="${stu.id}"
+                data-factor-key="${f.key}"
+                title="${f.desc} (클릭 시 +1회 체크)"
+              >
+                <span>➕ ${f.label}</span>
+                <span class="vb-factor-count-pill">${cnt}회</span>
+              </button>
+            `;
+          }).join('');
+
+          const minusFactorBtnsHtml = RubricCalcModule.MINUS_FACTORS.map(f => {
+            const cnt = calc.counts[f.key] || 0;
+            const isSelected = rec.selectedMinusKey === f.key;
+            return `
+              <button
+                type="button"
+                class="vb-factor-check-btn minus-factor ${isSelected ? 'active-factor' : ''}"
+                data-stu-id="${stu.id}"
+                data-factor-key="${f.key}"
+                title="${f.desc} (클릭 시 -1회 체크)"
+              >
+                <span>➖ ${f.label}</span>
+                <span class="vb-factor-count-pill">${cnt}회</span>
+              </button>
+            `;
+          }).join('');
+
+          return `
+            <article class="vb-student-eval-card" data-row-stu-id="${stu.id}">
+              <div class="vb-card-row-top">
+                <div class="vb-card-stu-title">
+                  <span class="vb-stu-index-num">#${idx + 1}</span>
+                  <span class="vb-stu-num-badge">${dispNum}</span>
+                  <strong class="vb-stu-name-strong">${dispName}</strong>
+                </div>
+                <div class="vb-card-top-right">
+                  <button
+                    type="button"
+                    class="vb-btn-undo-mini"
+                    data-undo-stu-id="${stu.id}"
+                    title="방금 체크한 항목 되돌리기(취소)"
+                  >
+                    ↩ 직전 체크 취소
+                  </button>
+                  <div class="vb-quick-pm-bar">
+                    <button
+                      type="button"
+                      class="vb-btn-quick-plus"
+                      data-quick-plus-stu-id="${stu.id}"
+                      title="선택된 플러스 요소(${selPlusObj.label}) +1회 추가"
+                    >
+                      ➕ 플러스 (${selPlusObj.label})
+                    </button>
+                    <button
+                      type="button"
+                      class="vb-btn-quick-minus"
+                      data-quick-minus-stu-id="${stu.id}"
+                      title="선택된 마이너스 요소(${selMinusObj.label}) -1회 추가"
+                    >
+                      ➖ 마이너스 (${selMinusObj.label})
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <div class="vb-factor-group-row">
-                <span class="vb-factor-group-tag minus-tag">마이너스(-) 요소</span>
-                ${minusFactorBtnsHtml}
+              <div class="vb-card-factors-wrap">
+                <div class="vb-factor-section-block">
+                  <div class="vb-factor-section-head plus">
+                    <span>🟦 플러스(+) 공격·수비 체크 (3회 시 +1점)</span>
+                  </div>
+                  <div class="vb-factor-btn-grid">
+                    ${plusFactorBtnsHtml}
+                  </div>
+                </div>
+
+                <div class="vb-factor-section-block">
+                  <div class="vb-factor-section-head minus">
+                    <span>🟥 마이너스(-) 실책·범실 체크 (3회 시 -1점)</span>
+                  </div>
+                  <div class="vb-factor-btn-grid">
+                    ${minusFactorBtnsHtml}
+                  </div>
+                </div>
               </div>
 
-              <!-- 3회 중복 진행 게이지 안내 -->
-              <div class="vb-triple-progress-line">
-                <span class="vb-triple-stat-chip plus">
-                  🟦 플러스 누적: 총 ${calc.totalPlusChecks}회 → <strong>+${calc.addedPoints}점 가산</strong>
-                  ${st.ruleEvery3 ? `(다음 +1점까지 ${calc.plusRemainder}/3회)` : ''}
-                </span>
-                <span>|</span>
-                <span class="vb-triple-stat-chip minus">
-                  🟥 마이너스 누적: 총 ${calc.totalMinusChecks}회 → <strong>-${calc.deductedPoints}점 감점</strong>
-                  ${st.ruleEvery3 ? `(다음 -1점까지 ${calc.minusRemainder}/3회)` : ''}
-                </span>
+              <div class="vb-card-bottom-summary">
+                <div class="vb-bottom-stat-pills">
+                  <span class="vb-triple-stat-chip plus">
+                    플러스 누적: ${calc.totalPlusChecks}회 (<strong>+${calc.addedPoints}점</strong>)
+                    ${st.ruleEvery3 ? `➔ 남은횟수 ${calc.plusRemainder}/3` : ''}
+                  </span>
+                  <span class="vb-triple-stat-chip minus">
+                    마이너스 누적: ${calc.totalMinusChecks}회 (<strong>-${calc.deductedPoints}점</strong>)
+                    ${st.ruleEvery3 ? `➔ 남은횟수 ${calc.minusRemainder}/3` : ''}
+                  </span>
+                </div>
+                <div class="vb-bottom-score-group">
+                  <div class="vb-score-box">
+                    <span class="lbl">가감 점수(기본5점)</span>
+                    <strong class="val">${calc.rawScore}점</strong>
+                  </div>
+                  <span class="arrow">➔</span>
+                  <div class="vb-score-box highlight">
+                    <span class="lbl">최종 점수(환산)</span>
+                    <strong class="val final">${calc.finalGradePoint}점</strong>
+                    <span class="range">(${calc.rangeLabel})</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            </article>
+          `;
+        }).join('');
+      }
 
-            <!-- [3] 우측: 실시간 점수 패널 (기본 5점 가감 점수 -> 최종 5~1점 환산 점수) -->
-            <div class="vb-stu-right-score-panel">
-              <div class="vb-score-col">
-                <span class="vb-score-col-label">가감 점수 (기본 5점)</span>
-                <span class="vb-score-col-val">${calc.rawScore}점</span>
-                <span class="vb-score-col-sub">5 + ${calc.addedPoints} - ${calc.deductedPoints}</span>
-              </div>
-
-              <span class="vb-score-divider-arrow">➔</span>
-
-              <div class="vb-score-col">
-                <span class="vb-score-col-label">최종 환산 (5점 만점)</span>
-                <span class="vb-score-col-val final-grade-val">${calc.finalGradePoint}점</span>
-                <span class="vb-score-col-sub">${calc.rangeLabel} 구간</span>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join('');
-
-      // 요소 버튼 클릭 시 즉시 해당 요소 +1회 체크
-      container.querySelectorAll('.vb-factor-check-btn').forEach(btn => {
+      // 1. 세부 요소 칩/버튼 클릭
+      container.querySelectorAll('.vb-factor-chip, .vb-factor-check-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const stuId = btn.getAttribute('data-stu-id');
           const factorKey = btn.getAttribute('data-factor-key');
@@ -899,7 +1171,7 @@
         });
       });
 
-      // 학번·이름 옆 [➕ 플러스] 빠른 버튼
+      // 2. 빠른 + 버튼
       container.querySelectorAll('[data-quick-plus-stu-id]').forEach(btn => {
         btn.addEventListener('click', () => {
           const stuId = btn.getAttribute('data-quick-plus-stu-id');
@@ -909,7 +1181,7 @@
         });
       });
 
-      // 학번·이름 옆 [➖ 마이너스] 빠른 버튼
+      // 3. 빠른 - 버튼
       container.querySelectorAll('[data-quick-minus-stu-id]').forEach(btn => {
         btn.addEventListener('click', () => {
           const stuId = btn.getAttribute('data-quick-minus-stu-id');
@@ -919,7 +1191,7 @@
         });
       });
 
-      // [↩ 취소] 되돌리기 버튼
+      // 4. 취소(되돌리기) 버튼
       container.querySelectorAll('[data-undo-stu-id]').forEach(btn => {
         btn.addEventListener('click', () => {
           const stuId = btn.getAttribute('data-undo-stu-id');

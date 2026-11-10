@@ -232,7 +232,7 @@
           detail: PrivacyGuardModule.maskLogMessage(detail)
         });
         localStorage.setItem(AUDIT_LOG_STORAGE_KEY, JSON.stringify(logs.slice(0, 100)));
-      } catch (e) {}
+      } catch (e) { }
     }
   };
 
@@ -944,7 +944,7 @@
           const parsed = JSON.parse(raw);
           this.state = { ...this.state, ...parsed };
         }
-      } catch (e) {}
+      } catch (e) { }
       return this.state;
     },
 
@@ -953,7 +953,7 @@
         this.state.updatedAt = Date.now();
         localStorage.setItem(TOURNAMENT_STORAGE_KEY, JSON.stringify(this.state));
         TournamentSyncBus.post(broadcastType, this.state);
-      } catch (e) {}
+      } catch (e) { }
     },
 
     getTeamName(teamId) {
@@ -1185,7 +1185,7 @@
       document.getElementById('copyStudentLinkBtn')?.addEventListener('click', () => {
         const studentUrl = new URL(window.location.href);
         studentUrl.searchParams.set('role', 'student');
-        navigator.clipboard?.writeText(studentUrl.toString()).catch(() => {});
+        navigator.clipboard?.writeText(studentUrl.toString()).catch(() => { });
         const feedback = document.getElementById('studentLinkCopyFeedback');
         if (feedback) {
           feedback.textContent = `✅ 학생용 대진표 링크 복사 완료: ${studentUrl.toString()}`;

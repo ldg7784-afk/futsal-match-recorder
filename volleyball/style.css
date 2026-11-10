@@ -363,6 +363,7 @@ body {
   flex-wrap: wrap;
 }
 
+/* 상단 루브릭 기준 안내 & 환산표 그리드: 겹침 방지 완벽 반응형 */
 .vb-criteria-and-table-grid {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
@@ -371,9 +372,10 @@ body {
   align-items: stretch;
 }
 
-@media (max-width: 1040px) {
+@media (max-width: 1240px) {
   .vb-criteria-and-table-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 }
 
@@ -383,7 +385,7 @@ body {
   gap: 1rem;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 860px) {
   .vb-criteria-boxes {
     grid-template-columns: 1fr;
   }
@@ -395,6 +397,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  box-sizing: border-box;
 }
 
 .vb-criteria-item.attack-box {
@@ -447,6 +450,8 @@ body {
   flex-direction: column;
   justify-content: center;
   box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.2);
+  overflow-x: auto;
+  box-sizing: border-box;
 }
 
 .vb-table-caption {
@@ -458,6 +463,15 @@ body {
 
 .vb-photo-score-table {
   width: 100%;
+  min-width: 380px;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: center;
+  font-size: 0.88rem;
+  border-radius: var(--vb-radius-sm);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
   border-collapse: separate;
   border-spacing: 0;
   text-align: center;
@@ -540,17 +554,26 @@ body {
 }
 
 /* ==========================================================================
-   5. 툴바 카드 (학생 추가 & 전원 초기화)
+   5. 툴바 카드 (평가 일자 선택 · 15명 일괄 불러오기 · 뷰 모드 토글)
    ========================================================================== */
 .vb-toolbar-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border: 1px solid var(--vb-border);
+  box-shadow: var(--vb-shadow-sm);
+}
+
+.vb-toolbar-row-primary {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 1.1rem 1.5rem;
-  background: #ffffff;
-  border: 1px solid var(--vb-border);
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--vb-border);
 }
 
 .vb-toolbar-left {
@@ -561,9 +584,10 @@ body {
 }
 
 .vb-card-title {
-  font-size: 1.1rem;
+  font-size: 1.12rem;
   font-weight: 900;
   color: var(--vb-text);
+  letter-spacing: -0.01em;
 }
 
 .vb-count-badge {
@@ -572,11 +596,65 @@ body {
   color: var(--vb-primary);
   background: var(--vb-primary-light);
   border: 1px solid #bfdbfe;
-  padding: 0.28rem 0.85rem;
+  padding: 0.3rem 0.85rem;
   border-radius: 999px;
+  white-space: nowrap;
 }
 
-.vb-toolbar-right {
+/* 평가 일자 피커 그룹 */
+.vb-eval-date-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: #f8fafc;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--vb-radius-md);
+  border: 1px solid var(--vb-border-strong);
+  flex-wrap: wrap;
+}
+
+.vb-date-label {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.vb-date-input {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.vb-date-status-pill {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.vb-toolbar-row-secondary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.vb-toolbar-view-toggle {
+  display: inline-flex;
+  gap: 0.4rem;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: var(--vb-radius-sm);
+  border: 1px solid var(--vb-border);
+}
+
+.vb-toolbar-right-actions {
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -592,6 +670,7 @@ body {
   color: var(--vb-text);
   background: #ffffff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
 }
 
 .vb-input:focus,
@@ -607,133 +686,366 @@ body {
 }
 
 /* ==========================================================================
-   6. 핵심: 학생별 실시간 평가 행 (학번·이름 옆 빠른 +/- 버튼 & 요소 체크)
+   6. 핵심: 15명 동시 평가에 특화된 가로형 빠른 체크보드 (Horizontal Table)
+      - 박스 겹침 0% 보장 (min-width 기반 가로 스크롤 & 고정 칼럼)
    ========================================================================== */
-.vb-student-eval-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.vb-student-eval-row {
-  background: var(--vb-surface);
+.vb-board-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #ffffff;
   border: 1px solid var(--vb-border);
   border-radius: var(--vb-radius-xl);
-  padding: 1.35rem 1.6rem;
+  padding: 0.75rem;
   box-shadow: var(--vb-shadow-sm);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
 }
 
-.vb-student-eval-row:hover {
-  border-color: #cbd5e1;
-  box-shadow: var(--vb-shadow-md);
-}
-
-/* [좌측] 학번·이름 + 바로 옆 빠른 +/- 버튼 */
-.vb-stu-left-identity {
+.vb-horizontal-table-body {
+  min-width: 1290px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  min-width: 240px;
-  max-width: 270px;
-  flex: 0 0 auto;
-  padding-right: 1.2rem;
-  border-right: 1px solid var(--vb-border);
+  gap: 6px;
 }
 
-@media (max-width: 1200px) {
-  .vb-student-eval-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .vb-stu-left-identity {
-    border-right: none;
-    border-bottom: 1px solid var(--vb-border);
-    padding-right: 0;
-    padding-bottom: 1.1rem;
-    min-width: 100%;
-    max-width: 100%;
-  }
-}
-
-.vb-stu-id-name-line {
+/* 테이블 헤더 */
+.vb-tbl-head-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
+  gap: 10px;
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: var(--vb-radius-sm);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  box-sizing: border-box;
+}
+
+.vb-tbl-th {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 개별 학생 행 */
+.vb-tbl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.65rem 1rem;
+  border-radius: var(--vb-radius-sm);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  transition: all 0.12s ease;
+  box-sizing: border-box;
+}
+
+.vb-tbl-row:nth-child(even) {
+  background: #f8fafc;
+}
+
+.vb-tbl-row:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.vb-tbl-cell {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* 칼럼별 엄격한 고정 너비 (오버랩 방지) */
+.col-stu {
+  flex: 0 0 170px;
+  min-width: 170px;
+  gap: 0.45rem;
+}
+
+.vb-stu-index-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8;
+  width: 22px;
+  text-align: right;
+  flex: 0 0 auto;
 }
 
 .vb-stu-num-badge {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: var(--vb-primary);
   background: var(--vb-primary-light);
   border: 1px solid #bfdbfe;
-  padding: 2px 9px;
+  padding: 2px 7px;
   border-radius: 6px;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .vb-stu-name-strong {
-  font-size: 1.22rem;
+  font-size: 1.05rem;
   font-weight: 900;
   color: var(--vb-text);
-  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 빠른 플러스/마이너스 바 */
-.vb-quick-pm-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.col-quick {
+  flex: 0 0 135px;
+  min-width: 135px;
+  gap: 0.4rem;
 }
 
-.vb-btn-quick-plus,
-.vb-btn-quick-minus {
+.vb-quick-btn {
   flex: 1;
+  min-height: 33px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--vb-radius-sm);
-  font-size: 0.88rem;
-  font-weight: 800;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: transform 0.08s ease, background-color 0.12s ease;
   white-space: nowrap;
+  transition: transform 0.08s ease, filter 0.12s ease;
 }
 
-.vb-btn-quick-plus {
+.vb-quick-btn.quick-plus {
   background: #2563eb;
   color: #ffffff;
-  border-color: #1d4ed8;
 }
 
-.vb-btn-quick-plus:hover {
+.vb-quick-btn.quick-plus:hover {
   background: #1d4ed8;
 }
 
-.vb-btn-quick-minus {
+.vb-quick-btn.quick-minus {
   background: #dc2626;
   color: #ffffff;
-  border-color: #b91c1c;
 }
 
-.vb-btn-quick-minus:hover {
+.vb-quick-btn.quick-minus:hover {
   background: #b91c1c;
 }
 
-.vb-btn-quick-plus:active,
-.vb-btn-quick-minus:active {
-  transform: scale(0.96);
+.vb-quick-btn:active {
+  transform: scale(0.93);
+}
+
+.col-plus-factors {
+  flex: 0 0 340px;
+  min-width: 340px;
+}
+
+.col-minus-factors {
+  flex: 0 0 340px;
+  min-width: 340px;
+}
+
+.vb-chips-flex {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+
+/* 개별 요소 칩 버튼 (가로형 테이블용) */
+.vb-factor-chip {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  font-size: 0.77rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  min-height: 33px;
+  white-space: nowrap;
+  transition: all 0.12s ease;
+  box-sizing: border-box;
+}
+
+.vb-factor-chip.plus {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.vb-factor-chip.plus:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.vb-factor-chip.plus.active-factor {
+  background: #bfdbfe;
+  border-color: #2563eb;
+  font-weight: 800;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+
+.vb-factor-chip.minus {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.vb-factor-chip.minus:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+.vb-factor-chip.minus.active-factor {
+  background: #fecaca;
+  border-color: #dc2626;
+  font-weight: 800;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+.vb-factor-chip:active {
+  transform: scale(0.92);
+}
+
+.chip-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip-cnt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(15, 23, 42, 0.1);
+  padding: 1px 5px;
+  border-radius: 999px;
+  min-width: 14px;
+  text-align: center;
+}
+
+.col-progress {
+  flex: 0 0 135px;
+  min-width: 135px;
+}
+
+.vb-progress-pills-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.vb-prog-pill {
+  font-size: 0.74rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.vb-prog-pill.plus {
+  color: #1d4ed8;
+}
+
+.vb-prog-pill.minus {
+  color: #b91c1c;
+}
+
+.col-raw {
+  flex: 0 0 85px;
+  min-width: 85px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.vb-raw-score-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.vb-raw-formula {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.col-grade {
+  flex: 0 0 95px;
+  min-width: 95px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.vb-final-grade-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 900;
+  padding: 2px 10px;
+  border-radius: 6px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.vb-final-grade-badge.grade-5 {
+  background: #fef08a;
+  color: #854d0e;
+  border: 1px solid #facc15;
+}
+
+.vb-final-grade-badge.grade-4 {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.vb-final-grade-badge.grade-3 {
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.vb-final-grade-badge.grade-2 {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+.vb-final-grade-badge.grade-1 {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.vb-grade-range-sub {
+  font-size: 0.68rem;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.col-action {
+  flex: 0 0 45px;
+  min-width: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .vb-btn-undo-mini {
@@ -742,7 +1054,7 @@ body {
   border: 1px solid var(--vb-border-strong);
   background: var(--vb-bg);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--vb-text-sub);
   cursor: pointer;
   transition: all 0.12s ease;
@@ -753,61 +1065,148 @@ body {
   color: var(--vb-text);
 }
 
-/* [중앙] 플러스/마이너스 요소 체크 버튼 그룹 (토스, 스파이크, 리시브, 좋은 움직임) */
-.vb-stu-center-factors {
+/* ==========================================================================
+   6-2. 카드 뷰 모드 (상세 카드 스택 모드)
+   ========================================================================== */
+.vb-student-board-view.mode-card-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  flex: 1 1 500px;
-  min-width: 320px;
+  gap: 1.25rem;
 }
 
-.vb-factor-group-row {
+.vb-student-eval-card {
+  background: var(--vb-surface);
+  border: 1px solid var(--vb-border);
+  border-radius: var(--vb-radius-xl);
+  padding: 1.35rem 1.6rem;
+  box-shadow: var(--vb-shadow-sm);
   display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.vb-card-row-top {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: 0.85rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--vb-border);
 }
 
-.vb-factor-group-tag {
-  font-size: 0.78rem;
+.vb-card-stu-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.vb-card-top-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.vb-quick-pm-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vb-btn-quick-plus,
+.vb-btn-quick-minus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--vb-radius-sm);
+  font-size: 0.85rem;
   font-weight: 800;
-  padding: 0.35rem 0.75rem;
-  border-radius: 6px;
-  min-width: 96px;
-  text-align: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.08s ease;
   white-space: nowrap;
-  flex: 0 0 auto;
 }
 
-.vb-factor-group-tag.plus-tag {
-  background: #eff6ff;
+.vb-btn-quick-plus {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.vb-btn-quick-minus {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.vb-btn-quick-plus:active,
+.vb-btn-quick-minus:active {
+  transform: scale(0.95);
+}
+
+.vb-card-factors-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 860px) {
+  .vb-card-factors-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vb-factor-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  background: #f8fafc;
+  padding: 0.85rem;
+  border-radius: var(--vb-radius-md);
+  border: 1px solid var(--vb-border);
+}
+
+.vb-factor-section-head {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.vb-factor-section-head.plus {
   color: #1d4ed8;
-  border: 1px solid #bfdbfe;
 }
 
-.vb-factor-group-tag.minus-tag {
-  background: #fef2f2;
+.vb-factor-section-head.minus {
   color: #b91c1c;
-  border: 1px solid #fecaca;
 }
 
-/* 개별 요소 체크 버튼 - 절대 겹치지 않도록 flex-wrap 및 독립 인라인 블록 적용 */
+.vb-factor-btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .vb-factor-btn-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .vb-factor-check-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.45rem;
-  padding: 0.45rem 0.8rem;
+  padding: 0.5rem 0.75rem;
   border-radius: var(--vb-radius-sm);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   border: 1px solid var(--vb-border-strong);
   background: #ffffff;
   color: var(--vb-text);
-  transition: all 0.14s ease;
   white-space: nowrap;
-  flex: 0 0 auto;
+  transition: all 0.12s ease;
 }
 
 .vb-factor-check-btn.plus-factor:hover {
@@ -815,122 +1214,86 @@ body {
   background: #eff6ff;
 }
 
-.vb-factor-check-btn.plus-factor.active-factor {
-  border: 2px solid #2563eb;
-  background: #dbeafe;
-  color: #1e40af;
-  font-weight: 800;
-}
-
 .vb-factor-check-btn.minus-factor:hover {
   border-color: #dc2626;
   background: #fef2f2;
 }
 
-.vb-factor-check-btn.minus-factor.active-factor {
-  border: 2px solid #dc2626;
-  background: #fee2e2;
-  color: #991b1b;
-  font-weight: 800;
-}
-
 .vb-factor-count-pill {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.08);
 }
 
-/* 3회 중복 진행 안내 라인 */
-.vb-triple-progress-line {
+.vb-card-bottom-summary {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.85rem;
+  gap: 1rem;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.9rem 1.25rem;
+  border-radius: var(--vb-radius-md);
+}
+
+.vb-bottom-stat-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   font-size: 0.82rem;
-  color: var(--vb-text-sub);
-  background: var(--vb-bg);
-  padding: 0.5rem 0.85rem;
-  border-radius: var(--vb-radius-sm);
-  border: 1px dashed var(--vb-border-strong);
-}
-
-.vb-triple-stat-chip {
   font-family: 'JetBrains Mono', monospace;
-  font-weight: 700;
 }
 
-.vb-triple-stat-chip.plus {
-  color: #1d4ed8;
+.vb-bottom-stat-pills .plus strong {
+  color: #93c5fd;
 }
 
-.vb-triple-stat-chip.minus {
-  color: #b91c1c;
+.vb-bottom-stat-pills .minus strong {
+  color: #fca5a5;
 }
 
-/* [우측] 실시간 점수 패널 (기본 5점 가감 -> 최종 5점 만점 환산) */
-.vb-stu-right-score-panel {
+.vb-bottom-score-group {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.85rem;
-  background: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
-  color: #ffffff;
-  padding: 0.95rem 1.25rem;
-  border-radius: var(--vb-radius-md);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
-  min-width: 280px;
-  max-width: 310px;
-  flex: 0 0 auto;
 }
 
-@media (max-width: 1200px) {
-  .vb-stu-right-score-panel {
-    min-width: 100%;
-    max-width: 100%;
-  }
-}
-
-.vb-score-col {
+.vb-score-box {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-.vb-score-col-label {
-  font-size: 0.74rem;
-  font-weight: 800;
+.vb-score-box .lbl {
+  font-size: 0.72rem;
   color: #94a3b8;
-  margin-bottom: 0.2rem;
-  white-space: nowrap;
 }
 
-.vb-score-col-val {
+.vb-score-box .val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 1.85rem;
+  font-size: 1.55rem;
   font-weight: 900;
   color: #38bdf8;
-  line-height: 1.05;
 }
 
-.vb-score-col-val.final-grade-val {
+.vb-score-box.highlight .val.final {
   color: #facc15;
 }
 
-.vb-score-col-sub {
-  font-size: 0.72rem;
-  color: #cbd5e1;
-  margin-top: 0.2rem;
-  white-space: nowrap;
+.vb-score-box .range {
+  font-size: 0.7rem;
+  color: #94a3b8;
 }
 
-.vb-score-divider-arrow {
-  color: #475569;
+.vb-bottom-score-group .arrow {
+  color: #64748b;
   font-weight: 900;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 /* ==========================================================================

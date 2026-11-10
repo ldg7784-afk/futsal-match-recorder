@@ -132,21 +132,47 @@
 
       <!-- 학생 추가 및 일괄 관리 바 -->
       <section class="vb-card vb-toolbar-card">
-        <div class="vb-toolbar-left">
-          <h3 class="vb-card-title">👥 학생별 실시간 플러스(+) · 마이너스(-) 체크 보드</h3>
-          <span class="vb-count-badge" id="studentCountBadge">총 6명 (기본점수 5점 시작)</span>
+        <div class="vb-toolbar-row-primary">
+          <div class="vb-toolbar-left">
+            <h3 class="vb-card-title">👥 학생별 실시간 가로형 빠른 체크 보드 (15명 동시 평가)</h3>
+            <span class="vb-count-badge" id="studentCountBadge">총 15명 (기본점수 5점 시작)</span>
+          </div>
+
+          <!-- 평가 일자 선택 바 -->
+          <div class="vb-eval-date-group">
+            <label for="evalDateInput" class="vb-date-label">📅 평가 일자</label>
+            <input type="date" id="evalDateInput" class="vb-input vb-input-sm vb-date-input" title="평가 일자 선택">
+            <button type="button" id="setTodayDateBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="오늘 날짜로 설정">오늘</button>
+            <span class="vb-date-status-pill" id="currentEvalDateBadge">2026-11-10 평가 진행 중</span>
+          </div>
         </div>
 
-        <div class="vb-toolbar-right">
-          <input type="text" id="newStudentNumberInput" class="vb-input vb-input-sm" placeholder="학번 (예: 20107)" maxlength="10">
-          <input type="text" id="newStudentNameInput" class="vb-input vb-input-sm" placeholder="이름 (예: 홍배구)" maxlength="20">
-          <button type="button" id="addStudentBtn" class="vb-btn vb-btn-primary vb-btn-sm">+ 학생 추가</button>
-          <button type="button" id="resetAllScoresBtn" class="vb-btn vb-btn-secondary vb-btn-sm">🔄 전원 기본 5점 초기화</button>
+        <div class="vb-toolbar-row-secondary">
+          <div class="vb-toolbar-view-toggle">
+            <button type="button" id="viewModeTableBtn" class="vb-btn vb-btn-sm vb-btn-primary active" title="15명 동시 평가에 최적화된 가로형 빠른 체크보드">
+              📊 가로형 빠른 체크보드 (권장)
+            </button>
+            <button type="button" id="viewModeCardBtn" class="vb-btn vb-btn-sm vb-btn-outline" title="학생별 상세 카드 뷰">
+              🗂️ 상세 카드 뷰
+            </button>
+          </div>
+
+          <div class="vb-toolbar-right-actions">
+            <button type="button" id="loadSample15Btn" class="vb-btn vb-btn-outline vb-btn-sm" title="최소 15명의 학생 명단을 즉시 불러옵니다">
+              👥 15명 일괄 불러오기
+            </button>
+            <input type="text" id="newStudentNumberInput" class="vb-input vb-input-sm" placeholder="학번 (예: 20116)" maxlength="10">
+            <input type="text" id="newStudentNameInput" class="vb-input vb-input-sm" placeholder="이름" maxlength="20">
+            <button type="button" id="addStudentBtn" class="vb-btn vb-btn-primary vb-btn-sm">+ 학생 추가</button>
+            <button type="button" id="resetAllScoresBtn" class="vb-btn vb-btn-secondary vb-btn-sm">🔄 전원 기본 5점 초기화</button>
+          </div>
         </div>
       </section>
 
       <!-- 핵심: 학번·이름 옆에 플러스/마이너스 + 요소(정확한 토스, 스파이크, 리시브, 좋은 움직임) 체크 리스트 -->
-      <section id="teacherStudentRowsContainer" class="vb-student-eval-stack" aria-label="학생별 경기 수행 능력 평가 목록"></section>
+      <section class="vb-board-scroll-wrapper">
+        <div id="teacherStudentRowsContainer" class="vb-student-board-view mode-horizontal-table" aria-label="학생별 경기 수행 능력 평가 목록"></div>
+      </section>
     </main>
 
     <!-- ==================================================================== -->
