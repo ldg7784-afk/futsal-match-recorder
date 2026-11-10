@@ -34,23 +34,23 @@
 
     body {
       font-family: var(--font-sans);
-      background-color: var(--tesla-light-ash);
-      color: var(--tesla-graphite);
+      background-color: #0b0f19;
+      color: #e2e8f0;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
-      line-height: 1.5;
+      padding: 2.5rem 1.5rem;
+      line-height: 1.6;
     }
 
     .portal-container {
       width: 100%;
-      max-width: 1280px;
+      max-width: 1360px;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 2.5rem;
     }
 
     .portal-header {
@@ -58,17 +58,26 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 2.2rem 1.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
 
     .brand-badge {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
       font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      color: var(--tesla-pewter);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      padding: 4px 12px;
+      border-radius: 999px;
       text-transform: uppercase;
     }
 
@@ -76,30 +85,32 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background-color: var(--tesla-carbon-dark);
+      background-color: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
     }
 
     .portal-title {
-      font-size: 32px;
-      font-weight: 600;
-      color: var(--tesla-carbon-dark);
+      font-size: 36px;
+      font-weight: 800;
+      color: #ffffff;
       letter-spacing: -0.02em;
     }
 
     .portal-subtitle {
-      font-size: 14px;
-      color: var(--tesla-pewter);
-      max-width: 640px;
+      font-size: 15px;
+      color: #94a3b8;
+      max-width: 680px;
+      line-height: 1.6;
     }
 
     /* 4단 독립 앱 선택 카드 그리드 */
     .app-cards-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1.25rem;
+      gap: 1.5rem;
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1200px) {
       .app-cards-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -108,34 +119,165 @@
     @media (max-width: 680px) {
       .app-cards-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 1.25rem;
       }
     }
 
     .app-card {
-      background: var(--tesla-white);
-      border: 1px solid var(--tesla-cloud-gray);
-      border-radius: var(--radius-panel);
-      padding: 1.75rem 1.5rem;
+      background: #131a29;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 2rem 1.6rem;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 1.5rem;
+      gap: 1.8rem;
       text-decoration: none;
       color: inherit;
-      transition: var(--tesla-transition);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
     .app-card:hover {
-      border-color: var(--tesla-pale-silver);
-      transform: translateY(-3px);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+      border-color: #38bdf8;
+      transform: translateY(-4px);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
     }
 
     .app-card-top {
       display: flex;
       flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .app-role-pill {
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .card-match .app-role-pill {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .card-possession .app-role-pill {
+      background: rgba(148, 163, 184, 0.15);
+      color: #cbd5e1;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .card-scoreboard .app-role-pill {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .card-tournament .app-role-pill {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .app-card-title {
+      font-size: 21px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .app-card-desc {
+      font-size: 13.5px;
+      color: #94a3b8;
+      line-height: 1.65;
+    }
+
+    .app-features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      font-size: 12.5px;
+      color: #cbd5e1;
+    }
+
+    .app-features-list li::before {
+      content: "✓";
+      color: #38bdf8;
+      display: inline-block;
+      width: 1.2em;
+      font-weight: bold;
+    }
+
+    .app-card-bottom {
+      display: flex;
+      flex-direction: column;
       gap: 0.75rem;
+    }
+
+    .btn-enter-app {
+      width: 100%;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: all 0.16s ease;
+      cursor: pointer;
+    }
+
+    .card-match .btn-enter-app {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .card-match:hover .btn-enter-app {
+      background: #1d4ed8;
+    }
+
+    .card-possession .btn-enter-app {
+      background: #334155;
+      color: #ffffff;
+    }
+
+    .card-possession:hover .btn-enter-app {
+      background: #1e293b;
+    }
+
+    .card-scoreboard .btn-enter-app {
+      background: #059669;
+      color: #ffffff;
+    }
+
+    .card-scoreboard:hover .btn-enter-app {
+      background: #047857;
+    }
+
+    .card-tournament .btn-enter-app {
+      background: #d97706;
+      color: #ffffff;
+    }
+
+    .card-tournament:hover .btn-enter-app {
+      background: #b45309;
+    }
+
+    .url-chip {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #64748b;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 5px 8px;
+      border-radius: 6px;
     }
 
     .app-role-pill {
