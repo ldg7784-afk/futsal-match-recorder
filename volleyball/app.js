@@ -135,18 +135,18 @@
 
     // 플러스(+) 체크 요소 정의 (가. 공격 / 나. 수비)
     PLUS_FACTORS: [
-      { key: 'toss_plus', category: '가. 공격', label: '정확한 토스', desc: '공격 +1점 요인: 정확한 토스 연결' },
-      { key: 'spike_plus', category: '가. 공격', label: '스파이크', desc: '공격 +1점 요인: 효과적인 스파이크 공격 성공' },
-      { key: 'receive_plus', category: '나. 수비', label: '리시브', desc: '수비 +1점 요인: 안정적인 리시브 및 수비 성공' },
-      { key: 'move_plus', category: '나. 수비', label: '좋은 움직임', desc: '수비 +1점 요인: 적절한 위치 선정 및 커버 움직임' }
+      { key: 'toss_plus', category: '가. 공격', label: '정확한 토스', shortLabel: '토스', desc: '공격 +1점 요인: 정확한 토스 연결' },
+      { key: 'spike_plus', category: '가. 공격', label: '스파이크', shortLabel: '스파이크', desc: '공격 +1점 요인: 효과적인 스파이크 공격 성공' },
+      { key: 'receive_plus', category: '나. 수비', label: '리시브', shortLabel: '리시브', desc: '수비 +1점 요인: 안정적인 리시브 및 수비 성공' },
+      { key: 'move_plus', category: '나. 수비', label: '좋은 움직임', shortLabel: '움직임', desc: '수비 +1점 요인: 적절한 위치 선정 및 커버 움직임' }
     ],
 
     // 마이너스(-) 체크 요소 정의 (가. 공격 / 나. 수비)
     MINUS_FACTORS: [
-      { key: 'toss_minus', category: '가. 공격', label: '부정확한 토스', desc: '공격 -1점 요인: 부정확한 토스 연결' },
-      { key: 'spike_minus', category: '가. 공격', label: '스파이크 실책', desc: '공격 -1점 요인: 비효과적인 공격 및 범실' },
-      { key: 'receive_minus', category: '나. 수비', label: '리시브 실패', desc: '수비 -1점 요인: 수비 실패 및 리시브 범실' },
-      { key: 'move_minus', category: '나. 수비', label: '위치선정 미흡', desc: '수비 -1점 요인: 부적절한 위치 선정 및 소극적 움직임' }
+      { key: 'toss_minus', category: '가. 공격', label: '부정확한 토스', shortLabel: '부정확토스', desc: '공격 -1점 요인: 부정확한 토스 연결' },
+      { key: 'spike_minus', category: '가. 공격', label: '스파이크 실책', shortLabel: '스파이크실책', desc: '공격 -1점 요인: 비효과적인 공격 및 범실' },
+      { key: 'receive_minus', category: '나. 수비', label: '리시브 실패', shortLabel: '리시브실패', desc: '수비 -1점 요인: 수비 실패 및 리시브 범실' },
+      { key: 'move_minus', category: '나. 수비', label: '위치선정 미흡', shortLabel: '위치미흡', desc: '수비 -1점 요인: 부적절한 위치 선정 및 소극적 움직임' }
     ],
 
     // 사진 하단 최종 배점 환산표 (9점 이상=5점 ~ 2점 이하=1점)
@@ -884,17 +884,16 @@
       }
 
       if (isTableMode) {
-        // [1] 가로형 빠른 체크보드 모드
+        // [1] 가로형 빠른 체크보드 모드: 학생(학번 성명), 가감 점수, 최종 환산 점수 제외하고 불필요한 글씨 완전 제거
         let headerHtml = `
           <div class="vb-tbl-head-row">
-            <div class="vb-tbl-th col-stu">학생 (학번·성명)</div>
-            <div class="vb-tbl-th col-quick">빠른 ± 원터치</div>
-            <div class="vb-tbl-th col-plus-factors">➕ 플러스 요인 (가.공격:토스·스파이크 / 나.수비:리시브·움직임)</div>
-            <div class="vb-tbl-th col-minus-factors">➖ 마이너스 요인 (가.공격:토스·스파이크실책 / 나.수비:실패·미흡)</div>
-            <div class="vb-tbl-th col-progress">3회 누적 진행</div>
+            <div class="vb-tbl-th col-stu">학생 (학번 성명)</div>
+            <div class="vb-tbl-th col-quick">빠른 ±</div>
+            <div class="vb-tbl-th col-plus-factors">플러스 (+)</div>
+            <div class="vb-tbl-th col-minus-factors">마이너스 (-)</div>
             <div class="vb-tbl-th col-raw">가감 점수</div>
-            <div class="vb-tbl-th col-grade">최종 환산</div>
-            <div class="vb-tbl-th col-action">되돌리기</div>
+            <div class="vb-tbl-th col-grade">최종 환산 점수</div>
+            <div class="vb-tbl-th col-action">취소</div>
           </div>
         `;
 
@@ -910,6 +909,7 @@
           const plusFactorChipsHtml = RubricCalcModule.PLUS_FACTORS.map(f => {
             const cnt = calc.counts[f.key] || 0;
             const isSelected = rec.selectedPlusKey === f.key;
+            const displayLabel = f.shortLabel || f.label;
             return `
               <button
                 type="button"
@@ -918,7 +918,7 @@
                 data-factor-key="${f.key}"
                 title="${f.desc} (클릭 시 +1회 체크)"
               >
-                <span class="chip-label">${f.label}</span>
+                <span class="chip-label">${displayLabel}</span>
                 <span class="chip-cnt">${cnt}</span>
               </button>
             `;
@@ -927,6 +927,7 @@
           const minusFactorChipsHtml = RubricCalcModule.MINUS_FACTORS.map(f => {
             const cnt = calc.counts[f.key] || 0;
             const isSelected = rec.selectedMinusKey === f.key;
+            const displayLabel = f.shortLabel || f.label;
             return `
               <button
                 type="button"
@@ -935,7 +936,7 @@
                 data-factor-key="${f.key}"
                 title="${f.desc} (클릭 시 -1회 체크)"
               >
-                <span class="chip-label">${f.label}</span>
+                <span class="chip-label">${displayLabel}</span>
                 <span class="chip-cnt">${cnt}</span>
               </button>
             `;
@@ -943,7 +944,7 @@
 
           return `
             <div class="vb-tbl-row" data-row-stu-id="${stu.id}">
-              <!-- 1. 학생 식별자 -->
+              <!-- 1. 학생 (학번 성명) -->
               <div class="vb-tbl-cell col-stu">
                 <span class="vb-stu-index-num">${idx + 1}</span>
                 <span class="vb-stu-num-badge">${dispNum}</span>
@@ -958,7 +959,7 @@
                   data-quick-plus-stu-id="${stu.id}"
                   title="선택된 플러스 요소(${selPlusObj.label}) +1회 체크"
                 >
-                  ➕ +1
+                  +1
                 </button>
                 <button
                   type="button"
@@ -966,7 +967,7 @@
                   data-quick-minus-stu-id="${stu.id}"
                   title="선택된 마이너스 요소(${selMinusObj.label}) -1회 체크"
                 >
-                  ➖ -1
+                  -1
                 </button>
               </div>
 
@@ -984,35 +985,19 @@
                 </div>
               </div>
 
-              <!-- 5. 3회 누적 진행 상태 -->
-              <div class="vb-tbl-cell col-progress">
-                <div class="vb-progress-pills-col">
-                  <span class="vb-prog-pill plus">
-                    +${calc.totalPlusChecks}회 ➔ <strong>+${calc.addedPoints}점</strong>
-                    ${st.ruleEvery3 ? `<small>(${calc.plusRemainder}/3)</small>` : ''}
-                  </span>
-                  <span class="vb-prog-pill minus">
-                    -${calc.totalMinusChecks}회 ➔ <strong>-${calc.deductedPoints}점</strong>
-                    ${st.ruleEvery3 ? `<small>(${calc.minusRemainder}/3)</small>` : ''}
-                  </span>
-                </div>
-              </div>
-
-              <!-- 6. 가감 점수 (기본 5점) -->
+              <!-- 5. 가감 점수 (군더더기 수식 글씨 완전 제거) -->
               <div class="vb-tbl-cell col-raw">
                 <span class="vb-raw-score-badge">${calc.rawScore}점</span>
-                <span class="vb-raw-formula">5+${calc.addedPoints}-${calc.deductedPoints}</span>
               </div>
 
-              <!-- 7. 최종 환산 점수 (5~1점) -->
+              <!-- 6. 최종 환산 점수 (구간 설명 글씨 완전 제거) -->
               <div class="vb-tbl-cell col-grade">
                 <span class="vb-final-grade-badge grade-${calc.finalGradePoint}">
                   ${calc.finalGradePoint}점
                 </span>
-                <span class="vb-grade-range-sub">${calc.rangeLabel}</span>
               </div>
 
-              <!-- 8. 취소(되돌리기) -->
+              <!-- 7. 취소(되돌리기) -->
               <div class="vb-tbl-cell col-action">
                 <button
                   type="button"
