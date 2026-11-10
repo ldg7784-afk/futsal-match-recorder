@@ -612,7 +612,7 @@ body {
 .vb-student-eval-stack {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: 1.25rem;
 }
 
 .vb-student-eval-row {
@@ -621,10 +621,12 @@ body {
   border-radius: var(--vb-radius-xl);
   padding: 1.35rem 1.6rem;
   box-shadow: var(--vb-shadow-sm);
-  display: grid;
-  grid-template-columns: 260px 1fr 290px;
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -633,28 +635,30 @@ body {
   box-shadow: var(--vb-shadow-md);
 }
 
-@media (max-width: 1200px) {
-  .vb-student-eval-row {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-}
-
 /* [좌측] 학번·이름 + 바로 옆 빠른 +/- 버튼 */
 .vb-stu-left-identity {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 240px;
+  max-width: 270px;
+  flex: 0 0 auto;
   padding-right: 1.2rem;
   border-right: 1px solid var(--vb-border);
 }
 
 @media (max-width: 1200px) {
+  .vb-student-eval-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
   .vb-stu-left-identity {
     border-right: none;
     border-bottom: 1px solid var(--vb-border);
     padding-right: 0;
     padding-bottom: 1.1rem;
+    min-width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -754,6 +758,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  flex: 1 1 500px;
+  min-width: 320px;
 }
 
 .vb-factor-group-row {
@@ -766,11 +772,12 @@ body {
 .vb-factor-group-tag {
   font-size: 0.78rem;
   font-weight: 800;
-  padding: 0.28rem 0.7rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 6px;
   min-width: 96px;
   text-align: center;
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .vb-factor-group-tag.plus-tag {
@@ -785,7 +792,7 @@ body {
   border: 1px solid #fecaca;
 }
 
-/* 개별 요소 체크 버튼 */
+/* 개별 요소 체크 버튼 - 절대 겹치지 않도록 flex-wrap 및 독립 인라인 블록 적용 */
 .vb-factor-check-btn {
   display: inline-flex;
   align-items: center;
@@ -799,6 +806,8 @@ body {
   background: #ffffff;
   color: var(--vb-text);
   transition: all 0.14s ease;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .vb-factor-check-btn.plus-factor:hover {
@@ -843,7 +852,7 @@ body {
   font-size: 0.82rem;
   color: var(--vb-text-sub);
   background: var(--vb-bg);
-  padding: 0.45rem 0.85rem;
+  padding: 0.5rem 0.85rem;
   border-radius: var(--vb-radius-sm);
   border: 1px dashed var(--vb-border-strong);
 }
@@ -872,6 +881,16 @@ body {
   padding: 0.95rem 1.25rem;
   border-radius: var(--vb-radius-md);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  min-width: 280px;
+  max-width: 310px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1200px) {
+  .vb-stu-right-score-panel {
+    min-width: 100%;
+    max-width: 100%;
+  }
 }
 
 .vb-score-col {
