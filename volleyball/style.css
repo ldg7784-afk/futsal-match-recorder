@@ -351,218 +351,201 @@ body {
 }
 
 /* ==========================================================================
-   4. 상단 루브릭 기준 카드 & 5점~1점 환산표 (시각적 계층 강화)
+   4. 상단 간단한 수행평가 기준 카드 (체크보드가 즉시 보이도록 초슬림 배치)
    ========================================================================== */
-.vb-rubric-reference-card {
+.vb-criteria-compact-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-}
-
-.vb-rubric-ref-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  padding-bottom: 1.2rem;
-  border-bottom: 1px solid var(--vb-border);
-}
-
-.vb-compliance-actions {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-/* 상단 루브릭 기준 안내 & 환산표 그리드: 겹침 방지 완벽 반응형 */
-.vb-criteria-and-table-grid {
-  display: grid;
-  grid-template-columns: 1.25fr 1fr;
-  gap: 1.5rem;
-  margin-top: 1.25rem;
-  align-items: stretch;
-}
-
-@media (max-width: 1240px) {
-  .vb-criteria-and-table-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-}
-
-.vb-criteria-boxes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-@media (max-width: 860px) {
-  .vb-criteria-boxes {
-    grid-template-columns: 1fr;
-  }
-}
-
-.vb-criteria-item {
-  border-radius: var(--vb-radius-md);
-  padding: 1.1rem 1.25rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  box-sizing: border-box;
-}
-
-.vb-criteria-item.attack-box {
-  background: #f0f7ff;
-  border: 1px solid #bfdbfe;
-}
-
-.vb-criteria-item.defense-box {
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-}
-
-.vb-criteria-title {
-  font-size: 0.96rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 0.65rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.vb-criteria-list {
-  list-style: none;
-  font-size: 0.84rem;
-  color: var(--vb-text-sub);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  line-height: 1.5;
-}
-
-.plus-txt {
-  color: #1e40af;
-  font-weight: 800;
-}
-
-.minus-txt {
-  color: #b91c1c;
-  font-weight: 800;
-}
-
-/* 5점 ~ 1점 환산표 */
-.vb-conversion-table-wrap {
-  background: #0f172a;
-  color: #ffffff;
-  border-radius: var(--vb-radius-md);
-  padding: 1.2rem 1.35rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.2);
-  overflow-x: auto;
-  box-sizing: border-box;
-}
-
-.vb-table-caption {
-  font-size: 0.84rem;
-  font-weight: 800;
-  color: #38bdf8;
+  border: 1px solid var(--vb-border);
+  border-radius: var(--vb-radius-lg);
+  padding: 0.65rem 1.15rem;
+  box-shadow: var(--vb-shadow-sm);
   margin-bottom: 0.75rem;
 }
 
-.vb-photo-score-table {
-  width: 100%;
-  min-width: 380px;
-  border-collapse: separate;
-  border-spacing: 0;
-  text-align: center;
-  font-size: 0.88rem;
-  border-radius: var(--vb-radius-sm);
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-border-collapse: separate;
-border-spacing: 0;
-text-align: center;
-font-size: 0.88rem;
-border-radius: var(--vb-radius-sm);
-overflow: hidden;
-background: rgba(255, 255, 255, 0.05);
-}
-
-.vb-photo-score-table th,
-.vb-photo-score-table td {
-  padding: 0.65rem 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.vb-photo-score-table th {
-  background: rgba(255, 255, 255, 0.08);
-  font-weight: 800;
-  color: #cbd5e1;
-  font-size: 0.85rem;
-}
-
-.vb-photo-score-table .default-start-col {
-  background: rgba(56, 189, 248, 0.22);
-  color: #7dd3fc;
-  font-weight: 800;
-}
-
-.vb-photo-score-table td strong {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.95rem;
-  letter-spacing: -0.01em;
-}
-
-/* 심의 설정 체크리스트 */
-.vb-purpose-checklist {
+.vb-criteria-compact-row {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.65rem;
-  margin-top: 1.25rem;
-  padding-top: 1.1rem;
-  border-top: 1px dashed var(--vb-border);
 }
 
-.vb-check-chip {
+.vb-criteria-title-block {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.vb-criteria-main-title {
+  font-size: 1.02rem;
+  font-weight: 900;
+  color: var(--vb-text);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.vb-criteria-rule-pill {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.vb-criteria-factors-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.vb-factor-tag {
+  font-size: 0.76rem;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.vb-factor-tag.attack {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.vb-factor-tag.defense {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.vb-criteria-mini-rubric {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.vb-mini-score {
+  font-size: 0.72rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', sans-serif;
+}
+
+.vb-mini-score.grade-5 {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde047;
+}
+
+.vb-mini-score.grade-4 {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.vb-mini-score.grade-3 {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.vb-mini-score.grade-3.current {
+  font-weight: 800;
+  border-color: #3b82f6;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.vb-mini-score.grade-2 {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+.vb-mini-score.grade-1 {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.vb-criteria-tools-block {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.vb-mini-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.84rem;
-  font-weight: 600;
-  color: var(--vb-text-sub);
-  background: var(--vb-bg);
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  background: #f8fafc;
   border: 1px solid var(--vb-border-strong);
-  padding: 0.42rem 0.9rem;
-  border-radius: var(--vb-radius-sm);
-  cursor: pointer;
-  transition: all 0.12s ease;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-.vb-check-chip:hover {
-  background: #e2e8f0;
-}
-
-.vb-check-chip input[type="checkbox"] {
+.vb-mini-toggle input[type="checkbox"] {
   accent-color: var(--vb-primary);
-  width: 16px;
-  height: 16px;
+  width: 13px;
+  height: 13px;
+}
+
+.vb-btn-xs {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.74rem;
+  border-radius: 4px;
+}
+
+.vb-mini-details {
+  position: relative;
+  display: inline-block;
+}
+
+.vb-mini-details summary {
+  list-style: none;
   cursor: pointer;
+}
+
+.vb-mini-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.vb-mini-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: #ffffff;
+  border: 1px solid var(--vb-border-strong);
+  border-radius: var(--vb-radius-md);
+  box-shadow: var(--vb-shadow-md);
+  padding: 0.75rem;
+  z-index: 100;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .vb-test-panel {
-  margin-top: 1rem;
-  padding: 1rem 1.2rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem 0.9rem;
   border-radius: var(--vb-radius-md);
   background: #090d16;
   color: #f8fafc;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   font-family: 'JetBrains Mono', monospace;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 /* ==========================================================================

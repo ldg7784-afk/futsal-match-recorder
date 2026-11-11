@@ -15,26 +15,18 @@
     <!-- 1. 상단 헤더 -->
     <header class="vb-header">
       <div class="vb-header-left">
-        <div class="vb-brand-row">
-          <span class="vb-live-dot"></span>
-          <span class="vb-badge">VOLLEYBALL PERFORMANCE ASSESSMENT</span>
-          <span class="vb-role-pill" id="currentRoleBadge">교사용 평가 모드</span>
-        </div>
-        <h1 class="vb-title">🏐 배구 3. 경기 수행 능력 평가 시스템</h1>
+        <h1 class="vb-title">🏐 배구 수행평가</h1>
       </div>
 
       <div class="vb-header-right">
         <div class="vb-role-switch-group" role="group" aria-label="화면 역할 전환">
           <button type="button" id="switchTeacherBtn" class="vb-role-btn active">
-            👨‍🏫 교사용 (+/- 체크 및 점수 부여)
+            교사용
           </button>
           <button type="button" id="switchStudentBtn" class="vb-role-btn">
-            🎓 학생용 (총점 · 아코디언 확인)
+            학생용
           </button>
         </div>
-        <button type="button" id="copyStudentViewLinkBtn" class="vb-btn vb-btn-secondary" title="학생 전용 결과 확인 링크 복사">
-          🔗 학생용 링크 복사
-        </button>
       </div>
     </header>
 
@@ -44,90 +36,50 @@
     <!-- 2. 교사용 화면 (Teacher View) -->
     <!-- ==================================================================== -->
     <main id="teacherViewSection" class="vb-view-section">
-      <!-- 상단: 사진과 100% 동일한 [3. 경기 수행 능력] 루브릭 기준 안내 및 환산표 카드 -->
-      <section class="vb-card vb-rubric-reference-card">
-        <div class="vb-rubric-ref-top">
-          <div>
-            <h2 class="vb-section-title">📌 3. 경기 수행 능력 평가 기준 (기본점수 5점 시작 · 3회 중복 시 1점씩 가감)</h2>
-            <p class="vb-section-sub">
-              기본점수 <strong>5점</strong>에서 시작하여 아래 <strong>공격(정확한 토스·스파이크)</strong> 및 <strong>수비(리시브·좋은 움직임/위치 선정)</strong> 기준에 따라 플러스(+)·마이너스(-)를 체크하며, <strong>3회 중복(누적) 시 1점씩 가감</strong>하여 최종 점수로 평가합니다.
-            </p>
-          </div>
-          <div class="vb-compliance-actions">
-            <button type="button" id="runCalcTestSuiteBtn" class="vb-btn vb-btn-outline">
-              🧪 계산 정확성 테스트 (5케이스)
-            </button>
-            <button type="button" id="exportDataBackupBtn" class="vb-btn vb-btn-outline">
-              💾 백업 내보내기(JSON)
-            </button>
-          </div>
-        </div>
-
-        <!-- 가. 공격 / 나. 수비 기준 요약 & 사진 속 5점~1점 환산표 -->
-        <div class="vb-criteria-and-table-grid">
-          <div class="vb-criteria-boxes">
-            <div class="vb-criteria-item attack-box">
-              <div class="vb-criteria-title">가. 공격 (정확한 토스 · 스파이크)</div>
-              <ul class="vb-criteria-list">
-                <li><strong class="plus-txt">공격 +1점 (3회 누적 시 +1점)</strong> : 정확한 토스, 스파이크 등 효과적인 공격</li>
-                <li><strong class="minus-txt">공격 -1점 (3회 누적 시 -1점)</strong> : 부정확한 토스, 스파이크 등 비효과적인 공격</li>
-              </ul>
-            </div>
-            <div class="vb-criteria-item defense-box">
-              <div class="vb-criteria-title">나. 수비 (리시브 · 좋은 움직임/위치 선정)</div>
-              <ul class="vb-criteria-list">
-                <li><strong class="plus-txt">수비 +1점 (3회 누적 시 +1점)</strong> : 적절한 위치 선정(좋은 움직임), 리시브(수비 성공) 등 효과적인 수비</li>
-                <li><strong class="minus-txt">수비 -1점 (3회 누적 시 -1점)</strong> : 부적절한 위치 선정, 리시브(수비) 실패 등 비효과적인 수비</li>
-              </ul>
-            </div>
+      <!-- 상단: 간단한 수행평가 기준 (체크 보드가 즉시 보이도록 컴팩트하게 구성) -->
+      <section class="vb-card vb-criteria-compact-card">
+        <div class="vb-criteria-compact-row">
+          <!-- 1. 수행평가 기준 타이틀 및 핵심 규칙 요약 -->
+          <div class="vb-criteria-title-block">
+            <h2 class="vb-criteria-main-title">📋 수행평가 기준</h2>
+            <span class="vb-criteria-rule-pill">기본 5점 시작 · 3회 중복 시 ±1점</span>
           </div>
 
-          <div class="vb-conversion-table-wrap">
-            <div class="vb-table-caption">* 3회 중복 시 1점씩 가감하여 점수 부여 (기본 5점 시작 → 최종 환산표)</div>
-            <table class="vb-photo-score-table" aria-label="경기 수행 능력 점수 환산표">
-              <thead>
-                <tr>
-                  <th>5점 (만점)</th>
-                  <th>4점</th>
-                  <th class="default-start-col">3점 (기본 5점 시작)</th>
-                  <th>2점</th>
-                  <th>1점</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>9점 이상</strong></td>
-                  <td><strong>8점 ~ 7점</strong></td>
-                  <td class="default-start-col"><strong>6점 ~ 5점</strong></td>
-                  <td><strong>4점 ~ 3점</strong></td>
-                  <td><strong>2점 이하</strong></td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- 2. 공격/수비 간략 요약 배지 -->
+          <div class="vb-criteria-factors-summary">
+            <span class="vb-factor-tag attack"><strong>공격</strong> (+1 / -1) : 토스, 스파이크</span>
+            <span class="vb-factor-tag defense"><strong>수비</strong> (+1 / -1) : 리시브, 위치/움직임</span>
+          </div>
+
+          <!-- 3. 루브릭 5점~1점 미니 환산표 -->
+          <div class="vb-criteria-mini-rubric" title="최종 환산 점수에 따른 수행평가 점수">
+            <span class="vb-mini-score grade-5">9점이상 <strong>5점</strong></span>
+            <span class="vb-mini-score grade-4">8~7점 <strong>4점</strong></span>
+            <span class="vb-mini-score grade-3 current">6~5점 <strong>3점</strong></span>
+            <span class="vb-mini-score grade-2">4~3점 <strong>2점</strong></span>
+            <span class="vb-mini-score grade-1">2점이하 <strong>1점</strong></span>
+          </div>
+
+          <!-- 4. 옵션 (3회 규칙 및 상세 도구) -->
+          <div class="vb-criteria-tools-block">
+            <label class="vb-mini-toggle" title="3회 중복 시 1점씩 가감 (체크 해제 시 1회마다 즉시 ±1점)">
+              <input type="checkbox" id="chkRuleEvery3" checked>
+              <span>3회 중복 시 ±1점</span>
+            </label>
+            <label class="vb-mini-toggle" title="개인정보 보호 학번/이름 마스킹">
+              <input type="checkbox" id="chkPrivacyMaskMode">
+              <span>🔒 마스킹</span>
+            </label>
+            <details class="vb-mini-details">
+              <summary class="vb-btn vb-btn-outline vb-btn-xs">도구 ▾</summary>
+              <div class="vb-mini-popover">
+                <button type="button" id="runCalcTestSuiteBtn" class="vb-btn vb-btn-outline vb-btn-xs">🧪 계산 검증 (5케이스)</button>
+                <button type="button" id="exportDataBackupBtn" class="vb-btn vb-btn-outline vb-btn-xs">💾 JSON 백업</button>
+                <div id="calcTestResultPanel" class="vb-test-panel hidden"></div>
+              </div>
+            </details>
           </div>
         </div>
-
-        <!-- 심의 대응 사용 목적 체크리스트 -->
-        <div class="vb-purpose-checklist">
-          <label class="vb-check-chip">
-            <input type="checkbox" id="chkRuleEvery3" checked>
-            <span>⚡ <strong>3회 중복 시 1점씩 가감 규칙 적용</strong> (체크 해제 시 1회마다 즉시 ±1점)</span>
-          </label>
-          <label class="vb-check-chip">
-            <input type="checkbox" id="chkPurposeTeacher" checked>
-            <span>[교사 운영] 교사만 +/- 체크 및 저장 가능</span>
-          </label>
-          <label class="vb-check-chip">
-            <input type="checkbox" id="chkPurposeClass" checked>
-            <span>[학생 열람] 학생은 총점(큰 숫자)과 아코디언만 확인</span>
-          </label>
-          <label class="vb-check-chip">
-            <input type="checkbox" id="chkPrivacyMaskMode">
-            <span>🔒 개인정보 보호(학번/이름 마스킹) 모드</span>
-          </label>
-        </div>
-
-        <div id="calcTestResultPanel" class="vb-test-panel hidden"></div>
       </section>
 
       <!-- 학생 추가 및 일괄 관리 바 -->
@@ -236,7 +188,7 @@
             <span class="vb-updated-time-pill" id="studentResultUpdatedAt">실시간 반영됨</span>
           </div>
 
-          <p class="vb-hero-eyebrow">3. 경기 수행 능력 점수 (기본 5점 시작 · 3회 중복 시 ±1점 가감)</p>
+          <p class="vb-hero-eyebrow">배구 수행평가 점수 (기본 5점 시작 · 3회 중복 시 ±1점 가감)</p>
 
           <div class="vb-hero-dual-score-row">
             <!-- 가감 누적 점수 (기본 5점 시작) -->

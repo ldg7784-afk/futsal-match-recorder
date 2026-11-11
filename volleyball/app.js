@@ -1106,7 +1106,7 @@
 
       const roleBadge = document.getElementById('currentRoleBadge');
       if (roleBadge) {
-        roleBadge.textContent = isTeacher ? '교사용 평가 모드' : '학생용 결과 확인 모드';
+        roleBadge.textContent = isTeacher ? '교사용' : '학생용';
         roleBadge.classList.toggle('student-mode', !isTeacher);
       }
 
