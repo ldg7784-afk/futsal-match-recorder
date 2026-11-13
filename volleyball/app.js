@@ -1513,17 +1513,13 @@
         const dispName = PrivacyGuardModule.formatStudentName(stu.name);
         const isMale = sRec.gender !== 'female';
 
-        const a1Val = sRec.attempt1 !== null ? sRec.attempt1 : '';
-        const a1Chips = [0, 1, 2, 3, 4, 5].map(cnt => {
-          const isAct = sRec.attempt1 === cnt || (cnt === 5 && sRec.attempt1 >= 5);
-          return `<button type="button" class="vb-chip-btn ${isAct ? 'active-chip' : ''}" data-stu-id="${stu.id}" data-attempt="1" data-val="${cnt}">${cnt === 5 ? '5+' : cnt}</button>`;
-        }).join('');
+                const a1Num = sRec.attempt1 !== null && sRec.attempt1 !== undefined ? sRec.attempt1 : null;
+        const a1Display = a1Num !== null ? `${a1Num}개` : '0개';
+        const a1IsPerfect = a1Num !== null && a1Num >= 5;
 
-        const a2Val = sRec.attempt2 !== null ? sRec.attempt2 : '';
-        const a2Chips = [0, 1, 2, 3, 4, 5].map(cnt => {
-          const isAct = sRec.attempt2 === cnt || (cnt === 5 && sRec.attempt2 >= 5);
-          return `<button type="button" class="vb-chip-btn ${isAct ? 'active-chip' : ''}" data-stu-id="${stu.id}" data-attempt="2" data-val="${cnt}">${cnt === 5 ? '5+' : cnt}</button>`;
-        }).join('');
+        const a2Num = sRec.attempt2 !== null && sRec.attempt2 !== undefined ? sRec.attempt2 : null;
+        const a2Display = a2Num !== null ? `${a2Num}개` : '0개';
+        const a2IsPerfect = a2Num !== null && a2Num >= 5;
 
         return `
           <div class="vb-skill-tbl-row vb-skill-table-grid" data-skill-row-stu-id="${stu.id}">
@@ -1541,27 +1537,31 @@
               </button>
             </div>
 
-            <!-- 3. 1차 시기 -->
+            <!-- 3. 1차 시기 (원클릭 +1 증가 카운터) -->
             <div class="col-attempt1">
-              <div class="vb-attempt-control-box">
-                <div class="vb-attempt-stepper">
-                  <button type="button" class="vb-step-btn" data-step-stu-id="${stu.id}" data-attempt="1" data-delta="-1">-</button>
-                  <input type="number" min="0" max="20" class="vb-attempt-input" data-input-attempt-stu-id="${stu.id}" data-attempt="1" value="${a1Val}" placeholder="-" />
-                  <button type="button" class="vb-step-btn" data-step-stu-id="${stu.id}" data-attempt="1" data-delta="1">+</button>
-                </div>
-                <div class="vb-fast-chips-row">${a1Chips}</div>
+              <div class="vb-skill-tap-counter">
+                <button type="button" class="vb-skill-main-tap-btn ${a1IsPerfect ? 'is-perfect' : ''}" 
+                        data-step-stu-id="${stu.id}" data-attempt="1" data-delta="1" 
+                        title="클릭 시 1회 증가 (+1)">
+                  <span class="tap-label">🏐 +1 탭</span>
+                  <span class="tap-count-badge">${a1Display}</span>
+                </button>
+                <button type="button" class="vb-skill-sub-dec-btn" data-step-stu-id="${stu.id}" data-attempt="1" data-delta="-1" title="1회 감소 (-1)">-1</button>
+                <button type="button" class="vb-skill-sub-reset-btn" data-reset-stu-id="${stu.id}" data-attempt="1" title="초기화 (0개)">↺</button>
               </div>
             </div>
 
-            <!-- 4. 2차 시기 -->
+            <!-- 4. 2차 시기 (원클릭 +1 증가 카운터) -->
             <div class="col-attempt2">
-              <div class="vb-attempt-control-box">
-                <div class="vb-attempt-stepper">
-                  <button type="button" class="vb-step-btn" data-step-stu-id="${stu.id}" data-attempt="2" data-delta="-1">-</button>
-                  <input type="number" min="0" max="20" class="vb-attempt-input" data-input-attempt-stu-id="${stu.id}" data-attempt="2" value="${a2Val}" placeholder="-" />
-                  <button type="button" class="vb-step-btn" data-step-stu-id="${stu.id}" data-attempt="2" data-delta="1">+</button>
-                </div>
-                <div class="vb-fast-chips-row">${a2Chips}</div>
+              <div class="vb-skill-tap-counter">
+                <button type="button" class="vb-skill-main-tap-btn ${a2IsPerfect ? 'is-perfect' : ''}" 
+                        data-step-stu-id="${stu.id}" data-attempt="2" data-delta="1" 
+                        title="클릭 시 1회 증가 (+1)">
+                  <span class="tap-label">🏐 +1 탭</span>
+                  <span class="tap-count-badge">${a2Display}</span>
+                </button>
+                <button type="button" class="vb-skill-sub-dec-btn" data-step-stu-id="${stu.id}" data-attempt="2" data-delta="-1" title="1회 감소 (-1)">-1</button>
+                <button type="button" class="vb-skill-sub-reset-btn" data-reset-stu-id="${stu.id}" data-attempt="2" title="초기화 (0개)">↺</button>
               </div>
             </div>
 
@@ -1603,8 +1603,8 @@
 
       container.innerHTML = `<div class="vb-skill-table-wrapper">${headerHtml}${rowsHtml}</div>`;
 
-      // 이벤트 바인딩
-      container.querySelectorAll('.vb-step-btn').forEach(btn => {
+      // 이벤트 바인딩: +1 탭 및 -1 감소 버튼 (교사 원터치)
+      container.querySelectorAll('[data-step-stu-id]').forEach(btn => {
         btn.addEventListener('click', () => {
           const sid = btn.getAttribute('data-step-stu-id');
           const att = Number(btn.getAttribute('data-attempt'));
@@ -1616,25 +1616,13 @@
         });
       });
 
-      container.querySelectorAll('.vb-chip-btn').forEach(btn => {
+      // 리셋 ↺ 버튼
+      container.querySelectorAll('[data-reset-stu-id]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const sid = btn.getAttribute('data-stu-id');
+          const sid = btn.getAttribute('data-reset-stu-id');
           const att = Number(btn.getAttribute('data-attempt'));
-          const val = Number(btn.getAttribute('data-val'));
-          if (sid && att !== undefined) {
-            DataModelModule.updateSkillAttempt(sid, att, val);
-            this.renderAll();
-          }
-        });
-      });
-
-      container.querySelectorAll('.vb-attempt-input').forEach(inp => {
-        inp.addEventListener('change', (e) => {
-          const sid = inp.getAttribute('data-input-attempt-stu-id');
-          const att = Number(inp.getAttribute('data-attempt'));
-          const val = e.target.value.trim() === '' ? null : Number(e.target.value);
           if (sid && att) {
-            DataModelModule.updateSkillAttempt(sid, att, val);
+            DataModelModule.updateSkillAttempt(sid, att, null);
             this.renderAll();
           }
         });

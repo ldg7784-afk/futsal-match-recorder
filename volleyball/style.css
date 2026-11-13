@@ -2508,3 +2508,134 @@ body {
   font-weight: 900;
   color: #94a3b8;
 }
+
+
+/* ==========================================================================
+   교사용 원클릭 횟수 카운터 (1차 시기 / 2차 시기 교사 원터치 증가)
+   ========================================================================== */
+.vb-skill-tap-counter {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vb-skill-main-tap-btn {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border: 1.5px solid #1d4ed8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2);
+  transition: all 0.12s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.vb-skill-main-tap-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.vb-skill-main-tap-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
+.vb-skill-main-tap-btn .tap-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.vb-skill-main-tap-btn .tap-count-badge {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 900;
+  min-width: 32px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 5개 이상 만점 달성 시 에메랄드 그린 스타일 */
+.vb-skill-main-tap-btn.is-perfect {
+  background: linear-gradient(135deg, #059669, #047857);
+  border-color: #047857;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+.vb-skill-main-tap-btn.is-perfect .tap-count-badge {
+  background: #ffffff;
+  color: #047857;
+}
+
+/* -1 감소 버튼 */
+.vb-skill-sub-dec-btn {
+  width: 32px;
+  height: 38px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.86rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.vb-skill-sub-dec-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.vb-skill-sub-dec-btn:active {
+  transform: scale(0.95);
+}
+
+/* 초기화 리셋 버튼 */
+.vb-skill-sub-reset-btn {
+  width: 28px;
+  height: 38px;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  color: #94a3b8;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.vb-skill-sub-reset-btn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
