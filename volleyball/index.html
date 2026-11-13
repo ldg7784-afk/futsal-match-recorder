@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>배구 경기 수행 능력 평가 | 고등학교 체육 수행평가</title>
-  <meta name="description" content="배구 경기 수행 능력 평가 - 기본 5점 시작, 정확한 토스·스파이크·리시브·좋은 움직임 플러스/마이너스 3회 중복 시 1점씩 가감 및 학생 결과 확인">
+  <title>배구 수행평가 시스템 | 경기 수행 능력 + 배구 기능평가</title>
+  <meta name="description" content="배구 경기 수행 능력 평가(5점 만점) 및 배구 기능평가(10점 만점, 40초/50초 타이머, 2회 기회, 남자/여자 기준) 종합 합산 시스템">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
@@ -12,10 +12,11 @@
 </head>
 <body>
   <div class="vb-app-container">
-    <!-- 1. 상단 헤더 -->
+    <!-- 1. 상단 메인 헤더 -->
     <header class="vb-header">
       <div class="vb-header-left">
         <h1 class="vb-title">🏐 배구 수행평가</h1>
+        <a href="../index.html" class="vb-btn vb-btn-outline vb-btn-xs" style="text-decoration:none; margin-left:0.6rem; font-weight:700;">🏠 메인 포털</a>
       </div>
 
       <div class="vb-header-right">
@@ -30,94 +31,44 @@
       </div>
     </header>
 
+    <!-- 2. 평가 영역 전환 네비게이션 바 (경기 수행평가 <-> 배구 기능평가) -->
+    <nav class="vb-eval-mode-navbar" role="tablist" aria-label="수행평가 영역 전환">
+      <div class="vb-eval-mode-tabs">
+        <button type="button" id="tabModeGameBtn" class="vb-mode-tab-btn active" role="tab" aria-selected="true" data-mode="game">
+          <span class="mode-tab-icon">🏐</span>
+          <span class="mode-tab-info">
+            <span class="mode-tab-title">1. 경기 수행 능력 평가</span>
+            <span class="mode-tab-sub">기본 5점 시작 · 토스/스파이크/리시브 3회당 ±1점 (5점 만점)</span>
+          </span>
+        </button>
+
+        <button type="button" id="tabModeSkillBtn" class="vb-mode-tab-btn" role="tab" aria-selected="false" data-mode="skill">
+          <span class="mode-tab-icon">🎯</span>
+          <span class="mode-tab-info">
+            <span class="mode-tab-title">2. 배구 기능평가 <span class="mode-tab-tag">선택</span></span>
+            <span class="mode-tab-sub">토스·스파이크 공 넘김 측정 (10점 만점 / 40초·50초 타이머)</span>
+          </span>
+        </button>
+
+        <button type="button" id="tabModeCombinedBtn" class="vb-mode-tab-btn" role="tab" aria-selected="false" data-mode="combined">
+          <span class="mode-tab-icon">🏆</span>
+          <span class="mode-tab-info">
+            <span class="mode-tab-title">3. 합산 종합 성적표</span>
+            <span class="mode-tab-sub">경기(5점) + 기능(10점) = 총 15점 만점 실시간 합산</span>
+          </span>
+        </button>
+      </div>
+    </nav>
+
     <div id="globalToastBanner" class="vb-toast hidden" role="status" aria-live="polite"></div>
 
     <!-- ==================================================================== -->
-    <!-- 2. 교사용 화면 (Teacher View) -->
+    <!-- 3. 교사용 화면 (Teacher View) -->
     <!-- ==================================================================== -->
     <main id="teacherViewSection" class="vb-view-section">
-      <!-- 상단: 간단한 수행평가 기준 (체크 보드가 즉시 보이도록 컴팩트하게 구성) -->
-      <section class="vb-card vb-criteria-compact-card">
-        <div class="vb-criteria-compact-row">
-          <!-- 1. 수행평가 기준 타이틀 및 핵심 규칙 요약 -->
-          <div class="vb-criteria-title-block">
-            <h2 class="vb-criteria-main-title">📋 수행평가 기준</h2>
-            <span class="vb-criteria-rule-pill">기본 5점 시작 · 3회 중복 시 ±1점</span>
-          </div>
 
-          <!-- 2. 공격/수비 간략 요약 배지 -->
-          <div class="vb-criteria-factors-summary">
-            <span class="vb-factor-tag attack"><strong>공격</strong> (+1 / -1) : 토스, 스파이크</span>
-            <span class="vb-factor-tag defense"><strong>수비</strong> (+1 / -1) : 리시브, 위치/움직임</span>
-          </div>
-
-          <!-- 3. 루브릭 5점~1점 미니 환산표 -->
-          <div class="vb-criteria-mini-rubric" title="최종 환산 점수에 따른 수행평가 점수">
-            <span class="vb-mini-score grade-5">9점이상 <strong>5점</strong></span>
-            <span class="vb-mini-score grade-4">8~7점 <strong>4점</strong></span>
-            <span class="vb-mini-score grade-3 current">6~5점 <strong>3점</strong></span>
-            <span class="vb-mini-score grade-2">4~3점 <strong>2점</strong></span>
-            <span class="vb-mini-score grade-1">2점이하 <strong>1점</strong></span>
-          </div>
-
-          <!-- 4. 옵션 (3회 규칙 및 상세 도구) -->
-          <div class="vb-criteria-tools-block">
-            <label class="vb-mini-toggle" title="3회 중복 시 1점씩 가감 (체크 해제 시 1회마다 즉시 ±1점)">
-              <input type="checkbox" id="chkRuleEvery3" checked>
-              <span>3회 중복 시 ±1점</span>
-            </label>
-            <label class="vb-mini-toggle" title="개인정보 보호 학번/이름 마스킹">
-              <input type="checkbox" id="chkPrivacyMaskMode">
-              <span>🔒 마스킹</span>
-            </label>
-            <details class="vb-mini-details">
-              <summary class="vb-btn vb-btn-outline vb-btn-xs">도구 ▾</summary>
-              <div class="vb-mini-popover">
-                <button type="button" id="runCalcTestSuiteBtn" class="vb-btn vb-btn-outline vb-btn-xs">🧪 계산 검증 (5케이스)</button>
-                <button type="button" id="exportDataBackupBtn" class="vb-btn vb-btn-outline vb-btn-xs">💾 JSON 백업</button>
-                <div id="calcTestResultPanel" class="vb-test-panel hidden"></div>
-              </div>
-            </details>
-          </div>
-        </div>
-      </section>
-
-      <!-- 학생 추가 및 일괄 관리 바 -->
-      <section class="vb-card vb-toolbar-card">
-        <div class="vb-toolbar-row-primary">
-          <div class="vb-toolbar-left">
-            <h3 class="vb-card-title">👥 학생별 실시간 가로형 빠른 체크 보드</h3>
-            <span class="vb-count-badge" id="studentCountBadge">1반 (총 12명)</span>
-          </div>
-
-          <!-- 평가 일자 선택 바 & 구글시트 출력 버튼 -->
-          <div class="vb-top-actions-cluster">
-            <div class="vb-eval-date-group">
-              <label for="evalDateInput" class="vb-date-label">📅 평가 일자</label>
-              <input type="date" id="evalDateInput" class="vb-input vb-input-sm vb-date-input" title="평가 일자 선택">
-              <button type="button" id="setTodayDateBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="오늘 날짜로 설정">오늘</button>
-              <span class="vb-date-status-pill" id="currentEvalDateBadge">2026-11-10 평가 진행 중</span>
-            </div>
-
-            <!-- 구글 시트 복사 및 엑셀 내보내기 버튼들 (전체 날짜별 / 현재 날짜별) -->
-            <div class="vb-export-btns-group">
-              <button type="button" id="copyGoogleSheetAllDatesBtn" class="vb-btn vb-btn-success vb-btn-sm" title="모든 평가 날짜의 1~9반 기록을 날짜별/반별/학번순으로 정렬하여 구글 시트에 바로 붙여넣을 수 있게 복사합니다">
-                📋 구글시트 복사 (전체 날짜별 정리)
-              </button>
-              <button type="button" id="copyGoogleSheetCurrentBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="선택된 날짜의 현재 반 평가 기록을 구글시트용으로 복사합니다">
-                📋 구글시트 (현재 날짜)
-              </button>
-              <button type="button" id="downloadCsvAllDatesBtn" class="vb-btn vb-btn-primary vb-btn-sm" title="모든 날짜별 평가 기록이 정리된 엑셀(CSV) 파일을 다운로드합니다">
-                📥 엑셀 다운로드 (전체 날짜별)
-              </button>
-              <button type="button" id="downloadCsvCurrentBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="현재 날짜의 1~9반 평가 기록을 엑셀(CSV) 파일로 다운로드합니다">
-                📥 엑셀 (현재 날짜)
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 1반부터 9반 선택 탭 바 -->
+      <!-- 공통 상단 학급 및 평가일자 바 -->
+      <section class="vb-card vb-common-class-bar">
         <div class="vb-class-selector-row">
           <div class="vb-class-nav-label">🏫 <strong>학급 선택:</strong></div>
           <div class="vb-class-nav-tabs" id="classTabsContainer" role="tablist" aria-label="1반부터 9반 선택">
@@ -133,44 +84,291 @@
           </div>
         </div>
 
-        <div class="vb-toolbar-row-secondary">
-          <div class="vb-toolbar-view-toggle">
-            <button type="button" id="viewModeTableBtn" class="vb-btn vb-btn-sm vb-btn-primary active" title="가로형 빠른 체크보드">
-              📊 가로형 빠른 체크보드
-            </button>
-            <button type="button" id="viewModeCardBtn" class="vb-btn vb-btn-sm vb-btn-outline" title="학생별 상세 카드 뷰">
-              🗂️ 상세 카드 뷰
-            </button>
+        <div class="vb-common-meta-row">
+          <div class="vb-eval-date-group">
+            <label for="evalDateInput" class="vb-date-label">📅 평가 일자</label>
+            <input type="date" id="evalDateInput" class="vb-input vb-input-sm vb-date-input" title="평가 일자 선택">
+            <button type="button" id="setTodayDateBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="오늘 날짜로 설정">오늘</button>
+            <span class="vb-date-status-pill" id="currentEvalDateBadge">2026-11-13 평가 진행 중</span>
           </div>
 
-          <div class="vb-toolbar-right-actions">
-            <button type="button" id="loadSample15Btn" class="vb-btn vb-btn-outline vb-btn-sm" title="학생명렬표 명단으로 초기화">
-              🔄 현재 반 명단 재동기화
-            </button>
-            <input type="text" id="newStudentNumberInput" class="vb-input vb-input-sm" placeholder="학번 (예: 20117)" maxlength="10">
-            <input type="text" id="newStudentNameInput" class="vb-input vb-input-sm" placeholder="이름" maxlength="20">
-            <button type="button" id="addStudentBtn" class="vb-btn vb-btn-primary vb-btn-sm">+ 학생 추가</button>
-            <button type="button" id="resetAllScoresBtn" class="vb-btn vb-btn-secondary vb-btn-sm">🔄 현재 반 0점 초기화</button>
+          <div class="vb-common-mode-indicator">
+            <span class="vb-indicator-pill" id="currentModeIndicatorPill">🏐 1. 경기 수행 능력 평가 진행 중</span>
           </div>
         </div>
       </section>
 
-      <!-- 핵심: 학번·이름 옆에 플러스/마이너스 + 요소(정확한 토스, 스파이크, 리시브, 좋은 움직임) 체크 리스트 -->
-      <section class="vb-board-scroll-wrapper">
-        <div id="teacherStudentRowsContainer" class="vb-student-board-view mode-horizontal-table" aria-label="학생별 경기 수행 능력 평가 목록"></div>
-      </section>
+      <!-- ------------------------------------------------------------------ -->
+      <!-- [MODE 1] 경기 수행 능력 평가 영역 (원래 원본 그대로 유지) -->
+      <!-- ------------------------------------------------------------------ -->
+      <div id="gameEvalContainer" class="vb-mode-content-block">
+        <!-- 상단: 원래 경기수행 기준 루브릭 -->
+        <section class="vb-card vb-criteria-compact-card">
+          <div class="vb-criteria-compact-row">
+            <div class="vb-criteria-title-block">
+              <h2 class="vb-criteria-main-title">📋 수행평가 기준</h2>
+              <span class="vb-criteria-rule-pill">기본 5점 시작 · 3회 중복 시 ±1점</span>
+            </div>
+
+            <div class="vb-criteria-factors-summary">
+              <span class="vb-factor-tag attack"><strong>공격</strong> (+1 / -1) : 토스, 스파이크</span>
+              <span class="vb-factor-tag defense"><strong>수비</strong> (+1 / -1) : 리시브, 위치/움직임</span>
+            </div>
+
+            <div class="vb-criteria-mini-rubric" title="최종 환산 점수에 따른 수행평가 점수">
+              <span class="vb-mini-score grade-5">9점이상 <strong>5점</strong></span>
+              <span class="vb-mini-score grade-4">8~7점 <strong>4점</strong></span>
+              <span class="vb-mini-score grade-3 current">6~5점 <strong>3점</strong></span>
+              <span class="vb-mini-score grade-2">4~3점 <strong>2점</strong></span>
+              <span class="vb-mini-score grade-1">2점이하 <strong>1점</strong></span>
+            </div>
+
+            <div class="vb-criteria-tools-block">
+              <label class="vb-mini-toggle" title="3회 중복 시 1점씩 가감 (체크 해제 시 1회마다 즉시 ±1점)">
+                <input type="checkbox" id="chkRuleEvery3" checked>
+                <span>3회 중복 시 ±1점</span>
+              </label>
+              <label class="vb-mini-toggle" title="개인정보 보호 학번/이름 마스킹">
+                <input type="checkbox" id="chkPrivacyMaskMode">
+                <span>🔒 마스킹</span>
+              </label>
+              <details class="vb-mini-details">
+                <summary class="vb-btn vb-btn-outline vb-btn-xs">도구 ▾</summary>
+                <div class="vb-mini-popover">
+                  <button type="button" id="runCalcTestSuiteBtn" class="vb-btn vb-btn-outline vb-btn-xs">🧪 계산 검증 (5케이스)</button>
+                  <button type="button" id="exportDataBackupBtn" class="vb-btn vb-btn-outline vb-btn-xs">💾 JSON 백업</button>
+                  <div id="calcTestResultPanel" class="vb-test-panel hidden"></div>
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <!-- 원래 툴바 바 -->
+        <section class="vb-card vb-toolbar-card">
+          <div class="vb-toolbar-row-primary">
+            <div class="vb-toolbar-left">
+              <h3 class="vb-card-title">👥 학생별 실시간 가로형 빠른 체크 보드</h3>
+              <span class="vb-count-badge" id="studentCountBadge">1반 (총 12명)</span>
+            </div>
+
+            <div class="vb-export-btns-group">
+              <button type="button" id="copyGoogleSheetAllDatesBtn" class="vb-btn vb-btn-success vb-btn-sm" title="모든 평가 날짜의 1~9반 기록 복사">
+                📋 구글시트 복사 (전체 날짜별 정리)
+              </button>
+              <button type="button" id="copyGoogleSheetCurrentBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="현재 날짜/반 기록 복사">
+                📋 구글시트 (현재 날짜)
+              </button>
+              <button type="button" id="downloadCsvAllDatesBtn" class="vb-btn vb-btn-primary vb-btn-sm" title="엑셀(CSV) 다운로드">
+                📥 엑셀 다운로드 (전체 날짜별)
+              </button>
+            </div>
+          </div>
+
+          <div class="vb-toolbar-row-secondary">
+            <div class="vb-toolbar-view-toggle">
+              <button type="button" id="viewModeTableBtn" class="vb-btn vb-btn-sm vb-btn-primary active" title="가로형 빠른 체크보드">
+                📊 가로형 빠른 체크보드
+              </button>
+              <button type="button" id="viewModeCardBtn" class="vb-btn vb-btn-sm vb-btn-outline" title="학생별 상세 카드 뷰">
+                🗂️ 상세 카드 뷰
+              </button>
+            </div>
+
+            <div class="vb-toolbar-right-actions">
+              <button type="button" id="loadSample15Btn" class="vb-btn vb-btn-outline vb-btn-sm" title="학생명렬표 명단으로 초기화">
+                🔄 현재 반 명단 재동기화
+              </button>
+              <input type="text" id="newStudentNumberInput" class="vb-input vb-input-sm" placeholder="학번 (예: 20117)" maxlength="10">
+              <input type="text" id="newStudentNameInput" class="vb-input vb-input-sm" placeholder="이름" maxlength="20">
+              <button type="button" id="addStudentBtn" class="vb-btn vb-btn-primary vb-btn-sm">+ 학생 추가</button>
+              <button type="button" id="resetAllScoresBtn" class="vb-btn vb-btn-secondary vb-btn-sm">🔄 현재 반 0점 초기화</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 학생별 경기 수행 평가 보드 (원래대로) -->
+        <section class="vb-board-scroll-wrapper">
+          <div id="teacherStudentRowsContainer" class="vb-student-board-view mode-horizontal-table" aria-label="학생별 경기 수행 능력 평가 목록"></div>
+        </section>
+      </div>
+
+      <!-- ------------------------------------------------------------------ -->
+      <!-- [MODE 2] 배구 기능평가 영역 (40초/50초 타이머, 평가 방법만, 박스 깔끔) -->
+      <!-- ------------------------------------------------------------------ -->
+      <div id="skillEvalContainer" class="vb-mode-content-block hidden">
+
+        <!-- (1) 타이머 카드 (40초 타이머, 50초 타이머라고만 적기, 소리알림 제거, 박스 벗어남 0%) -->
+        <section class="vb-card vb-timer-card-clean">
+          <div class="vb-timer-clean-wrapper">
+            <!-- 프리셋: 40초 타이머, 50초 타이머라고만 표기 -->
+            <div class="vb-timer-preset-group">
+              <button type="button" id="timerPreset40Btn" class="vb-timer-tab-btn active" data-seconds="40">
+                ⏱️ 40초 타이머
+              </button>
+              <button type="button" id="timerPreset50Btn" class="vb-timer-tab-btn" data-seconds="50">
+                ⏱️ 50초 타이머
+              </button>
+            </div>
+
+            <!-- 대형 디지털 타이머 디스플레이 -->
+            <div class="vb-timer-clock-box" id="timerDisplayBox">
+              <span id="timerClockDigits" class="vb-timer-digits">00:40</span>
+              <span id="timerStatusBadge" class="vb-timer-status ready">준비</span>
+            </div>
+
+            <!-- 조작 버튼 -->
+            <div class="vb-timer-controls-group">
+              <button type="button" id="timerStartBtn" class="vb-btn vb-btn-success vb-btn-sm vb-timer-btn">
+                ▶ 시작 (Space)
+              </button>
+              <button type="button" id="timerPauseBtn" class="vb-btn vb-btn-outline vb-btn-sm vb-timer-btn" disabled>
+                ⏸ 일시정지
+              </button>
+              <button type="button" id="timerResetBtn" class="vb-btn vb-btn-secondary vb-btn-sm vb-timer-btn">
+                🔄 리셋 (R)
+              </button>
+            </div>
+          </div>
+
+          <!-- 진행률 게이지 바 -->
+          <div class="vb-timer-progress-track">
+            <div id="timerProgressBar" class="vb-timer-progress-fill" style="width: 100%;"></div>
+          </div>
+        </section>
+
+        <!-- (2) 배구 기능평가 기준 카드 (반영 원칙 제거, 평가 방법만 명시, 우선 남자 기준) -->
+        <section class="vb-card vb-skill-criteria-card-clean">
+          <div class="vb-criteria-top-bar">
+            <div class="vb-criteria-title-area">
+              <h2 class="vb-criteria-heading">📋 배구 기능평가 기준</h2>
+              <span class="vb-male-priority-tag">⚡ 우선 남자 기준 적용</span>
+            </div>
+
+            <!-- 성별 기준 선택 -->
+            <div class="vb-gender-switch-area" role="group" aria-label="배점 기준 성별 선택">
+              <button type="button" id="genderCriteriaMaleBtn" class="vb-gender-choice-btn active" data-gender="male">
+                👦 우선 남자 기준 (기본)
+              </button>
+              <button type="button" id="genderCriteriaFemaleBtn" class="vb-gender-choice-btn" data-gender="female">
+                👧 여자 기준
+              </button>
+            </div>
+          </div>
+
+          <!-- 평가 방법만 깔끔하게 명시 (반영 원칙 삭제 완료) -->
+          <div class="vb-method-box">
+            <h3 class="vb-method-title">🎯 평가 방법 (2회 기회 중 최고 기록 반영)</h3>
+            <ul class="vb-method-list">
+              <li>• 코트 엔드라인에서 시작한다.</li>
+              <li>• 2번의 언더 또는 오버 토스를 통해 네트쪽으로 이동하며 2번째 토스 후 스파이크를 활용해 공을 반대편 코트로 넘긴다.</li>
+              <li>&nbsp;&nbsp;* <em>첫 번째 토스 후 원바운드 1회 가능</em></li>
+              <li>&nbsp;&nbsp;* <em>최대 7개의 배구공을 사용하여 평가를 진행한다.</em></li>
+              <li>• <strong>40초 동안</strong> 평가가 진행되며 넘어간 공의 개수를 측정하여 점수를 부여한다.</li>
+            </ul>
+          </div>
+
+          <!-- 배점 환산표 -->
+          <div class="vb-rubric-table-container">
+            <table class="vb-clean-rubric-table" id="skillRubricTable">
+              <thead>
+                <tr>
+                  <th scope="col" style="width: 150px;">환산 점수</th>
+                  <th scope="col">10점 (만점)</th>
+                  <th scope="col">9점</th>
+                  <th scope="col">8점</th>
+                  <th scope="col">7점</th>
+                  <th scope="col">6점</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr id="rowMaleCriteria" class="row-criteria active-criteria">
+                  <th scope="row"><strong>남 (우선 기준)</strong></th>
+                  <td><span class="cnt-pill pill-max">5개 이상</span></td>
+                  <td><span class="cnt-pill">4개</span></td>
+                  <td><span class="cnt-pill">3개</span></td>
+                  <td><span class="cnt-pill">2개</span></td>
+                  <td><span class="cnt-pill">1개 이하</span></td>
+                </tr>
+                <tr id="rowFemaleCriteria" class="row-criteria">
+                  <th scope="row"><strong>여</strong></th>
+                  <td><span class="cnt-pill pill-max">4개 이상</span></td>
+                  <td><span class="cnt-pill">3개</span></td>
+                  <td><span class="cnt-pill">2개</span></td>
+                  <td><span class="cnt-pill">1개</span></td>
+                  <td><span class="cnt-pill">0개</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- (3) 기능평가 툴바 -->
+        <section class="vb-card vb-toolbar-card">
+          <div class="vb-toolbar-row-primary">
+            <div class="vb-toolbar-left">
+              <h3 class="vb-card-title">🎯 학생별 배구 기능평가 입력 보드</h3>
+              <span class="vb-count-badge" id="skillStudentCountBadge">1반 (총 12명) · 2회 기회 중 최고 기록 자동 환산</span>
+            </div>
+
+            <div class="vb-export-btns-group">
+              <button type="button" id="copyGoogleSheetSkillBtn" class="vb-btn vb-btn-success vb-btn-sm" title="기능평가 기록 복사">
+                📋 구글시트 복사 (기능평가)
+              </button>
+              <button type="button" id="copyGoogleSheetCombinedSkillBtn" class="vb-btn vb-btn-primary vb-btn-sm" title="경기점수 + 기능점수 종합 합산 복사">
+                📋 구글시트 복사 (경기+기능 합산)
+              </button>
+              <button type="button" id="resetSkillCurrentClassBtn" class="vb-btn vb-btn-secondary vb-btn-sm" title="현재 반 기능 기록 초기화">
+                🔄 현재 반 기능점수 초기화
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- (4) 학생별 기능평가 보드 테이블 (헤더와 행이 100% 동일한 그리드로 정확히 일치) -->
+        <section class="vb-board-scroll-wrapper">
+          <div id="skillStudentRowsContainer" class="vb-student-board-view" aria-label="학생별 배구 기능평가 목록"></div>
+        </section>
+      </div>
+
+      <!-- ------------------------------------------------------------------ -->
+      <!-- [MODE 3] 합산 종합 성적표 -->
+      <!-- ------------------------------------------------------------------ -->
+      <div id="combinedEvalContainer" class="vb-mode-content-block hidden">
+        <section class="vb-card vb-toolbar-card">
+          <div class="vb-toolbar-row-primary">
+            <div class="vb-toolbar-left">
+              <h3 class="vb-card-title">🏆 배구 수행평가 종합 합산 성적표</h3>
+              <span class="vb-count-badge" id="combinedStudentCountBadge">경기 수행점수(5점) + 기능점수(10점) = 총 15점 만점</span>
+            </div>
+
+            <div class="vb-export-btns-group">
+              <button type="button" id="copyGoogleSheetCombinedMasterBtn" class="vb-btn vb-btn-success vb-btn-sm">
+                📋 구글시트 복사 (전체 반 종합 성적표)
+              </button>
+              <button type="button" id="downloadCsvCombinedBtn" class="vb-btn vb-btn-primary vb-btn-sm">
+                📥 엑셀 CSV 다운로드 (종합)
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="vb-board-scroll-wrapper">
+          <div id="combinedStudentRowsContainer" class="vb-student-board-view mode-horizontal-table" aria-label="배구 수행평가 종합 성적표 목록"></div>
+        </section>
+      </div>
+
     </main>
 
     <!-- ==================================================================== -->
-    <!-- 3. 학생용 화면 (Student View): 본인 총점(큰 숫자) + 아코디언 항목별 세부 -->
+    <!-- 4. 학생용 화면 (Student View) -->
     <!-- ==================================================================== -->
     <main id="studentViewSection" class="vb-view-section hidden">
-      <!-- 학생 본인 선택 바 -->
       <section class="vb-card vb-student-lookup-card">
         <div class="vb-student-lookup-row">
           <div class="vb-lookup-info">
-            <h2 class="vb-section-title">🎓 내 배구 경기 수행 능력 결과 확인</h2>
-            <p class="vb-section-sub">본인의 학번과 이름을 선택(또는 입력)하면 총점(큰 숫자)과 항목별 세부 아코디언을 확인할 수 있습니다.</p>
+            <h2 class="vb-section-title">🎓 내 배구 수행평가 종합 결과 확인</h2>
+            <p class="vb-section-sub">학번/이름을 선택하면 경기 수행 능력 점수(5점)와 배구 기능 점수(10점), 최종 합산 점수(15점 만점)를 확인할 수 있습니다.</p>
           </div>
           <div class="vb-lookup-controls">
             <select id="studentSelfSelect" class="vb-select" aria-label="본인 학번 및 이름 선택"></select>
@@ -181,50 +379,52 @@
       </section>
 
       <section class="vb-student-result-wrap">
-        <!-- (1) 학생용 총점 큰 숫자 카드 -->
         <div class="vb-card vb-hero-score-card">
           <div class="vb-hero-top-meta">
             <span class="vb-student-identity-pill" id="studentResultIdentity">20101 김배구</span>
             <span class="vb-updated-time-pill" id="studentResultUpdatedAt">실시간 반영됨</span>
           </div>
 
-          <p class="vb-hero-eyebrow">배구 수행평가 점수 (기본 5점 시작 · 3회 중복 시 ±1점 가감)</p>
+          <p class="vb-hero-eyebrow">배구 수행평가 점수 (경기 수행능력 5점 + 배구 기능평가 10점 = 총 15점 만점)</p>
 
-          <div class="vb-hero-dual-score-row">
-            <!-- 가감 누적 점수 (기본 5점 시작) -->
+          <div class="vb-hero-triple-score-row">
             <div class="vb-hero-score-block">
-              <span class="vb-hero-block-label">현재 가감 점수 (기본 5점 ± 가감)</span>
+              <span class="vb-hero-block-label">1. 경기 수행 능력 점수</span>
               <div class="vb-hero-big-score-box">
-                <span id="studentBigRawScore" class="vb-hero-big-number">5</span>
-                <span class="vb-hero-score-unit">점</span>
-              </div>
-              <span id="studentDeltaBreakdownBadge" class="vb-hero-sub-pill">기본 5점 + 가산 0점 - 감점 0점</span>
-            </div>
-
-            <div class="vb-hero-arrow">➔</div>
-
-            <!-- 표 기준 최종 환산 점수 (5점 ~ 1점) -->
-            <div class="vb-hero-score-block final-block">
-              <span class="vb-hero-block-label">수행평가 최종 환산 점수 (5점 만점)</span>
-              <div class="vb-hero-big-score-box">
-                <span id="studentBigFinalGradeScore" class="vb-hero-big-number final-gold">3</span>
+                <span id="studentBigGameScore" class="vb-hero-big-number">5</span>
                 <span class="vb-hero-score-unit">/ 5점</span>
               </div>
-              <span id="studentBracketRangeBadge" class="vb-hero-sub-pill gold-pill">현재 구간: 6~5점 구간 (3점)</span>
+              <span id="studentGameDetailBadge" class="vb-hero-sub-pill">기본 5점 시작 (±가감 점수: 0점)</span>
+            </div>
+
+            <div class="vb-hero-plus-sign">+</div>
+
+            <div class="vb-hero-score-block">
+              <span class="vb-hero-block-label">2. 배구 기능평가 점수</span>
+              <div class="vb-hero-big-score-box">
+                <span id="studentBigSkillScore" class="vb-hero-big-number">10</span>
+                <span class="vb-hero-score-unit">/ 10점</span>
+              </div>
+              <span id="studentSkillDetailBadge" class="vb-hero-sub-pill">최고 기록 기준 자동 환산</span>
+            </div>
+
+            <div class="vb-hero-plus-sign">=</div>
+
+            <div class="vb-hero-score-block final-block">
+              <span class="vb-hero-block-label">🏆 최종 합산 총점</span>
+              <div class="vb-hero-big-score-box">
+                <span id="studentBigTotalScore" class="vb-hero-big-number final-gold">15</span>
+                <span class="vb-hero-score-unit">/ 15점</span>
+              </div>
+              <span id="studentTotalRangeBadge" class="vb-hero-sub-pill gold-pill">경기 점수 + 기능 점수 합산</span>
             </div>
           </div>
-
-          <p id="studentScoreSummaryText" class="vb-hero-summary-text">
-            아래 항목을 1번 클릭하면 [가. 공격], [나. 수비] 요소별 체크 횟수와 점수 환산표를 자세히 볼 수 있습니다.
-          </p>
         </div>
 
-        <!-- (2) 학생용 아코디언 항목별 세부 (1번 클릭 시 즉시 접기/펼치기) -->
         <div class="vb-card vb-accordion-section-card">
           <div class="vb-accordion-header-bar">
             <div>
               <h3 class="vb-card-title">📌 항목별 세부 내역 (아코디언 접기/펼치기)</h3>
-              <p class="vb-card-sub">각 항목을 1번 클릭하면 정확한 토스·스파이크·리시브·좋은 움직임 체크 내역과 루브릭 기준이 펼쳐집니다.</p>
             </div>
             <div class="vb-accordion-bulk-btns">
               <button type="button" id="expandAllAccordionBtn" class="vb-btn-chip">전체 펼치기</button>
@@ -237,7 +437,7 @@
       </section>
     </main>
 
-    <!-- 4. 공통 푸터 (개인정보 처리방침 · 이용약관 · 문의/담당자 · 기관명 · 시행일) -->
+    <!-- 푸터 -->
     <footer class="vb-footer">
       <div class="vb-footer-links">
         <button type="button" class="vb-footer-link-btn" data-doc="privacy">개인정보 처리방침</button>
@@ -249,14 +449,12 @@
         <button type="button" class="vb-footer-link-btn" data-doc="audit">접근/감사 로그 확인(교사용)</button>
       </div>
       <div class="vb-footer-meta">
-        <span><strong>기관명</strong>: ○○고등학교 체육교육부</span>
-        <span><strong>문의/담당자</strong>: 체육교과 담당교사 (내선 000 / pe-teacher@school.edu.kr)</span>
-        <span><strong>시행일/변경일</strong>: 시행일 2026-03-02 (최종 변경일 2026-11-10)</span>
+        <span><strong>기관명</strong>: 청담고등학교 체육교육부</span>
+        <span><strong>문의/담당자</strong>: 체육교과 담당교사</span>
       </div>
     </footer>
   </div>
 
-  <!-- 정책 및 심의 문서 모달 -->
   <div id="policyModalBackdrop" class="vb-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
     <div class="vb-modal-dialog">
       <div class="vb-modal-header">

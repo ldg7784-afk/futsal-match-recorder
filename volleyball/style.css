@@ -1830,4 +1830,681 @@ body {
   padding: 1rem 1.6rem;
   border-top: 1px solid var(--vb-border);
   text-align: right;
+}\n
+
+/* ==========================================================================
+   신규: 배구 평가 영역 전환 네비게이션 탭 (경기 수행평가 <-> 배구 기능평가 <-> 합산 종합)
+   ========================================================================== */
+.vb-eval-mode-navbar {
+  margin-bottom: 1.25rem;
+}
+
+.vb-eval-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .vb-eval-mode-tabs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vb-mode-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--vb-surface);
+  border: 2px solid var(--vb-border);
+  border-radius: var(--vb-radius-lg);
+  padding: 0.85rem 1.2rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--vb-shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.vb-mode-tab-btn:hover {
+  border-color: #93c5fd;
+  transform: translateY(-2px);
+  box-shadow: var(--vb-shadow-md);
+}
+
+.vb-mode-tab-btn.active {
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  border-color: var(--vb-primary);
+  box-shadow: 0 4px 18px rgba(29, 78, 216, 0.15);
+}
+
+.mode-tab-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.mode-tab-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.mode-tab-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--vb-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vb-mode-tab-btn.active .mode-tab-title {
+  color: var(--vb-primary);
+}
+
+.mode-tab-sub {
+  font-size: 0.8rem;
+  color: var(--vb-text-muted);
+}
+
+.mode-tab-tag {
+  font-size: 0.68rem;
+  background: #f59e0b;
+  color: #ffffff;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+/* ==========================================================================
+   공통 학급 선택 바
+   ========================================================================== */
+.vb-common-class-bar {
+  margin-bottom: 1.25rem;
+  padding: 1.2rem 1.5rem;
+}
+
+.vb-common-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--vb-border);
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.vb-common-mode-indicator .vb-indicator-pill {
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* ==========================================================================
+   신규: 40초 / 50초 타이머 클린 카드 (오버플로우 0%, 소리알림 없음)
+   ========================================================================== */
+.vb-timer-card-clean {
+  background: #0f172a;
+  color: #f8fafc;
+  border: 1px solid #1e293b;
+  border-radius: var(--vb-radius-lg);
+  padding: 1.1rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+}
+
+.vb-timer-clean-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.vb-timer-preset-group {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.vb-timer-tab-btn {
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1.5px solid #334155;
+  border-radius: var(--vb-radius-md);
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.vb-timer-tab-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.vb-timer-tab-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
+}
+
+.vb-timer-clock-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.5rem 1.4rem;
+  border-radius: var(--vb-radius-md);
+  border: 1.5px solid #334155;
+}
+
+.vb-timer-digits {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.vb-timer-status {
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+}
+
+.vb-timer-status.ready { background: #334155; color: #cbd5e1; }
+.vb-timer-status.running { background: #0284c7; color: #ffffff; }
+.vb-timer-status.paused { background: #f59e0b; color: #ffffff; }
+.vb-timer-status.finished { background: #dc2626; color: #ffffff; font-weight: 900; }
+
+.vb-timer-controls-group {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.vb-timer-btn {
+  min-width: 90px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 0.6rem 0.9rem;
+}
+
+.vb-timer-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  margin-top: 0.9rem;
+  overflow: hidden;
+}
+
+.vb-timer-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #10b981);
+  transition: width 0.3s linear;
+}
+
+/* ==========================================================================
+   신규: 배구 기능평가 기준 카드 클린 (반영원칙 삭제, 평가방법만 수록)
+   ========================================================================== */
+.vb-skill-criteria-card-clean {
+  background: #ffffff;
+  border: 1.5px solid var(--vb-border);
+  border-left: 5px solid #f59e0b;
+  border-radius: var(--vb-radius-lg);
+  padding: 1.2rem 1.6rem;
+  margin-bottom: 1.25rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  box-shadow: var(--vb-shadow-sm);
+}
+
+.vb-criteria-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--vb-border);
+}
+
+.vb-criteria-title-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.vb-criteria-heading {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--vb-text);
+  margin: 0;
+}
+
+.vb-male-priority-tag {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.2);
+}
+
+.vb-gender-switch-area {
+  display: flex;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 3px;
+  border-radius: var(--vb-radius-md);
+}
+
+.vb-gender-choice-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+  padding: 4px 12px;
+  border-radius: var(--vb-radius-sm);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.vb-gender-choice-btn.active {
+  background: #ffffff;
+  color: #1d4ed8;
+  font-weight: 800;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+/* 평가 방법 박스 */
+.vb-method-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--vb-radius-md);
+  padding: 0.9rem 1.25rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.vb-method-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--vb-text);
+  margin-bottom: 0.45rem;
+}
+
+.vb-method-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--vb-text-sub);
+}
+
+.vb-method-list li {
+  margin-bottom: 0.2rem;
+}
+
+/* 환산표 */
+.vb-rubric-table-container {
+  border: 1.5px solid var(--vb-border-strong);
+  border-radius: var(--vb-radius-md);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.vb-clean-rubric-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 0.88rem;
+}
+
+.vb-clean-rubric-table th,
+.vb-clean-rubric-table td {
+  padding: 8px 10px;
+  border: 1px solid var(--vb-border);
+  box-sizing: border-box;
+}
+
+.vb-clean-rubric-table thead th {
+  background: #f1f5f9;
+  font-weight: 800;
+  color: var(--vb-text);
+  font-size: 0.9rem;
+}
+
+.vb-clean-rubric-table tr.active-criteria {
+  background: #eff6ff;
+}
+
+.vb-clean-rubric-table tr.active-criteria th {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.vb-clean-rubric-table .cnt-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  font-weight: 700;
+}
+
+.vb-clean-rubric-table tr.active-criteria .cnt-pill {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.vb-clean-rubric-table .cnt-pill.pill-max {
+  background: #fef08a;
+  border-color: #eab308;
+  color: #854d0e;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   무결점 섹터 정렬: .vb-skill-table-grid
+   헤더와 모든 행이 100% 동일한 그리드 템플릿을 사용하여 절대 어긋나지 않음
+   ========================================================================== */
+.vb-skill-table-grid {
+  display: grid;
+  grid-template-columns: 165px 65px 235px 235px 90px 105px 100px 125px minmax(110px, 1fr);
+  gap: 8px;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.vb-skill-tbl-head {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--vb-radius-sm);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.vb-skill-tbl-head > div {
+  text-align: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.vb-skill-tbl-head > div.col-stu {
+  text-align: left;
+}
+
+.vb-skill-tbl-row {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--vb-radius-sm);
+  transition: all 0.12s ease;
+  margin-bottom: 4px;
+}
+
+.vb-skill-tbl-row:nth-child(even) {
+  background: #f8fafc;
+}
+
+.vb-skill-tbl-row:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.vb-skill-tbl-row > div {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.vb-skill-tbl-row .col-gender,
+.vb-skill-tbl-row .col-best,
+.vb-skill-tbl-row .col-skill-score,
+.vb-skill-tbl-row .col-game-score,
+.vb-skill-tbl-row .col-total-score {
+  justify-content: center;
+}
+
+/* 성별 배지 버튼 */
+.vb-gender-badge-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.vb-gender-badge-btn.male {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.vb-gender-badge-btn.female {
+  background: #fdf2f8;
+  border-color: #fbcfe8;
+  color: #db2777;
+}
+
+/* 스텝퍼 & 칩 복합 컨트롤러 */
+.vb-attempt-control-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vb-attempt-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.vb-step-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--vb-radius-sm);
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.vb-step-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.vb-attempt-input {
+  flex: 1;
+  height: 28px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 800;
+  border: 1.5px solid var(--vb-border-strong);
+  border-radius: var(--vb-radius-sm);
+  background: #ffffff;
+  color: var(--vb-text);
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.vb-attempt-input:focus {
+  border-color: var(--vb-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+}
+
+.vb-fast-chips-row {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+}
+
+.vb-chip-btn {
+  flex: 1;
+  padding: 2px 0;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.vb-chip-btn:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.vb-chip-btn.active-chip {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* 최고 기록 및 점수 배지 */
+.vb-best-count-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--vb-radius-sm);
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.vb-best-count-badge.has-best {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.vb-skill-score-badge {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--vb-radius-sm);
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1.5px solid #fde047;
+}
+
+.vb-skill-score-badge.grade-10 {
+  background: #fef08a;
+  border-color: #eab308;
+  color: #713f12;
+}
+
+.vb-game-linked-badge {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--vb-radius-sm);
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.vb-total-score-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: var(--vb-radius-md);
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #fef08a;
+  border: 1.5px solid #eab308;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.vb-total-score-pill strong {
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+/* 학생용 3대 종합 점수 화면 */
+.vb-hero-triple-score-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1.3fr;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 1.5rem 0;
+  padding: 1.2rem 1.6rem;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--vb-border);
+  border-radius: var(--vb-radius-xl);
+}
+
+@media (max-width: 900px) {
+  .vb-hero-triple-score-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    text-align: center;
+  }
+  .vb-hero-plus-sign {
+    display: none;
+  }
+}
+
+.vb-hero-plus-sign {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #94a3b8;
 }
