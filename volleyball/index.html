@@ -198,46 +198,7 @@
       <!-- ------------------------------------------------------------------ -->
       <div id="skillEvalContainer" class="vb-mode-content-block hidden">
 
-        <!-- (1) 타이머 카드 (40초 타이머, 50초 타이머라고만 적기, 소리알림 제거, 박스 벗어남 0%) -->
-        <section class="vb-card vb-timer-card-clean">
-          <div class="vb-timer-clean-wrapper">
-            <!-- 프리셋: 40초 타이머, 50초 타이머라고만 표기 -->
-            <div class="vb-timer-preset-group">
-              <button type="button" id="timerPreset40Btn" class="vb-timer-tab-btn active" data-seconds="40">
-                ⏱️ 40초 타이머
-              </button>
-              <button type="button" id="timerPreset50Btn" class="vb-timer-tab-btn" data-seconds="50">
-                ⏱️ 50초 타이머
-              </button>
-            </div>
-
-            <!-- 대형 디지털 타이머 디스플레이 -->
-            <div class="vb-timer-clock-box" id="timerDisplayBox">
-              <span id="timerClockDigits" class="vb-timer-digits">00:40</span>
-              <span id="timerStatusBadge" class="vb-timer-status ready">준비</span>
-            </div>
-
-            <!-- 조작 버튼 -->
-            <div class="vb-timer-controls-group">
-              <button type="button" id="timerStartBtn" class="vb-btn vb-btn-success vb-btn-sm vb-timer-btn">
-                ▶ 시작 (Space)
-              </button>
-              <button type="button" id="timerPauseBtn" class="vb-btn vb-btn-outline vb-btn-sm vb-timer-btn" disabled>
-                ⏸ 일시정지
-              </button>
-              <button type="button" id="timerResetBtn" class="vb-btn vb-btn-secondary vb-btn-sm vb-timer-btn">
-                🔄 리셋 (R)
-              </button>
-            </div>
-          </div>
-
-          <!-- 진행률 게이지 바 -->
-          <div class="vb-timer-progress-track">
-            <div id="timerProgressBar" class="vb-timer-progress-fill" style="width: 100%;"></div>
-          </div>
-        </section>
-
-        <!-- (2) 배구 기능평가 기준 카드 (반영 원칙 제거, 평가 방법만 명시, 우선 남자 기준) -->
+        <!-- (1) 배구 기능평가 기준 카드 (상단 배치: 반영 원칙 제거, 평가 방법만 명시, 우선 남자 기준) -->
         <section class="vb-card vb-skill-criteria-card-clean">
           <div class="vb-criteria-top-bar">
             <div class="vb-criteria-title-area">
@@ -300,6 +261,45 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+        </section>
+
+        <!-- (2) 타이머 카드 (입력보드 바로 위 배치: 40초 타이머, 50초 타이머, 소리알림 제거, 박스 벗어남 0%) -->
+        <section class="vb-card vb-timer-card-clean">
+          <div class="vb-timer-clean-wrapper">
+            <!-- 프리셋: 40초 타이머, 50초 타이머라고만 표기 -->
+            <div class="vb-timer-preset-group">
+              <button type="button" id="timerPreset40Btn" class="vb-timer-tab-btn active" data-seconds="40">
+                ⏱️ 40초 타이머
+              </button>
+              <button type="button" id="timerPreset50Btn" class="vb-timer-tab-btn" data-seconds="50">
+                ⏱️ 50초 타이머
+              </button>
+            </div>
+
+            <!-- 대형 디지털 타이머 디스플레이 -->
+            <div class="vb-timer-clock-box" id="timerDisplayBox">
+              <span id="timerClockDigits" class="vb-timer-digits">00:40</span>
+              <span id="timerStatusBadge" class="vb-timer-status ready">준비</span>
+            </div>
+
+            <!-- 조작 버튼 -->
+            <div class="vb-timer-controls-group">
+              <button type="button" id="timerStartBtn" class="vb-btn vb-btn-success vb-btn-sm vb-timer-btn">
+                ▶ 시작 (Space)
+              </button>
+              <button type="button" id="timerPauseBtn" class="vb-btn vb-btn-outline vb-btn-sm vb-timer-btn" disabled>
+                ⏸ 일시정지
+              </button>
+              <button type="button" id="timerResetBtn" class="vb-btn vb-btn-secondary vb-btn-sm vb-timer-btn">
+                🔄 리셋 (R)
+              </button>
+            </div>
+          </div>
+
+          <!-- 진행률 게이지 바 -->
+          <div class="vb-timer-progress-track">
+            <div id="timerProgressBar" class="vb-timer-progress-fill" style="width: 100%;"></div>
           </div>
         </section>
 
