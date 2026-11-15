@@ -215,7 +215,7 @@
 
   // ==========================================================================
   // (4) 배구 기능평가 계산 모듈 (SkillCalcModule - 10점 만점)
-  // - 기준: 사진 원문 반영 (우선 남자 기준 적용)
+  // - 기준: 사진 원문 반영 (남자 기준 적용)
   //   [남자 기준] 5개 이상: 10점 / 4개: 9점 / 3개: 8점 / 2개: 7점 / 1개 이하: 6점
   //   [여자 기준] 4개 이상: 10점 / 3개: 9점 / 2개: 8점 / 1개: 7점 / 0개: 6점
   // ==========================================================================
@@ -234,7 +234,7 @@
         if (c === 1) return 7;
         return 6;
       } else {
-        // 우선 남자 기준 (기본)
+        // 남자 기준 (기본)
         if (c >= 5) return 10;
         if (c === 4) return 9;
         if (c === 3) return 8;
@@ -426,7 +426,7 @@
     state: {
       currentClass: 1,             // 1 ~ 9반
       currentMode: 'game',         // 'game' | 'skill' | 'combined'
-      skillCriteriaGender: 'male', // 'male' (우선 남자 기준) | 'female'
+      skillCriteriaGender: 'male', // 'male' (남자 기준) | 'female'
       classes: {},                 // { [c]: [학생목록] }
       students: [],                // 현재 반 학생 목록
       records: {},                 // 경기수행 기록
@@ -503,7 +503,7 @@
       return {
         attempt1: null,
         attempt2: null,
-        gender: this.state.skillCriteriaGender || 'male', // 기본: 우선 남자 기준
+        gender: this.state.skillCriteriaGender || 'male', // 기본: 남자 기준
         note: '',
         evalDate: this.state.evalDate || new Date().toISOString().slice(0, 10),
         updatedAt: new Date().toLocaleString('ko-KR', { hour12: false })
@@ -788,7 +788,7 @@
       if (docType === 'spec') {
         return {
           title: '배구 수행평가 루브릭 및 계산 규정',
-          html: `<p>1. 경기 수행 능력 평가: 기본 5점 시작 (3회당 ±1점)<br>2. 배구 기능평가: 40초 토스·스파이크 공 넘김 측정 (우선 남자 기준)</p>`
+          html: `<p>1. 경기 수행 능력 평가: 기본 5점 시작 (3회당 ±1점)<br>2. 배구 기능평가: 40초 토스·스파이크 공 넘김 측정 (남자 기준)</p>`
         };
       }
       const logs = AuthAccessModule.getAuditLogs();
@@ -1002,15 +1002,19 @@
       document.getElementById('timerPauseBtn')?.addEventListener('click', () => TimerModule.pause());
       document.getElementById('timerResetBtn')?.addEventListener('click', () => TimerModule.reset());
 
-      // 4. 기능평가 성별 기준 전환 (우선 남자 기준 기본)
+      // 4. 기능평가 성별 기준 전환 (남자 기준 기본)
       document.getElementById('genderCriteriaMaleBtn')?.addEventListener('click', () => {
         DataModelModule.state.skillCriteriaGender = 'male';
         DataModelModule.saveToStorage();
+        // 남학생 기준 선택 시 40초 타이머 자동 세팅
+        TimerModule.setPreset(40);
         this.renderAll();
       });
       document.getElementById('genderCriteriaFemaleBtn')?.addEventListener('click', () => {
         DataModelModule.state.skillCriteriaGender = 'female';
         DataModelModule.saveToStorage();
+        // 여학생 기준 선택 시 50초 타이머 자동 세팅
+        TimerModule.setPreset(50);
         this.renderAll();
       });
 
@@ -1282,6 +1286,19 @@
         document.getElementById('genderCriteriaFemaleBtn')?.classList.toggle('active', !isMale);
         document.getElementById('rowMaleCriteria')?.classList.toggle('active-criteria', isMale);
         document.getElementById('rowFemaleCriteria')?.classList.toggle('active-criteria', !isMale);
+
+        const methodMale = document.getElementById('methodCardMale');
+        const methodFemale = document.getElementById('methodCardFemale');
+        if (methodMale && methodFemale) {
+          methodMale.classList.toggle('active-method', isMale);
+          methodFemale.classList.toggle('active-method', !isMale);
+        }
+
+        const tagEl = document.getElementById('skillCriteriaActiveTag');
+        if (tagEl) {
+          tagEl.textContent = isMale ? '⚡ 남자 기준 (40초)' : '⚡ 여자 기준 (50초)';
+          tagEl.style.background = isMale ? 'linear-gradient(135deg, #1d4ed8, #2563eb)' : 'linear-gradient(135deg, #db2777, #e11d48)';
+        }
 
         this.updateViewModeBtns();
         this.renderTeacherStudentRows();
@@ -1804,7 +1821,7 @@
           title: '2. 배구 기능평가 측정 내역 (2회 기회 중 최고 기록 반영)',
           rightSummary: `기능 점수: ${sCalc.scoreDisplay}`,
           bodyHtml: `
-            <p>1차: <strong>${sCalc.attempt1 !== null ? sCalc.attempt1 + '개' : '미응시'}</strong> | 2차: <strong>${sCalc.attempt2 !== null ? sCalc.attempt2 + '개' : '미응시'}</strong> ➔ 최고 기록: <strong>${sCalc.bestDisplay}</strong> (${isMale ? '우선 남자 기준' : '여자 기준'} ➔ <strong>${sCalc.scoreDisplay}</strong>)</p>
+            <p>1차: <strong>${sCalc.attempt1 !== null ? sCalc.attempt1 + '개' : '미응시'}</strong> | 2차: <strong>${sCalc.attempt2 !== null ? sCalc.attempt2 + '개' : '미응시'}</strong> ➔ 최고 기록: <strong>${sCalc.bestDisplay}</strong> (${isMale ? '남자 기준' : '여자 기준'} ➔ <strong>${sCalc.scoreDisplay}</strong>)</p>
           `
         },
         {

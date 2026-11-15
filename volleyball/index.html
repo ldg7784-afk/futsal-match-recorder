@@ -1,59 +1,68 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>배구 수행평가 시스템 | 경기 수행 능력 + 배구 기능평가</title>
-  <meta name="description" content="배구 경기 수행 능력 평가(5점 만점) 및 배구 기능평가(10점 만점, 40초/50초 타이머, 2회 기회, 남자/여자 기준) 종합 합산 시스템">
+  <title>배구 수행평가 시스템 | 경기 수행 능력 + 배구 기능평가 종합 연동</title>
+  <meta name="description" content="배구 경기 수행 능력 평가(5점 만점) 및 배구 기능평가(10점 만점, 40초/50초 타이머, 2회 기회, 남자/여자 기준) 종합 합산 성적 시스템">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div class="vb-app-container">
     <!-- 1. 상단 메인 헤더 -->
     <header class="vb-header">
       <div class="vb-header-left">
-        <h1 class="vb-title">🏐 배구 수행평가</h1>
-        <a href="../index.html" class="vb-btn vb-btn-outline vb-btn-xs" style="text-decoration:none; margin-left:0.6rem; font-weight:700;">🏠 메인 포털</a>
+        <h1 class="vb-title">🏐 배구 수행평가 시스템</h1>
+        <span class="vb-header-subtitle">경기 수행 능력(5점) + 배구 기능평가(10점) 종합 연동</span>
+        <a href="../index.html" class="vb-btn vb-btn-outline vb-btn-xs"
+          style="text-decoration:none; margin-left:0.6rem; font-weight:700;">🏠 메인 포털</a>
       </div>
 
       <div class="vb-header-right">
         <div class="vb-role-switch-group" role="group" aria-label="화면 역할 전환">
           <button type="button" id="switchTeacherBtn" class="vb-role-btn active">
-            교사용
+            👨‍🏫 교사용 평가
           </button>
           <button type="button" id="switchStudentBtn" class="vb-role-btn">
-            학생용
+            🎓 학생용 결과 확인
           </button>
         </div>
       </div>
     </header>
 
-    <!-- 2. 평가 영역 전환 네비게이션 바 (경기 수행평가 <-> 배구 기능평가) -->
+    <!-- 2. 평가 영역 전환 네비게이션 바 (두 개를 클릭하여 전환 & 합산 연동) -->
     <nav class="vb-eval-mode-navbar" role="tablist" aria-label="수행평가 영역 전환">
       <div class="vb-eval-mode-tabs">
-        <button type="button" id="tabModeGameBtn" class="vb-mode-tab-btn active" role="tab" aria-selected="true" data-mode="game">
+        <button type="button" id="tabModeGameBtn" class="vb-mode-tab-btn active" role="tab" aria-selected="true"
+          data-mode="game">
           <span class="mode-tab-icon">🏐</span>
           <span class="mode-tab-info">
-            <span class="mode-tab-title">1. 경기 수행 능력 평가</span>
-            <span class="mode-tab-sub">기본 5점 시작 · 토스/스파이크/리시브 3회당 ±1점 (5점 만점)</span>
+            <span class="mode-tab-title">1. 경기 수행 능력 평가 (5점)</span>
+            <span class="mode-tab-sub">기본 5점 시작 · 토스/스파이크/리시브 3회당 ±1점</span>
           </span>
         </button>
 
-        <button type="button" id="tabModeSkillBtn" class="vb-mode-tab-btn" role="tab" aria-selected="false" data-mode="skill">
+        <button type="button" id="tabModeSkillBtn" class="vb-mode-tab-btn" role="tab" aria-selected="false"
+          data-mode="skill">
           <span class="mode-tab-icon">🎯</span>
           <span class="mode-tab-info">
-            <span class="mode-tab-title">2. 배구 기능평가 <span class="mode-tab-tag">선택</span></span>
-            <span class="mode-tab-sub">토스·스파이크 공 넘김 측정 (10점 만점 / 40초·50초 타이머)</span>
+            <span class="mode-tab-title">2. 배구 기능평가 (10점) <span class="mode-tab-tag">신규 연동</span></span>
+            <span class="mode-tab-sub">토스·스파이크 40초/50초 타이머 측정 · 2회 기회</span>
           </span>
         </button>
 
-        <button type="button" id="tabModeCombinedBtn" class="vb-mode-tab-btn" role="tab" aria-selected="false" data-mode="combined">
+        <button type="button" id="tabModeCombinedBtn" class="vb-mode-tab-btn" role="tab" aria-selected="false"
+          data-mode="combined">
           <span class="mode-tab-icon">🏆</span>
           <span class="mode-tab-info">
-            <span class="mode-tab-title">3. 합산 종합 성적표</span>
+            <span class="mode-tab-title">3. 합산 종합 성적표 (15점)</span>
             <span class="mode-tab-sub">경기(5점) + 기능(10점) = 총 15점 만점 실시간 합산</span>
           </span>
         </button>
@@ -67,7 +76,7 @@
     <!-- ==================================================================== -->
     <main id="teacherViewSection" class="vb-view-section">
 
-      <!-- 공통 상단 학급 및 평가일자 바 -->
+      <!-- 공통 상단 학급 및 평가일자 바 (모든 모드 공유) -->
       <section class="vb-card vb-common-class-bar">
         <div class="vb-class-selector-row">
           <div class="vb-class-nav-label">🏫 <strong>학급 선택:</strong></div>
@@ -88,7 +97,8 @@
           <div class="vb-eval-date-group">
             <label for="evalDateInput" class="vb-date-label">📅 평가 일자</label>
             <input type="date" id="evalDateInput" class="vb-input vb-input-sm vb-date-input" title="평가 일자 선택">
-            <button type="button" id="setTodayDateBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="오늘 날짜로 설정">오늘</button>
+            <button type="button" id="setTodayDateBtn" class="vb-btn vb-btn-outline vb-btn-sm"
+              title="오늘 날짜로 설정">오늘</button>
             <span class="vb-date-status-pill" id="currentEvalDateBadge">2026-11-13 평가 진행 중</span>
           </div>
 
@@ -99,14 +109,14 @@
       </section>
 
       <!-- ------------------------------------------------------------------ -->
-      <!-- [MODE 1] 경기 수행 능력 평가 영역 (원래 원본 그대로 유지) -->
+      <!-- [MODE 1] 경기 수행 능력 평가 영역 (기존 기능 + 합산 총점 연동) -->
       <!-- ------------------------------------------------------------------ -->
       <div id="gameEvalContainer" class="vb-mode-content-block">
-        <!-- 상단: 원래 경기수행 기준 루브릭 -->
+        <!-- 상단: 경기수행 기준 루브릭 -->
         <section class="vb-card vb-criteria-compact-card">
           <div class="vb-criteria-compact-row">
             <div class="vb-criteria-title-block">
-              <h2 class="vb-criteria-main-title">📋 수행평가 기준</h2>
+              <h2 class="vb-criteria-main-title">📋 경기 수행평가 기준</h2>
               <span class="vb-criteria-rule-pill">기본 5점 시작 · 3회 중복 시 ±1점</span>
             </div>
 
@@ -135,8 +145,10 @@
               <details class="vb-mini-details">
                 <summary class="vb-btn vb-btn-outline vb-btn-xs">도구 ▾</summary>
                 <div class="vb-mini-popover">
-                  <button type="button" id="runCalcTestSuiteBtn" class="vb-btn vb-btn-outline vb-btn-xs">🧪 계산 검증 (5케이스)</button>
-                  <button type="button" id="exportDataBackupBtn" class="vb-btn vb-btn-outline vb-btn-xs">💾 JSON 백업</button>
+                  <button type="button" id="runCalcTestSuiteBtn" class="vb-btn vb-btn-outline vb-btn-xs">🧪 계산 검증
+                    (5케이스)</button>
+                  <button type="button" id="exportDataBackupBtn" class="vb-btn vb-btn-outline vb-btn-xs">💾 JSON
+                    백업</button>
                   <div id="calcTestResultPanel" class="vb-test-panel hidden"></div>
                 </div>
               </details>
@@ -144,30 +156,34 @@
           </div>
         </section>
 
-        <!-- 원래 툴바 바 -->
+        <!-- 경기수행 툴바 바 -->
         <section class="vb-card vb-toolbar-card">
           <div class="vb-toolbar-row-primary">
             <div class="vb-toolbar-left">
-              <h3 class="vb-card-title">👥 학생별 실시간 가로형 빠른 체크 보드</h3>
+              <h3 class="vb-card-title">👥 학생별 경기 수행능력 빠른 체크 보드</h3>
               <span class="vb-count-badge" id="studentCountBadge">1반 (총 12명)</span>
             </div>
 
             <div class="vb-export-btns-group">
-              <button type="button" id="copyGoogleSheetAllDatesBtn" class="vb-btn vb-btn-success vb-btn-sm" title="모든 평가 날짜의 1~9반 기록 복사">
-                📋 구글시트 복사 (전체 날짜별 정리)
+              <button type="button" id="copyGoogleSheetAllDatesBtn" class="vb-btn vb-btn-success vb-btn-sm"
+                title="모든 평가 날짜의 1~9반 경기수행 기록 복사">
+                📋 구글시트 복사 (경기수행 전체)
               </button>
-              <button type="button" id="copyGoogleSheetCurrentBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="현재 날짜/반 기록 복사">
+              <button type="button" id="copyGoogleSheetCurrentBtn" class="vb-btn vb-btn-outline vb-btn-sm"
+                title="현재 날짜/반 경기수행 기록 복사">
                 📋 구글시트 (현재 날짜)
               </button>
-              <button type="button" id="downloadCsvAllDatesBtn" class="vb-btn vb-btn-primary vb-btn-sm" title="엑셀(CSV) 다운로드">
-                📥 엑셀 다운로드 (전체 날짜별)
+              <button type="button" id="downloadCsvAllDatesBtn" class="vb-btn vb-btn-primary vb-btn-sm"
+                title="엑셀(CSV) 파일 다운로드">
+                📥 엑셀 다운로드 (전체)
               </button>
             </div>
           </div>
 
           <div class="vb-toolbar-row-secondary">
             <div class="vb-toolbar-view-toggle">
-              <button type="button" id="viewModeTableBtn" class="vb-btn vb-btn-sm vb-btn-primary active" title="가로형 빠른 체크보드">
+              <button type="button" id="viewModeTableBtn" class="vb-btn vb-btn-sm vb-btn-primary active"
+                title="가로형 빠른 체크보드">
                 📊 가로형 빠른 체크보드
               </button>
               <button type="button" id="viewModeCardBtn" class="vb-btn vb-btn-sm vb-btn-outline" title="학생별 상세 카드 뷰">
@@ -179,37 +195,40 @@
               <button type="button" id="loadSample15Btn" class="vb-btn vb-btn-outline vb-btn-sm" title="학생명렬표 명단으로 초기화">
                 🔄 현재 반 명단 재동기화
               </button>
-              <input type="text" id="newStudentNumberInput" class="vb-input vb-input-sm" placeholder="학번 (예: 20117)" maxlength="10">
+              <input type="text" id="newStudentNumberInput" class="vb-input vb-input-sm" placeholder="학번 (예: 20117)"
+                maxlength="10">
               <input type="text" id="newStudentNameInput" class="vb-input vb-input-sm" placeholder="이름" maxlength="20">
               <button type="button" id="addStudentBtn" class="vb-btn vb-btn-primary vb-btn-sm">+ 학생 추가</button>
-              <button type="button" id="resetAllScoresBtn" class="vb-btn vb-btn-secondary vb-btn-sm">🔄 현재 반 0점 초기화</button>
+              <button type="button" id="resetAllScoresBtn" class="vb-btn vb-btn-secondary vb-btn-sm">🔄 현재 반 경기점수
+                초기화</button>
             </div>
           </div>
         </section>
 
-        <!-- 학생별 경기 수행 평가 보드 (원래대로) -->
+        <!-- 학생별 경기 수행 평가 보드 -->
         <section class="vb-board-scroll-wrapper">
-          <div id="teacherStudentRowsContainer" class="vb-student-board-view mode-horizontal-table" aria-label="학생별 경기 수행 능력 평가 목록"></div>
+          <div id="teacherStudentRowsContainer" class="vb-student-board-view mode-horizontal-table"
+            aria-label="학생별 경기 수행 능력 평가 목록"></div>
         </section>
       </div>
 
       <!-- ------------------------------------------------------------------ -->
-      <!-- [MODE 2] 배구 기능평가 영역 (40초/50초 타이머, 평가 방법만, 박스 깔끔) -->
+      <!-- [MODE 2] 배구 기능평가 영역 (40초/50초 타이머 + 기준 + 2회 기회) -->
       <!-- ------------------------------------------------------------------ -->
       <div id="skillEvalContainer" class="vb-mode-content-block hidden">
 
-        <!-- (1) 배구 기능평가 기준 카드 (상단 배치: 반영 원칙 제거, 평가 방법만 명시, 우선 남자 기준) -->
+        <!-- (1) 배구 기능평가 기준 카드 (상단 배치: 남학생 / 여학생 기준) -->
         <section class="vb-card vb-skill-criteria-card-clean">
           <div class="vb-criteria-top-bar">
             <div class="vb-criteria-title-area">
               <h2 class="vb-criteria-heading">📋 배구 기능평가 기준</h2>
-              <span class="vb-male-priority-tag">⚡ 우선 남자 기준 적용</span>
+              <span class="vb-male-priority-tag" id="skillCriteriaActiveTag">⚡ 남자 기준 (40초)</span>
             </div>
 
-            <!-- 성별 기준 선택 -->
+            <!-- 남/여 기준 선택 탭 (우선 삭제 및 남자 기준 / 여자 기준) -->
             <div class="vb-gender-switch-area" role="group" aria-label="배점 기준 성별 선택">
               <button type="button" id="genderCriteriaMaleBtn" class="vb-gender-choice-btn active" data-gender="male">
-                👦 우선 남자 기준 (기본)
+                👦 남자 기준
               </button>
               <button type="button" id="genderCriteriaFemaleBtn" class="vb-gender-choice-btn" data-gender="female">
                 👧 여자 기준
@@ -217,16 +236,47 @@
             </div>
           </div>
 
-          <!-- 평가 방법만 깔끔하게 명시 (반영 원칙 삭제 완료) -->
-          <div class="vb-method-box">
-            <h3 class="vb-method-title">🎯 평가 방법 (2회 기회 중 최고 기록 반영)</h3>
-            <ul class="vb-method-list">
-              <li>• 코트 엔드라인에서 시작한다.</li>
-              <li>• 2번의 언더 또는 오버 토스를 통해 네트쪽으로 이동하며 2번째 토스 후 스파이크를 활용해 공을 반대편 코트로 넘긴다.</li>
-              <li>&nbsp;&nbsp;* <em>첫 번째 토스 후 원바운드 1회 가능</em></li>
-              <li>&nbsp;&nbsp;* <em>최대 7개의 배구공을 사용하여 평가를 진행한다.</em></li>
-              <li>• <strong>40초 동안</strong> 평가가 진행되며 넘어간 공의 개수를 측정하여 점수를 부여한다.</li>
-            </ul>
+          <!-- 남학생 & 여학생 평가 방법 (사용자 제공 여학생 원문 100% 반영) -->
+          <div class="vb-skill-methods-grid">
+            <!-- 👦 남학생 평가 방법 -->
+            <div class="vb-method-card male-card active-method" id="methodCardMale">
+              <div class="vb-method-card-header">
+                <span class="vb-method-badge male">👦 남학생 수행평가</span>
+                <span class="vb-method-time-pill">⏱️ 40초 측정</span>
+              </div>
+              <div class="vb-method-overview">
+                40초 동안 배구 코트에서 토스를 통해 반대쪽 코트로 넘긴다. (2회 기회 중 최고 기록 반영)
+              </div>
+              <ol class="vb-method-ol">
+                <li>코트 엔드라인에서 시작한다.</li>
+                <li>2번의 언더 또는 오버 토스를 통해 네트 쪽으로 이동하며 2번째 토스 후 스파이크를 활용해 공을 반대편 코트로 넘긴다.</li>
+                <li>넘어간 공의 개수를 측정하여 점수를 부여한다.</li>
+              </ol>
+              <div class="vb-method-note">
+                • 첫 번째 토스 후 원바운드 1회 가능<br>
+                • 최대 7개의 배구공을 사용하여 평가 진행
+              </div>
+            </div>
+
+            <!-- 👧 여학생 평가 방법 (사용자 이미지 원문) -->
+            <div class="vb-method-card female-card" id="methodCardFemale">
+              <div class="vb-method-card-header">
+                <span class="vb-method-badge female">👧 여학생 수행평가</span>
+                <span class="vb-method-time-pill">⏱️ 50초 측정</span>
+              </div>
+              <div class="vb-method-overview">
+                50초 동안 배구 코트에서 최대 3번 토스를 통해 반대쪽 코트로 넘긴다.
+              </div>
+              <ol class="vb-method-ol">
+                <li>여학생은 배구 엔드라인 앞의 라인에서 시작하여 수행평가를 시작한다.</li>
+                <li>2번의 토스를 실시해야 하며 2번의 토스로 수행이 어려울 시 3번의 토스까지 허용한다.</li>
+                <li>마지막 토스 후 공을 캐치</li>
+                <li>캐치한 공을 던져서 스파이크를 실시.</li>
+              </ol>
+              <div class="vb-method-note">
+                • 평가 기준(배점 환산표)은 기존과 동일 (2회 기회 중 최고 기록 반영)
+              </div>
+            </div>
           </div>
 
           <!-- 배점 환산표 -->
@@ -234,7 +284,7 @@
             <table class="vb-clean-rubric-table" id="skillRubricTable">
               <thead>
                 <tr>
-                  <th scope="col" style="width: 150px;">환산 점수</th>
+                  <th scope="col" style="width: 170px;">환산 점수</th>
                   <th scope="col">10점 (만점)</th>
                   <th scope="col">9점</th>
                   <th scope="col">8점</th>
@@ -244,7 +294,7 @@
               </thead>
               <tbody>
                 <tr id="rowMaleCriteria" class="row-criteria active-criteria">
-                  <th scope="row"><strong>남 (우선 기준)</strong></th>
+                  <th scope="row"><strong>👦 남학생 기준 (40초)</strong></th>
                   <td><span class="cnt-pill pill-max">5개 이상</span></td>
                   <td><span class="cnt-pill">4개</span></td>
                   <td><span class="cnt-pill">3개</span></td>
@@ -252,7 +302,7 @@
                   <td><span class="cnt-pill">1개 이하</span></td>
                 </tr>
                 <tr id="rowFemaleCriteria" class="row-criteria">
-                  <th scope="row"><strong>여</strong></th>
+                  <th scope="row"><strong>👧 여학생 기준 (50초)</strong></th>
                   <td><span class="cnt-pill pill-max">4개 이상</span></td>
                   <td><span class="cnt-pill">3개</span></td>
                   <td><span class="cnt-pill">2개</span></td>
@@ -303,36 +353,40 @@
           </div>
         </section>
 
-        <!-- (3) 기능평가 툴바 -->
+        <!-- (3) 기능평가 학생별 빠른 기록 보드 툴바 -->
         <section class="vb-card vb-toolbar-card">
           <div class="vb-toolbar-row-primary">
             <div class="vb-toolbar-left">
-              <h3 class="vb-card-title">🎯 학생별 배구 기능평가 입력 보드</h3>
-              <span class="vb-count-badge" id="skillStudentCountBadge">1반 (총 12명) · 2회 기회 중 최고 기록 자동 환산</span>
+              <h3 class="vb-card-title">🎯 학생별 배구 기능평가 입력 보드 (1차 · 2차 시기 측정)</h3>
+              <span class="vb-count-badge" id="skillStudentCountBadge">1반 (총 12명) · 최고 기록 자동 환산</span>
             </div>
 
             <div class="vb-export-btns-group">
-              <button type="button" id="copyGoogleSheetSkillBtn" class="vb-btn vb-btn-success vb-btn-sm" title="기능평가 기록 복사">
+              <button type="button" id="copyGoogleSheetSkillBtn" class="vb-btn vb-btn-success vb-btn-sm"
+                title="현재 반 기능평가 기록 복사">
                 📋 구글시트 복사 (기능평가)
               </button>
-              <button type="button" id="copyGoogleSheetCombinedSkillBtn" class="vb-btn vb-btn-primary vb-btn-sm" title="경기점수 + 기능점수 종합 합산 복사">
-                📋 구글시트 복사 (경기+기능 합산)
+              <button type="button" id="copyGoogleSheetCombinedSkillBtn" class="vb-btn vb-btn-primary vb-btn-sm"
+                title="경기점수와 기능점수가 합산된 종합 기록 복사">
+                📋 구글시트 복사 (경기+기능 합산 종합)
               </button>
-              <button type="button" id="resetSkillCurrentClassBtn" class="vb-btn vb-btn-secondary vb-btn-sm" title="현재 반 기능 기록 초기화">
+              <button type="button" id="resetSkillCurrentClassBtn" class="vb-btn vb-btn-secondary vb-btn-sm"
+                title="현재 반 기능평가 기록 초기화">
                 🔄 현재 반 기능점수 초기화
               </button>
             </div>
           </div>
         </section>
 
-        <!-- (4) 학생별 기능평가 보드 테이블 (헤더와 행이 100% 동일한 그리드로 정확히 일치) -->
+        <!-- 학생별 기능평가 보드 테이블 (1차, 2차, 최고, 기능점수, 경기점수, 합산총점) -->
         <section class="vb-board-scroll-wrapper">
-          <div id="skillStudentRowsContainer" class="vb-student-board-view" aria-label="학생별 배구 기능평가 목록"></div>
+          <div id="skillStudentRowsContainer" class="vb-student-board-view mode-horizontal-table"
+            aria-label="학생별 배구 기능평가 목록"></div>
         </section>
       </div>
 
       <!-- ------------------------------------------------------------------ -->
-      <!-- [MODE 3] 합산 종합 성적표 -->
+      <!-- [MODE 3] 합산 종합 성적표 (경기 5점 + 기능 10점 = 총 15점 만점) -->
       <!-- ------------------------------------------------------------------ -->
       <div id="combinedEvalContainer" class="vb-mode-content-block hidden">
         <section class="vb-card vb-toolbar-card">
@@ -343,10 +397,16 @@
             </div>
 
             <div class="vb-export-btns-group">
-              <button type="button" id="copyGoogleSheetCombinedMasterBtn" class="vb-btn vb-btn-success vb-btn-sm">
+              <button type="button" id="copyGoogleSheetCombinedMasterBtn" class="vb-btn vb-btn-success vb-btn-sm"
+                title="전체 반 경기+기능 종합 합산 기록을 구글시트에 바로 붙여넣을 수 있게 복사">
                 📋 구글시트 복사 (전체 반 종합 성적표)
               </button>
-              <button type="button" id="downloadCsvCombinedBtn" class="vb-btn vb-btn-primary vb-btn-sm">
+              <button type="button" id="copyGoogleSheetCombinedCurrentClassBtn" class="vb-btn vb-btn-outline vb-btn-sm"
+                title="현재 반 경기+기능 종합 합산 기록 복사">
+                📋 구글시트 (현재 반만)
+              </button>
+              <button type="button" id="downloadCsvCombinedBtn" class="vb-btn vb-btn-primary vb-btn-sm"
+                title="모든 반의 종합 성적표 엑셀(CSV) 파일 다운로드">
                 📥 엑셀 CSV 다운로드 (종합)
               </button>
             </div>
@@ -354,21 +414,24 @@
         </section>
 
         <section class="vb-board-scroll-wrapper">
-          <div id="combinedStudentRowsContainer" class="vb-student-board-view mode-horizontal-table" aria-label="배구 수행평가 종합 성적표 목록"></div>
+          <div id="combinedStudentRowsContainer" class="vb-student-board-view mode-horizontal-table"
+            aria-label="배구 수행평가 종합 성적표 목록"></div>
         </section>
       </div>
 
     </main>
 
     <!-- ==================================================================== -->
-    <!-- 4. 학생용 화면 (Student View) -->
+    <!-- 4. 학생용 화면 (Student View): 경기점수(5점) + 기능점수(10점) + 합산총점(15점) -->
     <!-- ==================================================================== -->
     <main id="studentViewSection" class="vb-view-section hidden">
+      <!-- 학생 본인 선택 바 -->
       <section class="vb-card vb-student-lookup-card">
         <div class="vb-student-lookup-row">
           <div class="vb-lookup-info">
             <h2 class="vb-section-title">🎓 내 배구 수행평가 종합 결과 확인</h2>
-            <p class="vb-section-sub">학번/이름을 선택하면 경기 수행 능력 점수(5점)와 배구 기능 점수(10점), 최종 합산 점수(15점 만점)를 확인할 수 있습니다.</p>
+            <p class="vb-section-sub">본인의 학번과 이름을 선택하면 경기 수행 능력 점수(5점), 배구 기능 점수(10점), 그리고 최종 합산 점수(15점 만점)를 확인할 수 있습니다.
+            </p>
           </div>
           <div class="vb-lookup-controls">
             <select id="studentSelfSelect" class="vb-select" aria-label="본인 학번 및 이름 선택"></select>
@@ -379,6 +442,7 @@
       </section>
 
       <section class="vb-student-result-wrap">
+        <!-- (1) 학생용 3대 종합 점수 카드 (경기 수행 + 배구 기능 + 최종 합산) -->
         <div class="vb-card vb-hero-score-card">
           <div class="vb-hero-top-meta">
             <span class="vb-student-identity-pill" id="studentResultIdentity">20101 김배구</span>
@@ -388,6 +452,7 @@
           <p class="vb-hero-eyebrow">배구 수행평가 점수 (경기 수행능력 5점 + 배구 기능평가 10점 = 총 15점 만점)</p>
 
           <div class="vb-hero-triple-score-row">
+            <!-- 1. 경기 수행 능력 점수 (5점 만점) -->
             <div class="vb-hero-score-block">
               <span class="vb-hero-block-label">1. 경기 수행 능력 점수</span>
               <div class="vb-hero-big-score-box">
@@ -399,32 +464,40 @@
 
             <div class="vb-hero-plus-sign">+</div>
 
+            <!-- 2. 배구 기능평가 점수 (10점 만점) -->
             <div class="vb-hero-score-block">
               <span class="vb-hero-block-label">2. 배구 기능평가 점수</span>
               <div class="vb-hero-big-score-box">
                 <span id="studentBigSkillScore" class="vb-hero-big-number">10</span>
                 <span class="vb-hero-score-unit">/ 10점</span>
               </div>
-              <span id="studentSkillDetailBadge" class="vb-hero-sub-pill">최고 기록 기준 자동 환산</span>
+              <span id="studentSkillDetailBadge" class="vb-hero-sub-pill">1차: 4개 / 2차: 5개 (최고: 5개)</span>
             </div>
 
             <div class="vb-hero-plus-sign">=</div>
 
+            <!-- 3. 최종 합산 총점 (15점 만점) -->
             <div class="vb-hero-score-block final-block">
               <span class="vb-hero-block-label">🏆 최종 합산 총점</span>
               <div class="vb-hero-big-score-box">
                 <span id="studentBigTotalScore" class="vb-hero-big-number final-gold">15</span>
                 <span class="vb-hero-score-unit">/ 15점</span>
               </div>
-              <span id="studentTotalRangeBadge" class="vb-hero-sub-pill gold-pill">경기 점수 + 기능 점수 합산</span>
+              <span id="studentTotalRangeBadge" class="vb-hero-sub-pill gold-pill">경기 5점 + 기능 10점</span>
             </div>
           </div>
+
+          <p id="studentScoreSummaryText" class="vb-hero-summary-text">
+            아래 항목을 클릭하면 [1. 경기 수행 능력 세부 내역], [2. 배구 기능평가 40초 측정 내역], [3. 종합 루브릭 환산 기준표]를 자세히 볼 수 있습니다.
+          </p>
         </div>
 
+        <!-- (2) 학생용 아코디언 항목별 세부 -->
         <div class="vb-card vb-accordion-section-card">
           <div class="vb-accordion-header-bar">
             <div>
               <h3 class="vb-card-title">📌 항목별 세부 내역 (아코디언 접기/펼치기)</h3>
+              <p class="vb-card-sub">각 항목을 클릭하면 공격·수비 체크 내역 및 기능평가 공 넘김 기록과 환산표를 확인하실 수 있습니다.</p>
             </div>
             <div class="vb-accordion-bulk-btns">
               <button type="button" id="expandAllAccordionBtn" class="vb-btn-chip">전체 펼치기</button>
@@ -437,7 +510,7 @@
       </section>
     </main>
 
-    <!-- 푸터 -->
+    <!-- 5. 공통 푸터 -->
     <footer class="vb-footer">
       <div class="vb-footer-links">
         <button type="button" class="vb-footer-link-btn" data-doc="privacy">개인정보 처리방침</button>
@@ -451,11 +524,14 @@
       <div class="vb-footer-meta">
         <span><strong>기관명</strong>: 청담고등학교 체육교육부</span>
         <span><strong>문의/담당자</strong>: 체육교과 담당교사</span>
+        <span><strong>평가 항목</strong>: 배구 경기 수행 능력(5점) + 배구 기능평가(10점) = 총 15점 만점</span>
       </div>
     </footer>
   </div>
 
-  <div id="policyModalBackdrop" class="vb-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
+  <!-- 정책 및 심의 문서 모달 -->
+  <div id="policyModalBackdrop" class="vb-modal-backdrop hidden" role="dialog" aria-modal="true"
+    aria-labelledby="policyModalTitle">
     <div class="vb-modal-dialog">
       <div class="vb-modal-header">
         <h3 id="policyModalTitle">정책 문서</h3>
@@ -471,4 +547,5 @@
   <script src="roster_data.js"></script>
   <script src="app.js"></script>
 </body>
+
 </html>

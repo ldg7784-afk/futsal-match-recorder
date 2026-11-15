@@ -2639,3 +2639,129 @@ body {
   border-color: #fca5a5;
   color: #ef4444;
 }
+
+
+/* ==========================================================================
+   배구 기능평가 남학생 / 여학생 평가 방법 2-Grid 카드
+   ========================================================================== */
+.vb-skill-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.vb-method-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--vb-radius-md);
+  padding: 0.95rem 1.15rem;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.vb-method-card.male-card.active-method {
+  border-color: #3b82f6;
+  background: #f0f7ff;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.1);
+}
+
+.vb-method-card.female-card.active-method {
+  border-color: #ec4899;
+  background: #fdf2f8;
+  box-shadow: 0 3px 10px rgba(236, 72, 153, 0.1);
+}
+
+.vb-method-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.vb-method-badge {
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vb-method-badge.male {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.vb-method-badge.female {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.vb-method-time-pill {
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+.vb-method-card.active-method .vb-method-time-pill {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  font-weight: 900;
+}
+
+.vb-method-card.female-card.active-method .vb-method-time-pill {
+  border-color: #ec4899;
+  color: #be185d;
+  font-weight: 900;
+}
+
+.vb-method-overview {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.55rem;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
+  border-left: 3.5px solid #94a3b8;
+  line-height: 1.45;
+}
+
+.vb-method-card.male-card.active-method .vb-method-overview {
+  border-left-color: #3b82f6;
+}
+
+.vb-method-card.female-card.active-method .vb-method-overview {
+  border-left-color: #ec4899;
+}
+
+.vb-method-ol {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.vb-method-ol li {
+  margin-bottom: 0.2rem;
+}
+
+.vb-method-note {
+  margin-top: 0.45rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+}
