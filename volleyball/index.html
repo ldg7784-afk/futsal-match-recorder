@@ -106,11 +106,11 @@
             <span class="vb-date-status-pill" id="currentEvalDateBadge">📅 2026-11-13 (금) 평가 기록</span>
           </div>
 
-          <!-- 기기 간 기록 연동 & 모드 안내 -->
+          <!-- 실시간 클라우드 자동 연동 상태 & 모드 안내 -->
           <div class="vb-common-mode-indicator" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <button type="button" id="openSyncModalBtn" class="vb-btn vb-btn-success vb-btn-sm vb-sync-pulse-btn" style="font-weight: 800; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
-              📲 태블릿 ⇄ 컴터 기록 연동
-            </button>
+            <span class="vb-cloud-sync-status-pill" id="cloudSyncStatusBadge" title="태블릿과 컴퓨터 간 100% 실시간 자동 연동">
+              🟢 실시간 자동 연동 됨 (태블릿 ⇄ 컴터)
+            </span>
             <span class="vb-indicator-pill" id="currentModeIndicatorPill">🏐 1. 경기 수행 능력 평가 진행 중</span>
           </div>
         </div>
@@ -552,68 +552,7 @@
     </div>
   </div>
 
-  <!-- 태블릿 ⇄ 컴퓨터 기록 연동 및 백업 모달 -->
-  <div id="syncModalBackdrop" class="vb-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="syncModalTitle">
-    <div class="vb-modal-dialog" style="max-width: 660px;">
-      <div class="vb-modal-header">
-        <h3 id="syncModalTitle">📲 태블릿 ⇄ 컴퓨터 기록 연동 & 백업</h3>
-        <button type="button" id="closeSyncModalBtn" class="vb-modal-close" aria-label="모달 닫기">&times;</button>
-      </div>
-      <div class="vb-modal-body">
-        <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 1rem; margin-bottom: 1.2rem;">
-          <h4 style="margin: 0 0 0.4rem; color: #1e40af; font-size: 1rem;">💡 태블릿에서 평가한 기록을 컴퓨터로 가져오는 방법</h4>
-          <p style="margin: 0; font-size: 0.88rem; line-height: 1.6; color: #1e3a8a;">
-            브라우저 로컬 저장은 기기(태블릿) 안에만 보관되므로 컴퓨터에는 자동으로 공유되지 않습니다.<br>
-            아래 <strong>[1️⃣ 컴퓨터용 바로열기 링크]</strong>를 복사하여 컴퓨터로 보내거나, <strong>[2️⃣ 전체 기록 코드]</strong>를 붙여넣으시면 1초 만에 컴퓨터로 모든 평가가 완벽하게 복원됩니다!
-          </p>
-        </div>
 
-        <!-- 방법 1: 바로열기 링크 복사 (가장 간편) -->
-        <div style="margin-bottom: 1rem; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 1.1rem; background: #ffffff;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 8px;">
-            <strong style="font-size: 0.95rem; color: #0f172a;">1️⃣ 초간편 바로열기 링크 (추천)</strong>
-            <button type="button" id="btnCopyDirectSyncUrl" class="vb-btn vb-btn-primary vb-btn-sm" style="font-weight: 800;">
-              🔗 컴퓨터용 바로열기 링크 복사
-            </button>
-          </div>
-          <p style="font-size: 0.83rem; color: #64748b; margin: 0; line-height: 1.5;">
-            태블릿에서 위 버튼을 눌러 링크를 복사한 뒤, <strong>카카오톡 '나에게 보내기'</strong>나 메일로 컴퓨터에 보내 클릭하면 컴퓨터 브라우저에 모든 기록이 즉시 자동 저장됩니다.
-          </p>
-        </div>
-
-        <!-- 방법 2: 전체 기록 코드 복사 & 붙여넣기 -->
-        <div style="margin-bottom: 1rem; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 1.1rem; background: #ffffff;">
-          <strong style="font-size: 0.95rem; color: #0f172a; display: block; margin-bottom: 0.55rem;">2️⃣ 데이터 코드 직접 복사 & 붙여넣기</strong>
-          <div style="display: flex; gap: 8px; margin-bottom: 0.6rem;">
-            <button type="button" id="btnCopyAllDataCode" class="vb-btn vb-btn-outline vb-btn-sm" style="flex: 1; font-weight: 800;">
-              📤 (태블릿에서) 전체 기록 코드 복사
-            </button>
-            <button type="button" id="btnPasteAndRestore" class="vb-btn vb-btn-success vb-btn-sm" style="flex: 1; font-weight: 800;">
-              📥 (컴퓨터에서) 코드 붙여넣고 동기화
-            </button>
-          </div>
-          <textarea id="syncDataTextarea" class="vb-input" style="width: 100%; height: 75px; font-family: monospace; font-size: 0.78rem; box-sizing: border-box;" placeholder="태블릿에서 복사한 코드를 여기에 붙여넣고 [코드 붙여넣고 동기화]를 클릭하세요..."></textarea>
-        </div>
-
-        <!-- 방법 3: 백업 파일 다운로드 & 복원 -->
-        <div style="border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 1.1rem; background: #ffffff;">
-          <strong style="font-size: 0.95rem; color: #0f172a; display: block; margin-bottom: 0.55rem;">3️⃣ 백업 파일(.json) 영구 보관 & 불러오기</strong>
-          <div style="display: flex; gap: 8px;">
-            <button type="button" id="btnDownloadBackupFile" class="vb-btn vb-btn-secondary vb-btn-sm" style="flex: 1; font-weight: 800;">
-              💾 백업 파일 다운로드 (.json)
-            </button>
-            <label class="vb-btn vb-btn-secondary vb-btn-sm" style="flex: 1; text-align: center; cursor: pointer; margin: 0; font-weight: 800;">
-              📂 백업 파일 열기
-              <input type="file" id="uploadBackupFileInput" accept=".json" style="display: none;">
-            </label>
-          </div>
-        </div>
-      </div>
-      <div class="vb-modal-footer">
-        <button type="button" id="closeSyncModalBottomBtn" class="vb-btn vb-btn-secondary">닫기</button>
-      </div>
-    </div>
-  </div>
 
   <script src="roster_data.js"></script>
   <script src="app.js"></script>

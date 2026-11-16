@@ -438,6 +438,146 @@
   };
 
   // ==========================================================================
+
+  // ==========================================================================
+  // (5-2) 실시간 클라우드 자동 연동 모듈 (CloudSyncModule)
+  // 태블릿 ⇄ 컴퓨터 100% 무인 실시간 자동 동기화 (Zero-click Live Cloud Sync)
+  // ==========================================================================
+  const CloudSyncModule = {
+    syncEndpoint: '/api/sync',
+    ntfyTopic: 'cdhs_volleyball_eval_sync_2026',
+    debounceTimer: null,
+    isSyncing: false,
+    lastSyncedAt: null,
+    isPulling: false,
+
+    init() {
+      // 1. 페이지 접속 시 클라우드에서 최신 평가 기록 자동 가져오기
+      this.pullFromCloud(true);
+
+      // 2. 실시간 자동 갱신 리스너 (태블릿에서 저장 시 컴퓨터 화면 즉시 자동 갱신)
+      this.startRealtimeListener();
+    },
+
+    updateStatus(state, msg) {
+      const badge = document.getElementById('cloudSyncStatusBadge');
+      if (!badge) return;
+      badge.classList.remove('syncing', 'error');
+      if (state === 'syncing') {
+        badge.classList.add('syncing');
+        badge.textContent = '🔄 클라우드 실시간 동기화 중...';
+      } else if (state === 'success') {
+        badge.textContent = msg || '🟢 실시간 자동 연동 됨 (태블릿 ⇄ 컴터)';
+      } else if (state === 'error') {
+        badge.classList.add('error');
+        badge.textContent = '⚠️ 로컬 저장됨 (클라우드 재연결 중)';
+      }
+    },
+
+    // 클라우드에서 최신 평가 데이터 가져오기 (태블릿 입력 -> 컴퓨터로 즉시 반영)
+    async pullFromCloud(isInitial = false) {
+      if (this.isSyncing) return;
+      try {
+        if (isInitial) this.updateStatus('syncing');
+        const res = await fetch(this.syncEndpoint);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const resJson = await res.json();
+
+        if (resJson && resJson.success && resJson.exists && resJson.data) {
+          const cloudData = resJson.data;
+          const hasCloudRecords = (cloudData.records && Object.keys(cloudData.records).length > 0) ||
+                                 (cloudData.skillRecords && Object.keys(cloudData.skillRecords).length > 0) ||
+                                 (cloudData.dateHistory && Object.keys(cloudData.dateHistory).length > 0) ||
+                                 (cloudData.dateSkillHistory && Object.keys(cloudData.dateSkillHistory).length > 0);
+
+          if (hasCloudRecords) {
+            this.isPulling = true;
+            DataModelModule.importAllDataPayload(JSON.stringify(cloudData), false);
+            this.isPulling = false;
+            this.lastSyncedAt = cloudData.syncedAt || resJson.sha;
+
+            if (typeof UIModule !== 'undefined' && UIModule.renderAll) {
+              UIModule.renderAll();
+            }
+          }
+        } else if (isInitial) {
+          // 클라우드가 비어있고 로컬에 평가 기록이 있다면 초기 1회 클라우드로 자동 업로드
+          const localHasRecords = DataModelModule.hasRecordsOnDate(DataModelModule.state.evalDate) ||
+                                  DataModelModule.getEvaluatedDatesList().length > 0;
+          if (localHasRecords) {
+            this.pushToCloud();
+            return;
+          }
+        }
+        this.updateStatus('success');
+      } catch (err) {
+        console.warn('Cloud pull note:', err.message);
+        this.updateStatus(isInitial ? 'error' : 'success');
+      }
+    },
+
+    // 교사가 점수 버튼을 누를 때마다 클라우드로 자동 전송 (디바운스 400ms)
+    schedulePush() {
+      if (this.isPulling) return; // 외부에서 가져온 데이터를 다시 푸시하지 않음
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
+      this.updateStatus('syncing');
+      this.debounceTimer = setTimeout(() => {
+        this.pushToCloud();
+      }, 400);
+    },
+
+    async pushToCloud() {
+      try {
+        const payloadStr = DataModelModule.exportAllDataPayload();
+        const payload = JSON.parse(payloadStr);
+
+        const res = await fetch(this.syncEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const resJson = await res.json();
+        this.lastSyncedAt = resJson.syncedAt || new Date().toISOString();
+        this.updateStatus('success', '🟢 실시간 자동 연동 됨 (태블릿 ⇄ 컴터)');
+      } catch (err) {
+        console.warn('Cloud push note:', err.message);
+        this.updateStatus('error');
+      }
+    },
+
+    // 태블릿에서 점수를 입력했을 때 컴퓨터 브라우저가 즉시 실시간 감지하여 화면 자동 갱신
+    startRealtimeListener() {
+      // 1) ntfy.sh Server-Sent Events 실시간 브로드캐스트
+      try {
+        if (typeof window !== 'undefined' && window.EventSource) {
+          const evtSource = new EventSource(`https://ntfy.sh/${this.ntfyTopic}/sse`);
+          evtSource.onmessage = (e) => {
+            try {
+              const data = JSON.parse(e.data);
+              if (data.event === 'message' && data.message) {
+                const msgObj = JSON.parse(data.message);
+                if (msgObj.event === 'data_updated' && msgObj.timestamp !== this.lastSyncedAt) {
+                  this.pullFromCloud(false);
+                }
+              }
+            } catch (ignore) {}
+          };
+        }
+      } catch (e) {
+        console.warn('SSE warning, using polling fallback');
+      }
+
+      // 2) 8초 주기 자동 폴링 폴백
+      if (typeof window !== 'undefined') {
+        setInterval(() => {
+          this.pullFromCloud(false);
+        }, 8000);
+      }
+    }
+  };
+
   // (6) 데이터 모델 모듈 (DataModelModule)
   // ==========================================================================
   const DataModelModule = {
@@ -562,7 +702,7 @@
     },
 
     // 기기 간 전체 데이터 가져오기 (JSON 또는 Base64 디코딩 후 병합)
-    importAllDataPayload(rawStr) {
+    importAllDataPayload(rawStr, shouldSave = true) {
       if (!rawStr) throw new Error('가져올 데이터가 비어 있습니다.');
       let parsed = null;
       let text = String(rawStr).trim();
@@ -624,7 +764,27 @@
         this.state.skillRecords = this.state.dateSkillHistory[curD];
       }
 
-      this.saveToStorage();
+      if (shouldSave) {
+        this.saveToStorage();
+      } else {
+        const curDate = this.state.evalDate || new Date().toISOString().slice(0, 10);
+        const payload = {
+          classes: this.state.classes,
+          currentClass: this.state.currentClass,
+          currentMode: this.state.currentMode,
+          skillCriteriaGender: this.state.skillCriteriaGender,
+          records: this.state.records,
+          skillRecords: this.state.skillRecords,
+          dateHistory: this.state.dateHistory,
+          dateSkillHistory: this.state.dateSkillHistory,
+          evalDate: this.state.evalDate,
+          viewMode: this.state.viewMode,
+          ruleEvery3: this.state.ruleEvery3,
+          privacyMaskMode: this.state.privacyMaskMode,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(VB_STORAGE_KEY, JSON.stringify(payload));
+      }
       this.loadClass(this.state.currentClass || 1, false);
       return true;
     },
@@ -926,6 +1086,11 @@
       };
       localStorage.setItem(VB_STORAGE_KEY, JSON.stringify(payload));
       SyncBus.post('VB_PERFORMANCE_UPDATED', payload);
+
+      // 클라우드 실시간 자동 동기화 트리거
+      if (typeof CloudSyncModule !== 'undefined' && CloudSyncModule.schedulePush) {
+        CloudSyncModule.schedulePush();
+      }
     }
   };
 
@@ -990,6 +1155,11 @@
     },
 
     init() {
+      // 실시간 클라우드 자동 연동 초기화
+      if (typeof CloudSyncModule !== 'undefined' && CloudSyncModule.init) {
+        CloudSyncModule.init();
+      }
+
       // URL Hash에 태블릿 연동 데이터(#sync=...)가 포함된 경우 자동 복원
       if (typeof window !== 'undefined' && window.location.hash.startsWith('#sync=')) {
         try {
@@ -1237,99 +1407,11 @@
         this.renderAll();
       });
 
-      // 5-2. 태블릿 ⇄ 컴퓨터 기록 연동 모달 관련 이벤트
-      const syncModal = document.getElementById('syncModalBackdrop');
-      const openSyncModal = () => {
-        if (syncModal) syncModal.classList.remove('hidden');
-      };
-      const closeSyncModal = () => {
-        if (syncModal) syncModal.classList.add('hidden');
-      };
-
-      document.getElementById('openSyncModalBtn')?.addEventListener('click', openSyncModal);
-      document.getElementById('closeSyncModalBtn')?.addEventListener('click', closeSyncModal);
-      document.getElementById('closeSyncModalBottomBtn')?.addEventListener('click', closeSyncModal);
-
-      // 1) 컴퓨터용 바로열기 링크 복사
-      document.getElementById('btnCopyDirectSyncUrl')?.addEventListener('click', () => {
-        try {
-          const payload = DataModelModule.exportAllDataPayload();
-          const base64Code = btoa(unescape(encodeURIComponent(payload)));
-          const baseOrigin = window.location.origin + window.location.pathname;
-          const directUrl = `${baseOrigin}#sync=${base64Code}`;
-          this.copyToClipboard(directUrl, '컴퓨터용 바로열기 링크');
-          alert('🔗 컴퓨터용 바로열기 링크가 복사되었습니다!\n\n카카오톡 "나에게 보내기"나 메신저로 컴퓨터에 보낸 뒤 클릭하시면, 컴퓨터에 모든 평가 기록이 즉시 1초 만에 저장됩니다!');
-        } catch (err) {
-          alert('링크 생성 오류: ' + err.message);
+      // 5-2. 실시간 자동 연동 뱃지 클릭 시 즉시 수동 새로고침
+      document.getElementById('cloudSyncStatusBadge')?.addEventListener('click', () => {
+        if (typeof CloudSyncModule !== 'undefined' && CloudSyncModule.pullFromCloud) {
+          CloudSyncModule.pullFromCloud(true);
         }
-      });
-
-      // 2) 전체 기록 코드 복사
-      document.getElementById('btnCopyAllDataCode')?.addEventListener('click', () => {
-        try {
-          const payload = DataModelModule.exportAllDataPayload();
-          const base64Code = btoa(unescape(encodeURIComponent(payload)));
-          const ta = document.getElementById('syncDataTextarea');
-          if (ta) ta.value = base64Code;
-          this.copyToClipboard(base64Code, '전체 기록 코드');
-          alert('📤 전체 기록 코드가 복사되었습니다!\n\n컴퓨터에서 [동기화 모달]을 열고 붙여넣은 뒤 [코드 붙여넣고 동기화]를 누르세요.');
-        } catch (err) {
-          alert('코드 복사 오류: ' + err.message);
-        }
-      });
-
-      // 2-2) 코드 붙여넣고 동기화
-      document.getElementById('btnPasteAndRestore')?.addEventListener('click', () => {
-        const ta = document.getElementById('syncDataTextarea');
-        const code = String(ta?.value || '').trim();
-        if (!code) {
-          alert('붙여넣을 데이터 코드를 입력해 주세요.');
-          return;
-        }
-        try {
-          DataModelModule.importAllDataPayload(code);
-          this.renderAll();
-          if (syncModal) syncModal.classList.add('hidden');
-          alert('🎉 동기화 성공!\n\n태블릿의 모든 평가 기록이 컴퓨터로 완벽하게 복원 및 저장되었습니다!');
-        } catch (err) {
-          alert('동기화 실패: ' + err.message);
-        }
-      });
-
-      // 3) 백업 파일 다운로드
-      document.getElementById('btnDownloadBackupFile')?.addEventListener('click', () => {
-        try {
-          const payload = DataModelModule.exportAllDataPayload();
-          const curDate = DataModelModule.state.evalDate || 'all';
-          const blob = new Blob([payload], { type: 'application/json;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `volleyball_backup_${curDate}.json`;
-          a.click();
-          URL.revokeObjectURL(url);
-          this.showToast('💾 백업 파일 다운로드가 완료되었습니다.');
-        } catch (err) {
-          alert('다운로드 오류: ' + err.message);
-        }
-      });
-
-      // 3-2) 백업 파일 불러오기
-      document.getElementById('uploadBackupFileInput')?.addEventListener('change', (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            DataModelModule.importAllDataPayload(event.target.result);
-            this.renderAll();
-            if (syncModal) syncModal.classList.add('hidden');
-            alert('🎉 백업 파일 복원 완료!\n\n파일에 저장된 모든 기록이 성공적으로 로드되었습니다.');
-          } catch (err) {
-            alert('파일 불러오기 실패: ' + err.message);
-          }
-        };
-        reader.readAsText(file);
       });
 
       // 6. 학급 탭 클릭
@@ -2208,6 +2290,7 @@
     SkillCalcModule,
     TimerModule,
     UIModule,
+    CloudSyncModule,
     AuthAccessModule
   };
 

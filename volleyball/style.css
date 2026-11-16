@@ -2801,11 +2801,36 @@ body {
   white-space: nowrap;
 }
 
-.vb-sync-pulse-btn {
-  /* pulse subtle */
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+.vb-cloud-sync-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  border: 1.5px solid #a7f3d0;
+  color: #065f46;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
+  transition: all 0.25s ease;
+  white-space: nowrap;
 }
-.vb-sync-pulse-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+
+.vb-cloud-sync-status-pill.syncing {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+  animation: pulse-sync 1.2s infinite alternate;
+}
+
+.vb-cloud-sync-status-pill.error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+@keyframes pulse-sync {
+  0% { opacity: 0.75; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
 }
