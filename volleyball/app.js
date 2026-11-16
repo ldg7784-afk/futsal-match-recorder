@@ -924,16 +924,24 @@
       };
     },
 
-    // 학번/ID 매핑 헬퍼 (STU_ 접두사 호환 및 레거시 v1 counts 자동 변환)
+    // 학번/ID 매핑 헬퍼 (STU_ 접두사 호환, 평가 기록 우선 선택 및 레거시 v1 counts 자동 변환)
     getStudentRecord(studentId = '') {
       if (!studentId) return this.createEmptyRecord();
       const rawId = String(studentId).trim();
       const numOnly = rawId.replace(/^STU_/, '');
       const withPrefix = 'STU_' + numOnly;
 
-      const rec = this.state.records[rawId] || 
-                  this.state.records[numOnly] || 
-                  this.state.records[withPrefix];
+      const recRaw = this.state.records[rawId];
+      const recNum = this.state.records[numOnly];
+      const recPrefix = this.state.records[withPrefix];
+
+      const candidates = [recRaw, recNum, recPrefix].filter(Boolean);
+      const evaluated = candidates.find(r => {
+        if (r.counts && Object.values(r.counts).some(v => Number(v) > 0)) return true;
+        const leg = (r.serve?.plus || 0) + (r.serve?.minus || 0) + (r.receive?.plus || 0) + (r.receive?.minus || 0) + (r.toss?.plus || 0) + (r.toss?.minus || 0) + (r.spike?.plus || 0) + (r.spike?.minus || 0);
+        return leg > 0;
+      });
+      const rec = evaluated || candidates[0];
 
       if (!rec) {
         const fresh = this.createEmptyRecord(rawId);
@@ -945,15 +953,17 @@
       if (!rec.counts) {
         rec.counts = {
           toss_plus: (rec.toss?.plus || 0),
-          spike_plus: (rec.spike?.plus || 0),
+          spike_plus: (rec.spike?.plus || 0) + (rec.serve?.plus || 0),
           receive_plus: (rec.receive?.plus || 0),
           move_plus: (rec.move?.plus || 0),
           toss_minus: (rec.toss?.minus || 0),
-          spike_minus: (rec.spike?.minus || 0),
+          spike_minus: (rec.spike?.minus || 0) + (rec.serve?.minus || 0),
           receive_minus: (rec.receive?.minus || 0),
           move_minus: (rec.move?.minus || 0)
         };
       }
+      this.state.records[rawId] = rec;
+      this.state.records[numOnly] = rec;
       return rec;
     },
 
@@ -963,15 +973,25 @@
       const numOnly = rawId.replace(/^STU_/, '');
       const withPrefix = 'STU_' + numOnly;
 
-      const rec = this.state.skillRecords[rawId] || 
-                  this.state.skillRecords[numOnly] || 
-                  this.state.skillRecords[withPrefix];
+      const recRaw = this.state.skillRecords[rawId];
+      const recNum = this.state.skillRecords[numOnly];
+      const recPrefix = this.state.skillRecords[withPrefix];
+
+      const candidates = [recRaw, recNum, recPrefix].filter(Boolean);
+      const evaluated = candidates.find(r => {
+        const a1Valid = r.attempt1 !== null && r.attempt1 !== undefined && r.attempt1 !== '';
+        const a2Valid = r.attempt2 !== null && r.attempt2 !== undefined && r.attempt2 !== '';
+        return a1Valid || a2Valid;
+      });
+      const rec = evaluated || candidates[0];
 
       if (!rec) {
         const fresh = this.createEmptySkillRecord(rawId);
         this.state.skillRecords[rawId] = fresh;
         return fresh;
       }
+      this.state.skillRecords[rawId] = rec;
+      this.state.skillRecords[numOnly] = rec;
       return rec;
     },
 
