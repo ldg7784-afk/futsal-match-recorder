@@ -2099,6 +2099,7 @@ body {
   margin: 0;
 }
 
+.vb-gender-criteria-active-tag,
 .vb-male-priority-tag {
   background: linear-gradient(135deg, #1d4ed8, #2563eb);
   color: #ffffff;

@@ -496,6 +496,12 @@
             this.isPulling = false;
             this.lastSyncedAt = cloudData.syncedAt || resJson.sha;
 
+            // 로컬에 평가 기록이 있다면 병합된 최종본을 클라우드에 자동 푸시하여 상호 동기화 보장
+            const evalDates = DataModelModule.getEvaluatedDatesList();
+            if (evalDates.length > 0 && isInitial) {
+              this.pushToCloud();
+            }
+
             if (typeof UIModule !== 'undefined' && UIModule.renderAll) {
               UIModule.renderAll();
             }
@@ -637,12 +643,17 @@
       if (gMap) {
         const hasGame = Object.values(gMap).some(rec => {
           if (!rec) return false;
+          // 신규 counts 객체 검사
+          if (rec.counts && Object.values(rec.counts).some(v => Number(v) > 0)) return true;
+          // 레거시 v1 구조 검사
           const sSum = (rec.serve?.plus || 0) + (rec.serve?.minus || 0);
           const rSum = (rec.receive?.plus || 0) + (rec.receive?.minus || 0);
           const tSum = (rec.toss?.plus || 0) + (rec.toss?.minus || 0);
           const spSum = (rec.spike?.plus || 0) + (rec.spike?.minus || 0);
-          const pos = (rec.positions || []).length;
-          return (sSum + rSum + tSum + spSum > 0) || (pos > 0);
+          if (sSum + rSum + tSum + spSum > 0) return true;
+          if (rec.history && rec.history.length > 0) return true;
+          if (rec.note && String(rec.note).trim().length > 0) return true;
+          return false;
         });
         if (hasGame) return true;
       }
@@ -652,8 +663,10 @@
       if (sMap) {
         const hasSkill = Object.values(sMap).some(rec => {
           if (!rec) return false;
-          return (rec.attempt1 !== null && rec.attempt1 !== undefined) ||
-                 (rec.attempt2 !== null && rec.attempt2 !== undefined);
+          const a1Valid = rec.attempt1 !== null && rec.attempt1 !== undefined && rec.attempt1 !== '';
+          const a2Valid = rec.attempt2 !== null && rec.attempt2 !== undefined && rec.attempt2 !== '';
+          const noteValid = rec.note && String(rec.note).trim().length > 0;
+          return a1Valid || a2Valid || noteValid;
         });
         if (hasSkill) return true;
       }
@@ -680,6 +693,11 @@
         datesSet.add(st.evalDate);
       }
 
+      // 과거 평가 이력 기본 검사 (2026-11-10, 2026-11-13, 2026-11-15, 2026-11-16)
+      ['2026-11-10', '2026-11-13', '2026-11-15', '2026-11-16'].forEach(d => {
+        if (this.hasRecordsOnDate(d)) datesSet.add(d);
+      });
+
       return Array.from(datesSet).sort().reverse();
     },
 
@@ -701,7 +719,7 @@
       return JSON.stringify(exportObj);
     },
 
-    // 기기 간 전체 데이터 가져오기 (JSON 또는 Base64 디코딩 후 병합)
+    // 기기 간 전체 데이터 가져오기 (JSON 또는 Base64 디코딩 후 스마트 딥 병합)
     importAllDataPayload(rawStr, shouldSave = true) {
       if (!rawStr) throw new Error('가져올 데이터가 비어 있습니다.');
       let parsed = null;
@@ -727,47 +745,106 @@
         throw new Error('유효한 배구 평가 데이터 형식이 아닙니다.');
       }
 
-      // 상태 병합
-      if (parsed.classes) this.state.classes = parsed.classes;
-      if (parsed.students) this.state.students = parsed.students;
+      // 1. 학급 및 학생 기본정보 유지/갱신
+      if (parsed.classes && Object.keys(parsed.classes).length > 0) this.state.classes = parsed.classes;
+      if (parsed.students && parsed.students.length > 0) this.state.students = parsed.students;
       if (parsed.currentClass) this.state.currentClass = parsed.currentClass;
       if (parsed.skillCriteriaGender) this.state.skillCriteriaGender = parsed.skillCriteriaGender;
 
+      // 2. dateHistory 안전 딥 병합 (기존 평가 기록 절대 보존)
       if (!this.state.dateHistory) this.state.dateHistory = {};
       if (parsed.dateHistory) {
-        Object.assign(this.state.dateHistory, parsed.dateHistory);
+        for (const [date, inRecs] of Object.entries(parsed.dateHistory)) {
+          if (!this.state.dateHistory[date]) {
+            this.state.dateHistory[date] = { ...inRecs };
+          } else {
+            const mergedDate = { ...this.state.dateHistory[date] };
+            for (const [sid, inRec] of Object.entries(inRecs)) {
+              const exRec = mergedDate[sid];
+              if (!exRec) {
+                mergedDate[sid] = inRec;
+              } else {
+                const inHasCounts = inRec.counts && Object.values(inRec.counts).some(v => Number(v) > 0);
+                const inHasLegacy = (inRec.serve?.plus || 0) + (inRec.receive?.plus || 0) + (inRec.toss?.plus || 0) + (inRec.spike?.plus || 0) > 0;
+                const exHasCounts = exRec.counts && Object.values(exRec.counts).some(v => Number(v) > 0);
+                const exHasLegacy = (exRec.serve?.plus || 0) + (exRec.receive?.plus || 0) + (exRec.toss?.plus || 0) + (exRec.spike?.plus || 0) > 0;
+
+                if ((inHasCounts || inHasLegacy) && !(exHasCounts || exHasLegacy)) {
+                  mergedDate[sid] = inRec;
+                } else if (!(inHasCounts || inHasLegacy) && (exHasCounts || exHasLegacy)) {
+                  mergedDate[sid] = exRec;
+                } else {
+                  mergedDate[sid] = { ...exRec, ...inRec };
+                  if (exRec.counts && inRec.counts) {
+                    mergedDate[sid].counts = { ...exRec.counts };
+                    for (const [k, v] of Object.entries(inRec.counts)) {
+                      if (Number(v) > 0 || !mergedDate[sid].counts[k]) mergedDate[sid].counts[k] = v;
+                    }
+                  }
+                }
+              }
+            }
+            this.state.dateHistory[date] = mergedDate;
+          }
+        }
       }
 
+      // 3. dateSkillHistory 안전 딥 병합 (1차/2차 시기 기록 절대 보존)
       if (!this.state.dateSkillHistory) this.state.dateSkillHistory = {};
       if (parsed.dateSkillHistory) {
-        Object.assign(this.state.dateSkillHistory, parsed.dateSkillHistory);
+        for (const [date, inRecs] of Object.entries(parsed.dateSkillHistory)) {
+          if (!this.state.dateSkillHistory[date]) {
+            this.state.dateSkillHistory[date] = { ...inRecs };
+          } else {
+            const mergedDate = { ...this.state.dateSkillHistory[date] };
+            for (const [sid, inRec] of Object.entries(inRecs)) {
+              const exRec = mergedDate[sid];
+              if (!exRec) {
+                mergedDate[sid] = inRec;
+              } else {
+                const inValid = (inRec.attempt1 !== null && inRec.attempt1 !== undefined && inRec.attempt1 !== '') ||
+                                (inRec.attempt2 !== null && inRec.attempt2 !== undefined && inRec.attempt2 !== '') ||
+                                (inRec.note && String(inRec.note).trim().length > 0);
+                const exValid = (exRec.attempt1 !== null && exRec.attempt1 !== undefined && exRec.attempt1 !== '') ||
+                                (exRec.attempt2 !== null && exRec.attempt2 !== undefined && exRec.attempt2 !== '') ||
+                                (exRec.note && String(exRec.note).trim().length > 0);
+
+                if (inValid && !exValid) {
+                  mergedDate[sid] = inRec;
+                } else if (!inValid && exValid) {
+                  mergedDate[sid] = exRec;
+                } else {
+                  mergedDate[sid] = {
+                    ...exRec,
+                    ...inRec,
+                    attempt1: (inRec.attempt1 !== null && inRec.attempt1 !== undefined) ? inRec.attempt1 : exRec.attempt1,
+                    attempt2: (inRec.attempt2 !== null && inRec.attempt2 !== undefined) ? inRec.attempt2 : exRec.attempt2,
+                    note: inRec.note || exRec.note || ''
+                  };
+                }
+              }
+            }
+            this.state.dateSkillHistory[date] = mergedDate;
+          }
+        }
       }
 
-      if (parsed.evalDate) {
-        this.state.evalDate = parsed.evalDate;
+      // 4. 활성 평가 날짜 결정
+      const evalList = this.getEvaluatedDatesList();
+      let activeDate = parsed.evalDate || this.state.evalDate;
+      // 현재 날짜에 기록이 없고 과거 평가 기록이 있다면 최신 평가 기록 날짜를 기본 활성화
+      if (!this.hasRecordsOnDate(activeDate) && evalList.length > 0) {
+        activeDate = evalList[0];
       }
+      this.state.evalDate = activeDate;
 
-      const curD = this.state.evalDate;
-      if (parsed.records && Object.keys(parsed.records).length > 0) {
-        this.state.records = parsed.records;
-        if (!this.state.dateHistory[curD]) this.state.dateHistory[curD] = {};
-        Object.assign(this.state.dateHistory[curD], parsed.records);
-      } else if (this.state.dateHistory[curD]) {
-        this.state.records = this.state.dateHistory[curD];
-      }
-
-      if (parsed.skillRecords && Object.keys(parsed.skillRecords).length > 0) {
-        this.state.skillRecords = parsed.skillRecords;
-        if (!this.state.dateSkillHistory[curD]) this.state.dateSkillHistory[curD] = {};
-        Object.assign(this.state.dateSkillHistory[curD], parsed.skillRecords);
-      } else if (this.state.dateSkillHistory[curD]) {
-        this.state.skillRecords = this.state.dateSkillHistory[curD];
-      }
+      // 5. 활성 날짜의 기록 로드 및 동기화
+      this.state.records = this.state.dateHistory[activeDate] || parsed.records || this.state.records || {};
+      this.state.skillRecords = this.state.dateSkillHistory[activeDate] || parsed.skillRecords || this.state.skillRecords || {};
 
       if (shouldSave) {
         this.saveToStorage();
       } else {
-        const curDate = this.state.evalDate || new Date().toISOString().slice(0, 10);
         const payload = {
           classes: this.state.classes,
           currentClass: this.state.currentClass,
@@ -847,6 +924,57 @@
       };
     },
 
+    // 학번/ID 매핑 헬퍼 (STU_ 접두사 호환 및 레거시 v1 counts 자동 변환)
+    getStudentRecord(studentId = '') {
+      if (!studentId) return this.createEmptyRecord();
+      const rawId = String(studentId).trim();
+      const numOnly = rawId.replace(/^STU_/, '');
+      const withPrefix = 'STU_' + numOnly;
+
+      const rec = this.state.records[rawId] || 
+                  this.state.records[numOnly] || 
+                  this.state.records[withPrefix];
+
+      if (!rec) {
+        const fresh = this.createEmptyRecord(rawId);
+        this.state.records[rawId] = fresh;
+        return fresh;
+      }
+
+      // 레거시 v1 구조 (serve, receive, toss, spike) 자동 변환
+      if (!rec.counts) {
+        rec.counts = {
+          toss_plus: (rec.toss?.plus || 0),
+          spike_plus: (rec.spike?.plus || 0),
+          receive_plus: (rec.receive?.plus || 0),
+          move_plus: (rec.move?.plus || 0),
+          toss_minus: (rec.toss?.minus || 0),
+          spike_minus: (rec.spike?.minus || 0),
+          receive_minus: (rec.receive?.minus || 0),
+          move_minus: (rec.move?.minus || 0)
+        };
+      }
+      return rec;
+    },
+
+    getSkillRecord(studentId = '') {
+      if (!studentId) return this.createEmptySkillRecord();
+      const rawId = String(studentId).trim();
+      const numOnly = rawId.replace(/^STU_/, '');
+      const withPrefix = 'STU_' + numOnly;
+
+      const rec = this.state.skillRecords[rawId] || 
+                  this.state.skillRecords[numOnly] || 
+                  this.state.skillRecords[withPrefix];
+
+      if (!rec) {
+        const fresh = this.createEmptySkillRecord(rawId);
+        this.state.skillRecords[rawId] = fresh;
+        return fresh;
+      }
+      return rec;
+    },
+
     loadClass(classNum, broadcast = true) {
       const c = Number(classNum) || 1;
       this.state.currentClass = c;
@@ -854,12 +982,8 @@
       this.state.students = classStudents;
 
       this.state.students.forEach(stu => {
-        if (!this.state.records[stu.id]) {
-          this.state.records[stu.id] = this.createEmptyRecord(stu.id);
-        }
-        if (!this.state.skillRecords[stu.id]) {
-          this.state.skillRecords[stu.id] = this.createEmptySkillRecord(stu.id);
-        }
+        this.getStudentRecord(stu.id);
+        this.getSkillRecord(stu.id);
       });
 
       if (broadcast) this.saveToStorage();
@@ -878,6 +1002,7 @@
 
       this.state.evalDate = cleanDate;
 
+      // 새 날짜의 경기수행 기록 로드
       if (this.state.dateHistory[cleanDate]) {
         this.state.records = this.state.dateHistory[cleanDate];
       } else {
@@ -891,6 +1016,7 @@
         this.state.dateHistory[cleanDate] = freshRecords;
       }
 
+      // 새 날짜의 기능평가 기록 로드
       if (this.state.dateSkillHistory[cleanDate]) {
         this.state.skillRecords = this.state.dateSkillHistory[cleanDate];
       } else {
@@ -903,6 +1029,12 @@
         this.state.skillRecords = freshSkillRecords;
         this.state.dateSkillHistory[cleanDate] = freshSkillRecords;
       }
+
+      // 현재 반 학생들의 레코드 확인
+      (this.state.students || []).forEach(stu => {
+        this.getStudentRecord(stu.id);
+        this.getSkillRecord(stu.id);
+      });
 
       this.saveToStorage();
     },
@@ -1747,7 +1879,7 @@
         `;
 
         let rowsHtml = st.students.map((stu, idx) => {
-          const rec = st.records[stu.id] || DataModelModule.createEmptyRecord(stu.id);
+          const rec = DataModelModule.getStudentRecord(stu.id);
           const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
           const dispNum = PrivacyGuardModule.maskStudentId(stu.studentNumber);
           const dispName = PrivacyGuardModule.formatStudentName(stu.name);
@@ -1818,7 +1950,7 @@
       } else {
         // 카드형 모드
         container.innerHTML = st.students.map((stu, idx) => {
-          const rec = st.records[stu.id] || DataModelModule.createEmptyRecord(stu.id);
+          const rec = DataModelModule.getStudentRecord(stu.id);
           const calc = RubricCalcModule.calculateStudentPerformance(rec.counts, st.ruleEvery3);
           const dispNum = PrivacyGuardModule.maskStudentId(stu.studentNumber);
           const dispName = PrivacyGuardModule.formatStudentName(stu.name);
@@ -1925,8 +2057,8 @@
       `;
 
       let rowsHtml = st.students.map((stu, idx) => {
-        const sRec = st.skillRecords[stu.id] || DataModelModule.createEmptySkillRecord(stu.id);
-        const gRec = st.records[stu.id] || DataModelModule.createEmptyRecord(stu.id);
+        const sRec = DataModelModule.getSkillRecord(stu.id);
+        const gRec = DataModelModule.getStudentRecord(stu.id);
 
         const sCalc = SkillCalcModule.calculateStudentSkill(sRec, st.skillCriteriaGender);
         const gCalc = RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
@@ -2099,8 +2231,8 @@
       `;
 
       let rowsHtml = st.students.map((stu, idx) => {
-        const gRec = st.records[stu.id] || DataModelModule.createEmptyRecord(stu.id);
-        const sRec = st.skillRecords[stu.id] || DataModelModule.createEmptySkillRecord(stu.id);
+        const gRec = DataModelModule.getStudentRecord(stu.id);
+        const sRec = DataModelModule.getSkillRecord(stu.id);
 
         const gCalc = RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
         const sCalc = SkillCalcModule.calculateStudentSkill(sRec, st.skillCriteriaGender);
@@ -2157,8 +2289,8 @@
       }
 
       const activeStu = st.students.find(s => s.id === AuthAccessModule.activeStudentViewerId) || st.students[0];
-      const gRec = activeStu ? (st.records[activeStu.id] || DataModelModule.createEmptyRecord(activeStu.id)) : DataModelModule.createEmptyRecord();
-      const sRec = activeStu ? (st.skillRecords[activeStu.id] || DataModelModule.createEmptySkillRecord(activeStu.id)) : DataModelModule.createEmptySkillRecord();
+      const gRec = activeStu ? DataModelModule.getStudentRecord(activeStu.id) : DataModelModule.createEmptyRecord();
+      const sRec = activeStu ? DataModelModule.getSkillRecord(activeStu.id) : DataModelModule.createEmptySkillRecord();
 
       const gCalc = RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
       const sCalc = SkillCalcModule.calculateStudentSkill(sRec, st.skillCriteriaGender);
@@ -2201,8 +2333,8 @@
     renderStudentAccordion(gCalcData, sCalcData) {
       const st = DataModelModule.state;
       const activeStu = st.students.find(s => s.id === AuthAccessModule.activeStudentViewerId) || st.students[0];
-      const gRec = activeStu ? (st.records[activeStu.id] || DataModelModule.createEmptyRecord(activeStu.id)) : DataModelModule.createEmptyRecord();
-      const sRec = activeStu ? (st.skillRecords[activeStu.id] || DataModelModule.createEmptySkillRecord(activeStu.id)) : DataModelModule.createEmptySkillRecord();
+      const gRec = activeStu ? DataModelModule.getStudentRecord(activeStu.id) : DataModelModule.createEmptyRecord();
+      const sRec = activeStu ? DataModelModule.getSkillRecord(activeStu.id) : DataModelModule.createEmptySkillRecord();
 
       const gCalc = gCalcData || RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
       const sCalc = sCalcData || SkillCalcModule.calculateStudentSkill(sRec, st.skillCriteriaGender);
