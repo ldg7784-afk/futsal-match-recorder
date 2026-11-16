@@ -2765,3 +2765,47 @@ body {
   color: #64748b;
   line-height: 1.5;
 }
+
+
+/* ==========================================================================
+   평가 일자 드롭다운 및 기기 연동 버튼 스타일
+   ========================================================================== */
+.vb-eval-date-select {
+  height: 34px;
+  border-radius: var(--vb-radius-sm);
+  border: 1.5px solid var(--vb-border-strong);
+  background: #ffffff;
+  color: var(--vb-text);
+  font-weight: 800;
+  font-size: 0.88rem;
+  padding: 0 10px;
+  cursor: pointer;
+  box-shadow: var(--vb-shadow-xs);
+  transition: all 0.15s ease;
+}
+
+.vb-eval-date-select:focus {
+  border-color: var(--vb-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+}
+
+.vb-date-status-pill {
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  white-space: nowrap;
+}
+
+.vb-sync-pulse-btn {
+  /* pulse subtle */
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.vb-sync-pulse-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}

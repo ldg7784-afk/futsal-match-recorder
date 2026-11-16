@@ -26,6 +26,26 @@
   };
 
   // ==========================================================================
+
+  // ==========================================================================
+  // 요일 포함 날짜 포맷 헬퍼 함수
+  // 예: 2026-11-13 -> 2026-11-13 (금), 2026-11-16 -> 2026-11-16 (월)
+  // ==========================================================================
+  function formatDateWithDay(dateStr) {
+    if (!dateStr) return '';
+    const clean = String(dateStr).trim();
+    const parts = clean.split('-');
+    if (parts.length !== 3) return clean;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    const dt = new Date(y, m, d);
+    if (isNaN(dt.getTime())) return clean;
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const day = dayNames[dt.getDay()] || '';
+    return `${clean} (${day})`;
+  }
+
   // (1) 개인정보보호 모듈 (PrivacyGuardModule)
   // ==========================================================================
   const PrivacyGuardModule = {
@@ -446,10 +466,167 @@
       this.initClassesFromRoster();
       this.loadFromStorage();
 
-      if (!this.state.evalDate) {
+      // 평가된 날짜 목록 조회
+      const evaluatedDates = this.getEvaluatedDatesList();
+      if (evaluatedDates.length > 0) {
+        // 만약 현재 설정된 날짜에 기록이 없다면, 가장 최근에 실제로 평가를 진행했던 날짜로 자동 설정!
+        if (!this.hasRecordsOnDate(this.state.evalDate)) {
+          this.state.evalDate = evaluatedDates[0];
+          if (this.state.dateHistory && this.state.dateHistory[this.state.evalDate]) {
+            this.state.records = this.state.dateHistory[this.state.evalDate];
+          }
+          if (this.state.dateSkillHistory && this.state.dateSkillHistory[this.state.evalDate]) {
+            this.state.skillRecords = this.state.dateSkillHistory[this.state.evalDate];
+          }
+        }
+      } else if (!this.state.evalDate) {
         this.state.evalDate = new Date().toISOString().slice(0, 10);
       }
       this.loadClass(this.state.currentClass || 1, false);
+    },
+
+
+    // 특정 날짜에 실제 평가 기록이 존재하는지 판별
+    hasRecordsOnDate(dateStr) {
+      if (!dateStr) return false;
+      const d = String(dateStr).trim();
+      const st = this.state;
+
+      // 1. 경기수행 기록 검사
+      const gMap = (st.dateHistory && st.dateHistory[d]) || (d === st.evalDate ? st.records : null);
+      if (gMap) {
+        const hasGame = Object.values(gMap).some(rec => {
+          if (!rec) return false;
+          const sSum = (rec.serve?.plus || 0) + (rec.serve?.minus || 0);
+          const rSum = (rec.receive?.plus || 0) + (rec.receive?.minus || 0);
+          const tSum = (rec.toss?.plus || 0) + (rec.toss?.minus || 0);
+          const spSum = (rec.spike?.plus || 0) + (rec.spike?.minus || 0);
+          const pos = (rec.positions || []).length;
+          return (sSum + rSum + tSum + spSum > 0) || (pos > 0);
+        });
+        if (hasGame) return true;
+      }
+
+      // 2. 기능평가 기록 검사
+      const sMap = (st.dateSkillHistory && st.dateSkillHistory[d]) || (d === st.evalDate ? st.skillRecords : null);
+      if (sMap) {
+        const hasSkill = Object.values(sMap).some(rec => {
+          if (!rec) return false;
+          return (rec.attempt1 !== null && rec.attempt1 !== undefined) ||
+                 (rec.attempt2 !== null && rec.attempt2 !== undefined);
+        });
+        if (hasSkill) return true;
+      }
+
+      return false;
+    },
+
+    // 실제 평가가 진행된 모든 날짜 목록을 최신순(내림차순)으로 반환
+    getEvaluatedDatesList() {
+      const datesSet = new Set();
+      const st = this.state;
+
+      if (st.dateHistory) {
+        Object.keys(st.dateHistory).forEach(d => {
+          if (this.hasRecordsOnDate(d)) datesSet.add(d);
+        });
+      }
+      if (st.dateSkillHistory) {
+        Object.keys(st.dateSkillHistory).forEach(d => {
+          if (this.hasRecordsOnDate(d)) datesSet.add(d);
+        });
+      }
+      if (st.evalDate && this.hasRecordsOnDate(st.evalDate)) {
+        datesSet.add(st.evalDate);
+      }
+
+      return Array.from(datesSet).sort().reverse();
+    },
+
+    // 기기 간 전체 데이터 내보내기 (JSON 문자열 반환)
+    exportAllDataPayload() {
+      const exportObj = {
+        version: '1.2.0',
+        exportedAt: new Date().toISOString(),
+        evalDate: this.state.evalDate,
+        currentClass: this.state.currentClass,
+        skillCriteriaGender: this.state.skillCriteriaGender,
+        classes: this.state.classes,
+        students: this.state.students,
+        records: this.state.records,
+        skillRecords: this.state.skillRecords,
+        dateHistory: this.state.dateHistory || {},
+        dateSkillHistory: this.state.dateSkillHistory || {}
+      };
+      return JSON.stringify(exportObj);
+    },
+
+    // 기기 간 전체 데이터 가져오기 (JSON 또는 Base64 디코딩 후 병합)
+    importAllDataPayload(rawStr) {
+      if (!rawStr) throw new Error('가져올 데이터가 비어 있습니다.');
+      let parsed = null;
+      let text = String(rawStr).trim();
+
+      // Base64 인코딩된 문자열인지 확인
+      if (text.startsWith('{') && text.endsWith('}')) {
+        parsed = JSON.parse(text);
+      } else {
+        try {
+          const decoded = decodeURIComponent(escape(atob(text)));
+          parsed = JSON.parse(decoded);
+        } catch (e1) {
+          try {
+            parsed = JSON.parse(atob(text));
+          } catch (e2) {
+            parsed = JSON.parse(text);
+          }
+        }
+      }
+
+      if (!parsed || (!parsed.dateHistory && !parsed.records && !parsed.dateSkillHistory && !parsed.skillRecords)) {
+        throw new Error('유효한 배구 평가 데이터 형식이 아닙니다.');
+      }
+
+      // 상태 병합
+      if (parsed.classes) this.state.classes = parsed.classes;
+      if (parsed.students) this.state.students = parsed.students;
+      if (parsed.currentClass) this.state.currentClass = parsed.currentClass;
+      if (parsed.skillCriteriaGender) this.state.skillCriteriaGender = parsed.skillCriteriaGender;
+
+      if (!this.state.dateHistory) this.state.dateHistory = {};
+      if (parsed.dateHistory) {
+        Object.assign(this.state.dateHistory, parsed.dateHistory);
+      }
+
+      if (!this.state.dateSkillHistory) this.state.dateSkillHistory = {};
+      if (parsed.dateSkillHistory) {
+        Object.assign(this.state.dateSkillHistory, parsed.dateSkillHistory);
+      }
+
+      if (parsed.evalDate) {
+        this.state.evalDate = parsed.evalDate;
+      }
+
+      const curD = this.state.evalDate;
+      if (parsed.records && Object.keys(parsed.records).length > 0) {
+        this.state.records = parsed.records;
+        if (!this.state.dateHistory[curD]) this.state.dateHistory[curD] = {};
+        Object.assign(this.state.dateHistory[curD], parsed.records);
+      } else if (this.state.dateHistory[curD]) {
+        this.state.records = this.state.dateHistory[curD];
+      }
+
+      if (parsed.skillRecords && Object.keys(parsed.skillRecords).length > 0) {
+        this.state.skillRecords = parsed.skillRecords;
+        if (!this.state.dateSkillHistory[curD]) this.state.dateSkillHistory[curD] = {};
+        Object.assign(this.state.dateSkillHistory[curD], parsed.skillRecords);
+      } else if (this.state.dateSkillHistory[curD]) {
+        this.state.skillRecords = this.state.dateSkillHistory[curD];
+      }
+
+      this.saveToStorage();
+      this.loadClass(this.state.currentClass || 1, false);
+      return true;
     },
 
     initClassesFromRoster() {
@@ -813,6 +990,20 @@
     },
 
     init() {
+      // URL Hash에 태블릿 연동 데이터(#sync=...)가 포함된 경우 자동 복원
+      if (typeof window !== 'undefined' && window.location.hash.startsWith('#sync=')) {
+        try {
+          const syncCode = window.location.hash.replace('#sync=', '');
+          DataModelModule.importAllDataPayload(syncCode);
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+          setTimeout(() => {
+            alert('🎉 태블릿 평가 기록이 컴퓨터로 성공적으로 연동되었습니다!\n모든 날짜와 학생 기록이 복원되었습니다.');
+          }, 300);
+        } catch (err) {
+          console.error('URL Sync Import Error:', err);
+        }
+      }
+
       DataModelModule.init();
       AuthAccessModule.initFromUrl();
       TimerModule.init();
@@ -1018,15 +1209,127 @@
         this.renderAll();
       });
 
-      // 5. 날짜 변경
-      document.getElementById('evalDateInput')?.addEventListener('change', (e) => {
+      // 5. 날짜 변경 (드롭다운 & 새 날짜 추가 & 오늘)
+      document.getElementById('evalDateSelect')?.addEventListener('change', (e) => {
         DataModelModule.setEvalDate(e.target.value);
         this.renderAll();
       });
+
+      const dateInput = document.getElementById('evalDateInput');
+      document.getElementById('addNewDateBtn')?.addEventListener('click', () => {
+        if (dateInput) {
+          dateInput.classList.remove('hidden');
+          dateInput.showPicker ? dateInput.showPicker() : dateInput.focus();
+        }
+      });
+
+      dateInput?.addEventListener('change', (e) => {
+        if (e.target.value) {
+          DataModelModule.setEvalDate(e.target.value);
+          dateInput.classList.add('hidden');
+          this.renderAll();
+        }
+      });
+
       document.getElementById('setTodayDateBtn')?.addEventListener('click', () => {
         const today = new Date().toISOString().slice(0, 10);
         DataModelModule.setEvalDate(today);
         this.renderAll();
+      });
+
+      // 5-2. 태블릿 ⇄ 컴퓨터 기록 연동 모달 관련 이벤트
+      const syncModal = document.getElementById('syncModalBackdrop');
+      const openSyncModal = () => {
+        if (syncModal) syncModal.classList.remove('hidden');
+      };
+      const closeSyncModal = () => {
+        if (syncModal) syncModal.classList.add('hidden');
+      };
+
+      document.getElementById('openSyncModalBtn')?.addEventListener('click', openSyncModal);
+      document.getElementById('closeSyncModalBtn')?.addEventListener('click', closeSyncModal);
+      document.getElementById('closeSyncModalBottomBtn')?.addEventListener('click', closeSyncModal);
+
+      // 1) 컴퓨터용 바로열기 링크 복사
+      document.getElementById('btnCopyDirectSyncUrl')?.addEventListener('click', () => {
+        try {
+          const payload = DataModelModule.exportAllDataPayload();
+          const base64Code = btoa(unescape(encodeURIComponent(payload)));
+          const baseOrigin = window.location.origin + window.location.pathname;
+          const directUrl = `${baseOrigin}#sync=${base64Code}`;
+          this.copyToClipboard(directUrl, '컴퓨터용 바로열기 링크');
+          alert('🔗 컴퓨터용 바로열기 링크가 복사되었습니다!\n\n카카오톡 "나에게 보내기"나 메신저로 컴퓨터에 보낸 뒤 클릭하시면, 컴퓨터에 모든 평가 기록이 즉시 1초 만에 저장됩니다!');
+        } catch (err) {
+          alert('링크 생성 오류: ' + err.message);
+        }
+      });
+
+      // 2) 전체 기록 코드 복사
+      document.getElementById('btnCopyAllDataCode')?.addEventListener('click', () => {
+        try {
+          const payload = DataModelModule.exportAllDataPayload();
+          const base64Code = btoa(unescape(encodeURIComponent(payload)));
+          const ta = document.getElementById('syncDataTextarea');
+          if (ta) ta.value = base64Code;
+          this.copyToClipboard(base64Code, '전체 기록 코드');
+          alert('📤 전체 기록 코드가 복사되었습니다!\n\n컴퓨터에서 [동기화 모달]을 열고 붙여넣은 뒤 [코드 붙여넣고 동기화]를 누르세요.');
+        } catch (err) {
+          alert('코드 복사 오류: ' + err.message);
+        }
+      });
+
+      // 2-2) 코드 붙여넣고 동기화
+      document.getElementById('btnPasteAndRestore')?.addEventListener('click', () => {
+        const ta = document.getElementById('syncDataTextarea');
+        const code = String(ta?.value || '').trim();
+        if (!code) {
+          alert('붙여넣을 데이터 코드를 입력해 주세요.');
+          return;
+        }
+        try {
+          DataModelModule.importAllDataPayload(code);
+          this.renderAll();
+          if (syncModal) syncModal.classList.add('hidden');
+          alert('🎉 동기화 성공!\n\n태블릿의 모든 평가 기록이 컴퓨터로 완벽하게 복원 및 저장되었습니다!');
+        } catch (err) {
+          alert('동기화 실패: ' + err.message);
+        }
+      });
+
+      // 3) 백업 파일 다운로드
+      document.getElementById('btnDownloadBackupFile')?.addEventListener('click', () => {
+        try {
+          const payload = DataModelModule.exportAllDataPayload();
+          const curDate = DataModelModule.state.evalDate || 'all';
+          const blob = new Blob([payload], { type: 'application/json;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `volleyball_backup_${curDate}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          this.showToast('💾 백업 파일 다운로드가 완료되었습니다.');
+        } catch (err) {
+          alert('다운로드 오류: ' + err.message);
+        }
+      });
+
+      // 3-2) 백업 파일 불러오기
+      document.getElementById('uploadBackupFileInput')?.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            DataModelModule.importAllDataPayload(event.target.result);
+            this.renderAll();
+            if (syncModal) syncModal.classList.add('hidden');
+            alert('🎉 백업 파일 복원 완료!\n\n파일에 저장된 모든 기록이 성공적으로 로드되었습니다.');
+          } catch (err) {
+            alert('파일 불러오기 실패: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
       });
 
       // 6. 학급 탭 클릭
@@ -1222,8 +1525,29 @@
 
     updateEvalDateBadge() {
       const curDate = DataModelModule.state.evalDate || new Date().toISOString().slice(0, 10);
+      const hasRecords = DataModelModule.hasRecordsOnDate(curDate);
+      const formattedDate = formatDateWithDay(curDate);
+
+      // 상단 배지 업데이트 (요일 상시 표시)
       const badge = document.getElementById('currentEvalDateBadge');
-      if (badge) badge.textContent = `📅 ${curDate} 평가 진행 중`;
+      if (badge) {
+        badge.textContent = `📅 ${formattedDate} ${hasRecords ? '평가 기록' : '신규 진행 중'}`;
+      }
+
+      // 날짜 선택 드롭다운 갱신 (평가한 날짜들만 요일과 함께 목록화)
+      const selectEl = document.getElementById('evalDateSelect');
+      if (selectEl) {
+        const evalDates = DataModelModule.getEvaluatedDatesList();
+        const allOptionDates = Array.from(new Set([curDate, ...evalDates])).sort().reverse();
+
+        selectEl.innerHTML = allOptionDates.map(d => {
+          const isEvaluated = DataModelModule.hasRecordsOnDate(d);
+          const label = formatDateWithDay(d);
+          const tag = isEvaluated ? '📌 [기록 있음]' : '✨ [신규 진행]';
+          return `<option value="${d}" ${d === curDate ? 'selected' : ''}>${label} ${tag}</option>`;
+        }).join('');
+      }
+
       const dateInput = document.getElementById('evalDateInput');
       if (dateInput && dateInput.value !== curDate) dateInput.value = curDate;
     },
