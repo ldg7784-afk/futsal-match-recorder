@@ -1,0 +1,28 @@
+{
+  "records": {
+    "20101": {
+      "serve": {
+        "plus": 1,
+        "minus": 0
+      }
+    }
+  },
+  "skillRecords": {
+    "20101": {
+      "attempt1": 5,
+      "attempt2": 4
+    }
+  },
+  "dateHistory": {
+    "2026-11-13": {
+      "20101": {}
+    }
+  },
+  "dateSkillHistory": {
+    "2026-11-13": {
+      "20101": {}
+    }
+  },
+  "evalDate": "2026-11-13",
+  "syncedAt": "2026-11-16T07:29:54.018Z"
+}
