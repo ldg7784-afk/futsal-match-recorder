@@ -1050,11 +1050,13 @@
         this.state.dateSkillHistory[cleanDate] = freshSkillRecords;
       }
 
-      // 현재 반 학생들의 레코드 확인
-      (this.state.students || []).forEach(stu => {
-        this.getStudentRecord(stu.id);
-        this.getSkillRecord(stu.id);
-      });
+      // 전체 학생들의 레코드 정규화 및 변종 동기화
+      for (let c = 1; c <= 9; c++) {
+        (this.state.classes[c] || []).forEach(stu => {
+          this.getStudentRecord(stu.id);
+          this.getSkillRecord(stu.id);
+        });
+      }
 
       this.saveToStorage();
     },
