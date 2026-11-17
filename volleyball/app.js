@@ -2490,8 +2490,7 @@
         const dispName = PrivacyGuardModule.formatStudentName(stu.name);
         const isMale = sRec.gender !== 'female';
 
-        const cumDeltaText = gCalc.netPointDelta > 0 ? `+${gCalc.netPointDelta}점` : (gCalc.netPointDelta < 0 ? `${gCalc.netPointDelta}점` : '0점');
-        const cumSummaryText = `누적 ${gCalc.totalPlusChecks}+ / ${gCalc.totalMinusChecks}- (${gCalc.netChecks >= 0 ? '+' : ''}${gCalc.netChecks}회 ➔ ${cumDeltaText})`;
+        const cumSummaryHtml = `누적 <span style="color:#2563eb; font-weight:800;">플러스 ${gCalc.totalPlusChecks}</span> <span style="color:#dc2626; font-weight:800;">마이너스 ${gCalc.totalMinusChecks}</span>`;
 
         return `
           <div class="vb-tbl-row">
@@ -2501,8 +2500,8 @@
             <div class="vb-tbl-cell" style="width:65px; justify-content:center;"><span class="vb-gender-badge-btn ${isMale ? 'male' : 'female'}">${isMale ? '남' : '여'}</span></div>
             <div class="vb-tbl-cell" style="width:165px; flex-direction:column; justify-content:center; align-items:center;">
               <span class="vb-final-grade-badge grade-${gCalc.finalGradePoint}">${gCalc.finalGradePoint}점</span>
-              <span style="font-size:0.75rem; color:#4338ca; font-weight:700; background:#eef2ff; border:1px solid #c7d2fe; border-radius:6px; padding:1px 6px; margin-top:3px; white-space:nowrap;" title="전체 일자 가감점수 누적: 플러스 ${gCalc.totalPlusChecks}회, 마이너스 ${gCalc.totalMinusChecks}회">
-                ${cumSummaryText}
+              <span style="font-size:0.75rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2px 8px; margin-top:3px; white-space:nowrap; color:#475569;" title="전체 일자 가감점수 누적: 플러스 ${gCalc.totalPlusChecks}회, 마이너스 ${gCalc.totalMinusChecks}회">
+                ${cumSummaryHtml}
               </span>
             </div>
             <div class="vb-tbl-cell" style="width:95px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt1 ?? '-'}개</span></div>
@@ -2607,8 +2606,8 @@
           rightSummary: `경기 점수: ${gCalc.finalGradePoint}점 (누적 종합)`,
           bodyHtml: `
             <p><strong>루브릭 기준</strong>: 기본 5점에서 시작하여 공격/수비 요소 3회마다 +1점씩 가산, 실책 3회마다 -1점씩 감점되어 최종 5점 만점으로 환산됩니다.</p>
-            <p style="margin-top:6px; color:#4338ca; font-weight:600;">
-              ✨ 전체 평가일자 누적 가감 집계: 공격/수비 성공 ${gCalc.totalPlusChecks}회 · 실책 ${gCalc.totalMinusChecks}회 (순 가감 ${gCalc.netChecks >= 0 ? '+' : ''}${gCalc.netChecks}회 ➔ 3회당 환산 ${gCalc.netPointDelta >= 0 ? '+' : ''}${gCalc.netPointDelta}점 ➔ 최종 경기점수 <strong>${gCalc.finalGradePoint}점</strong>)
+            <p style="margin-top:6px; color:#475569; font-weight:600;">
+              ✨ 전체 평가일자 누적: <span style="color:#2563eb; font-weight:800;">플러스 ${gCalc.totalPlusChecks}</span> <span style="color:#dc2626; font-weight:800;">마이너스 ${gCalc.totalMinusChecks}</span> ➔ 최종 경기점수 <strong>${gCalc.finalGradePoint}점</strong>
             </p>
           `
         },
