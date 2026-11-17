@@ -778,7 +778,7 @@ body {
 }
 
 .vb-horizontal-table-body {
-  min-width: 1260px;
+  min-width: 1180px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -878,64 +878,23 @@ body {
   text-overflow: ellipsis;
 }
 
-.col-quick {
-  flex: 0 0 85px;
-  min-width: 85px;
-  gap: 3px;
-}
-
-.vb-quick-btn {
-  flex: 1;
-  min-height: 30px;
-  border: none;
-  border-radius: 5px;
-  font-size: 0.76rem;
-  font-weight: 800;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  transition: transform 0.08s ease, filter 0.12s ease;
-}
-
-.vb-quick-btn.quick-plus {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.vb-quick-btn.quick-plus:hover {
-  background: #1d4ed8;
-}
-
-.vb-quick-btn.quick-minus {
-  background: #dc2626;
-  color: #ffffff;
-}
-
-.vb-quick-btn.quick-minus:hover {
-  background: #b91c1c;
-}
-
-.vb-quick-btn:active {
-  transform: scale(0.92);
-}
-
+/* 2. 플러스 / 마이너스 요인 칼럼 (각 325px: 4개 요소 + 되돌리기 버튼) */
 .col-plus-factors {
-  flex: 0 0 290px;
-  min-width: 290px;
+  flex: 0 0 325px;
+  min-width: 325px;
 }
 
 .col-minus-factors {
-  flex: 0 0 290px;
-  min-width: 290px;
+  flex: 0 0 325px;
+  min-width: 325px;
 }
 
-/* 4등분 그리드로 고정하여 '좋은 움직임', '부정확한 토스' 등 긴 글씨 절대 겹침 방지 */
+/* 4개 요소 칩 + 맨 옆 되돌리기(↩) 버튼 28px 그리드 배치 */
 .vb-chips-flex {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr) 28px;
   gap: 3px;
+  align-items: center;
   width: 100%;
 }
 
@@ -945,7 +904,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 2px;
-  padding: 4px 4px;
+  padding: 4px 5px;
   border-radius: 5px;
   font-size: 0.70rem;
   font-weight: 700;
@@ -954,10 +913,14 @@ body {
   border: 1px solid transparent;
   min-height: 30px;
   white-space: nowrap;
-  transition: all 0.12s ease;
+  transition: background-color 0.08s ease, color 0.08s ease, border-color 0.08s ease, transform 0.08s ease, box-shadow 0.08s ease;
   box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* 플러스 기본 상태: 깨끗하고 부드러운 블루 */
 .vb-factor-chip.plus {
   background: #eff6ff;
   color: #1d4ed8;
@@ -966,16 +929,26 @@ body {
 
 .vb-factor-chip.plus:hover {
   background: #dbeafe;
-  border-color: #3b82f6;
+  border-color: #93c5fd;
 }
 
-.vb-factor-chip.plus.active-factor {
-  background: #bfdbfe;
-  border-color: #2563eb;
-  font-weight: 800;
-  box-shadow: 0 0 0 1px #2563eb;
+/* 플러스 터치/누르는 순간: 선명한 파란색 번쩍 활성화 피드백 (손 떼면 즉시 기본 복귀) */
+.vb-factor-chip.plus:active,
+.vb-factor-chip.plus.touch-active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.45) !important;
+  transform: scale(0.93);
 }
 
+.vb-factor-chip.plus:active .chip-cnt,
+.vb-factor-chip.plus.touch-active .chip-cnt {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+}
+
+/* 마이너스 기본 상태: 깨끗하고 부드러운 레드 */
 .vb-factor-chip.minus {
   background: #fef2f2;
   color: #b91c1c;
@@ -984,18 +957,23 @@ body {
 
 .vb-factor-chip.minus:hover {
   background: #fee2e2;
-  border-color: #ef4444;
+  border-color: #fca5a5;
 }
 
-.vb-factor-chip.minus.active-factor {
-  background: #fecaca;
-  border-color: #dc2626;
-  font-weight: 800;
-  box-shadow: 0 0 0 1px #dc2626;
+/* 마이너스 터치/누르는 순간: 선명한 빨간색 번쩍 활성화 피드백 (손 떼면 즉시 기본 복귀) */
+.vb-factor-chip.minus:active,
+.vb-factor-chip.minus.touch-active {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #b91c1c !important;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.45) !important;
+  transform: scale(0.93);
 }
 
-.vb-factor-chip:active {
-  transform: scale(0.92);
+.vb-factor-chip.minus:active .chip-cnt,
+.vb-factor-chip.minus.touch-active .chip-cnt {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
 }
 
 .chip-label {
@@ -1017,13 +995,84 @@ body {
   text-align: center;
 }
 
-/* 5. 가감 점수: 누를 때마다 실시간으로 +1, -1 즉시 변동 */
-.col-delta {
-  flex: 0 0 75px;
-  min-width: 75px;
-  display: flex;
+/* 플러스 / 마이너스 맨 옆 되돌리기 (↩) 버튼 */
+.vb-factor-undo-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 5px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #64748b;
+  transition: all 0.1s ease;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vb-factor-undo-btn.plus-undo {
+  border-color: #bfdbfe;
+  color: #2563eb;
+  background: #f8fafc;
+}
+
+.vb-factor-undo-btn.plus-undo:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.vb-factor-undo-btn.plus-undo:active,
+.vb-factor-undo-btn.plus-undo.touch-active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+  transform: scale(0.92);
+}
+
+.vb-factor-undo-btn.minus-undo {
+  border-color: #fecaca;
+  color: #dc2626;
+  background: #f8fafc;
+}
+
+.vb-factor-undo-btn.minus-undo:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.vb-factor-undo-btn.minus-undo:active,
+.vb-factor-undo-btn.minus-undo.touch-active {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #b91c1c !important;
+  transform: scale(0.92);
+}
+
+/* 3. 가감 점수: 플마 3회 = ±1점 환산 점수 표기 */
+.col-delta {
+  flex: 0 0 80px;
+  min-width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.vb-delta-checks-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .vb-raw-score-badge {
@@ -1120,31 +1169,7 @@ body {
   border: 1px solid #fecaca;
 }
 
-/* 8. 취소(되돌리기) 버튼 */
-.col-action {
-  flex: 0 0 42px;
-  min-width: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.vb-btn-undo-mini {
-  padding: 0.32rem 0.55rem;
-  border-radius: var(--vb-radius-sm);
-  border: 1px solid var(--vb-border-strong);
-  background: var(--vb-bg);
-  font-size: 0.76rem;
-  font-weight: 800;
-  color: var(--vb-text-sub);
-  cursor: pointer;
-  transition: all 0.12s ease;
-}
-
-.vb-btn-undo-mini:hover {
-  background: #e2e8f0;
-  color: var(--vb-text);
-}
+/* 8. 취소 칼럼 제거됨 (플러스/마이너스 옆 ↩ 버튼으로 통합) */
 
 /* 9. 기타 사항 입력 필드 (취소 버튼 옆: 슬림하게 단축) */
 .col-note {
