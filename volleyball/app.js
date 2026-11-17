@@ -454,8 +454,10 @@
   const CloudSyncModule = {
     syncEndpoint: '/api/sync',
     ntfyTopic: 'cdhs_volleyball_eval_sync_2026',
+    clientId: 'vb_client_' + Math.random().toString(36).slice(2) + '_' + Date.now(),
     debounceTimer: null,
     isSyncing: false,
+    isPushing: false,
     lastSyncedAt: null,
     isPulling: false,
 
@@ -484,7 +486,14 @@
 
     // 클라우드에서 최신 평가 데이터 가져오기 (태블릿 입력 -> 컴퓨터로 즉시 반영)
     async pullFromCloud(isInitial = false) {
-      if (this.isSyncing) return;
+      if (this.isSyncing || this.isPushing) return;
+      // 교사가 로컬에서 버튼을 누르고 있는 중이거나(최근 3초 이내), 푸시가 대기 중이면 풀링 차단하여 횟수 롤백 방지!
+      if (!isInitial) {
+        if (this.debounceTimer) return;
+        if (typeof DataModelModule !== 'undefined' && DataModelModule.lastLocalActionTime && (Date.now() - DataModelModule.lastLocalActionTime < 3000)) {
+          return;
+        }
+      }
       try {
         if (isInitial) this.updateStatus('syncing');
         const res = await fetch(this.syncEndpoint);
@@ -542,8 +551,10 @@
 
     async pushToCloud() {
       try {
+        this.isPushing = true;
         const payloadStr = DataModelModule.exportAllDataPayload();
         const payload = JSON.parse(payloadStr);
+        payload.clientId = this.clientId; // 자기 자신의 브로드캐스트 필터링용
 
         const res = await fetch(this.syncEndpoint, {
           method: 'POST',
@@ -558,6 +569,8 @@
       } catch (err) {
         console.warn('Cloud push note:', err.message);
         this.updateStatus('error');
+      } finally {
+        this.isPushing = false;
       }
     },
 
@@ -572,8 +585,14 @@
               const data = JSON.parse(e.data);
               if (data.event === 'message' && data.message) {
                 const msgObj = JSON.parse(data.message);
-                if (msgObj.event === 'data_updated' && msgObj.timestamp !== this.lastSyncedAt) {
-                  this.pullFromCloud(false);
+                if (msgObj.event === 'data_updated') {
+                  // 내가 방금 푸시한 변경사항 알림은 무시 (덮어쓰기 레이스컨디션 원천 차단)
+                  if (msgObj.clientId && msgObj.clientId === this.clientId) {
+                    return;
+                  }
+                  if (msgObj.timestamp !== this.lastSyncedAt) {
+                    this.pullFromCloud(false);
+                  }
                 }
               }
             } catch (ignore) {}
@@ -596,6 +615,7 @@
   // ==========================================================================
   const DataModelModule = {
     roster: null,
+    lastLocalActionTime: 0,
 
     state: {
       currentClass: 1,             // 1 ~ 9반
@@ -763,24 +783,31 @@
       if (parsed.currentClass) this.state.currentClass = parsed.currentClass;
       if (parsed.skillCriteriaGender) this.state.skillCriteriaGender = parsed.skillCriteriaGender;
 
-      // 2. dateHistory 병합 (교사의 점수 수정 및 0점 초기화 완벽 존중)
+      const isRecentlyEdited = (Date.now() - (this.lastLocalActionTime || 0)) < 3000;
+
+      // 2. dateHistory 병합 (교사의 점수 수정 및 0점 초기화 완벽 존중, 로컬 최근 작업 보호)
       if (!this.state.dateHistory) this.state.dateHistory = {};
       if (parsed.dateHistory) {
         for (const [date, inRecs] of Object.entries(parsed.dateHistory)) {
           if (!this.state.dateHistory[date]) {
             this.state.dateHistory[date] = { ...inRecs };
+          } else if (date === this.state.evalDate && isRecentlyEdited) {
+            // 현재 작업 중인 날짜에 최근 로컬 클릭이 있다면 클라우드 과거 스냅샷으로 덮어쓰지 않음
+            continue;
           } else {
             this.state.dateHistory[date] = { ...this.state.dateHistory[date], ...inRecs };
           }
         }
       }
 
-      // 3. dateSkillHistory 병합 (교사의 시기 초기화 및 메모 삭제 완벽 존중)
+      // 3. dateSkillHistory 병합 (교사의 시기 초기화 및 메모 삭제 완벽 존중, 로컬 최근 작업 보호)
       if (!this.state.dateSkillHistory) this.state.dateSkillHistory = {};
       if (parsed.dateSkillHistory) {
         for (const [date, inRecs] of Object.entries(parsed.dateSkillHistory)) {
           if (!this.state.dateSkillHistory[date]) {
             this.state.dateSkillHistory[date] = { ...inRecs };
+          } else if (date === this.state.evalDate && isRecentlyEdited) {
+            continue;
           } else {
             this.state.dateSkillHistory[date] = { ...this.state.dateSkillHistory[date], ...inRecs };
           }
@@ -922,6 +949,62 @@
       return rec;
     },
 
+    // 학생의 유효한 경기수행 기록 조회 (현재 날짜에 평가가 없으면 최근 평가된 날짜의 기록 자동 연동!)
+    getEffectiveStudentRecord(studentId = '') {
+      const active = this.getStudentRecord(studentId);
+      const rawId = String(studentId).trim();
+      const numOnly = rawId.replace(/^STU_/, '');
+      const withPrefix = 'STU_' + numOnly;
+
+      const hasActiveScores = active && (
+        (active.counts && Object.values(active.counts).some(v => Number(v) > 0)) ||
+        (active.history && active.history.length > 0) ||
+        (active.note && String(active.note).trim().length > 0)
+      );
+      if (hasActiveScores) return active;
+
+      // 현재 날짜에 기록이 없다면 dateHistory의 모든 날짜(최신순)에서 평가된 기록 탐색
+      const dates = Object.keys(this.state.dateHistory || {}).sort().reverse();
+      for (const d of dates) {
+        const rec = this.state.dateHistory[d]?.[withPrefix] || this.state.dateHistory[d]?.[numOnly];
+        if (rec) {
+          const hasScores = (rec.counts && Object.values(rec.counts).some(v => Number(v) > 0)) ||
+                            (rec.history && rec.history.length > 0) ||
+                            (rec.note && String(rec.note).trim().length > 0);
+          if (hasScores) return rec;
+        }
+      }
+      return active || this.createEmptyRecord(studentId);
+    },
+
+    // 학생의 유효한 기능평가 기록 조회 (현재 날짜에 시기가 없으면 최근 평가된 날짜의 기록 자동 연동!)
+    getEffectiveSkillRecord(studentId = '') {
+      const active = this.getSkillRecord(studentId);
+      const rawId = String(studentId).trim();
+      const numOnly = rawId.replace(/^STU_/, '');
+      const withPrefix = 'STU_' + numOnly;
+
+      const hasActiveScores = active && (
+        (active.attempt1 !== null && active.attempt1 !== undefined && active.attempt1 !== '') ||
+        (active.attempt2 !== null && active.attempt2 !== undefined && active.attempt2 !== '') ||
+        (active.note && String(active.note).trim().length > 0)
+      );
+      if (hasActiveScores) return active;
+
+      // 현재 날짜에 기록이 없다면 dateSkillHistory의 모든 날짜(최신순)에서 평가된 기록 탐색
+      const dates = Object.keys(this.state.dateSkillHistory || {}).sort().reverse();
+      for (const d of dates) {
+        const rec = this.state.dateSkillHistory[d]?.[withPrefix] || this.state.dateSkillHistory[d]?.[numOnly];
+        if (rec) {
+          const hasScores = (rec.attempt1 !== null && rec.attempt1 !== undefined && rec.attempt1 !== '') ||
+                            (rec.attempt2 !== null && rec.attempt2 !== undefined && rec.attempt2 !== '') ||
+                            (rec.note && String(rec.note).trim().length > 0);
+          if (hasScores) return rec;
+        }
+      }
+      return active || this.createEmptySkillRecord(studentId);
+    },
+
     loadClass(classNum, broadcast = true) {
       const c = Number(classNum) || 1;
       this.state.currentClass = c;
@@ -996,6 +1079,7 @@
 
     // 기능평가 조작
     updateSkillAttempt(studentId, attemptNum, countValue) {
+      this.lastLocalActionTime = Date.now();
       AuthAccessModule.assertTeacherPermission('기능평가 시기 기록');
       const rec = this.getSkillRecord(studentId);
       const parsed = (countValue === null || countValue === undefined || countValue === '')
@@ -1011,6 +1095,7 @@
     },
 
     incrementSkillAttempt(studentId, attemptNum, delta) {
+      this.lastLocalActionTime = Date.now();
       AuthAccessModule.assertTeacherPermission('기능평가 증감');
       const rec = this.getSkillRecord(studentId);
       const cur = attemptNum === 1 ? (rec.attempt1 ?? 0) : (rec.attempt2 ?? 0);
@@ -1054,6 +1139,7 @@
 
     // 경기수행 조작
     incrementFactor(studentId, factorKey) {
+      this.lastLocalActionTime = Date.now();
       AuthAccessModule.assertTeacherPermission('플러스/마이너스 요소 체크');
       const rec = this.getStudentRecord(studentId);
       rec.counts[factorKey] = (rec.counts[factorKey] || 0) + 1;
@@ -1069,6 +1155,7 @@
     },
 
     undoLastFactor(studentId) {
+      this.lastLocalActionTime = Date.now();
       AuthAccessModule.assertTeacherPermission('체크 되돌리기');
       const rec = this.getStudentRecord(studentId);
       if (!rec || !Array.isArray(rec.history) || rec.history.length === 0) {
@@ -1082,6 +1169,7 @@
     },
 
     undoLastPlusFactor(studentId) {
+      this.lastLocalActionTime = Date.now();
       AuthAccessModule.assertTeacherPermission('플러스 체크 되돌리기');
       const rec = this.getStudentRecord(studentId);
       if (!rec) return null;
@@ -1115,6 +1203,7 @@
     },
 
     undoLastMinusFactor(studentId) {
+      this.lastLocalActionTime = Date.now();
       AuthAccessModule.assertTeacherPermission('마이너스 체크 되돌리기');
       const rec = this.getStudentRecord(studentId);
       if (!rec) return null;
@@ -1148,6 +1237,7 @@
     },
 
     updateStudentNote(studentId, noteText) {
+      this.lastLocalActionTime = Date.now();
       AuthAccessModule.assertTeacherPermission('기타 사항 수정');
       const rec = this.getStudentRecord(studentId);
       rec.note = String(noteText || '').trim();
@@ -2064,17 +2154,15 @@
         countBadge.textContent = `${st.currentClass}반 (총 ${st.students.length}명) · 40초 토스·스파이크 공 넘김 측정 (2회 기회 중 최고 기록 반영)`;
       }
 
-      // 헤더: vb-skill-table-grid 사용
+      // 헤더: vb-skill-table-grid 사용 (기능평가 순수 7개 칼럼: 경기점수/합산 제거)
       let headerHtml = `
         <div class="vb-skill-tbl-head vb-skill-table-grid">
           <div class="col-stu">학생 (학번 성명)</div>
           <div class="col-gender">성별</div>
-          <div class="col-attempt1">1차 시기 (40초)</div>
-          <div class="col-attempt2">2차 시기 (40초)</div>
+          <div class="col-attempt1">1차 시기 (40초/50초)</div>
+          <div class="col-attempt2">2차 시기 (40초/50초)</div>
           <div class="col-best">최고 기록</div>
-          <div class="col-skill-score">기능(10점)</div>
-          <div class="col-game-score">경기(5점)</div>
-          <div class="col-total-score">🏆 합산(15점)</div>
+          <div class="col-skill-score">기능점수 (10점)</div>
           <div class="col-note">비고</div>
         </div>
       `;
@@ -2157,21 +2245,7 @@
               </span>
             </div>
 
-            <!-- 7. 경기 점수 연동 (5점 만점) -->
-            <div class="col-game-score">
-              <span class="vb-game-linked-badge">
-                ${gCalc.finalGradePoint}점
-              </span>
-            </div>
-
-            <!-- 8. 합산 총점 (15점 만점) -->
-            <div class="col-total-score">
-              <span class="vb-total-score-pill">
-                <strong>${combined.totalScore}</strong> / 15점
-              </span>
-            </div>
-
-            <!-- 9. 비고 -->
+            <!-- 7. 비고 -->
             <div class="col-note">
               <input type="text" class="vb-tbl-note-input" data-skill-note-stu-id="${stu.id}" value="${String(sRec.note || '').replace(/"/g, '&quot;')}" placeholder="비고..." />
             </div>
@@ -2254,8 +2328,9 @@
       `;
 
       let rowsHtml = st.students.map((stu, idx) => {
-        const gRec = DataModelModule.getStudentRecord(stu.id);
-        const sRec = DataModelModule.getSkillRecord(stu.id);
+        // 경기수행과 기능평가 점수를 실시간 상시 자동 연동 (다른 날짜에 각각 평가했더라도 자동 종합!)
+        const gRec = DataModelModule.getEffectiveStudentRecord(stu.id);
+        const sRec = DataModelModule.getEffectiveSkillRecord(stu.id);
 
         const gCalc = RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
         const sCalc = SkillCalcModule.calculateStudentSkill(sRec, st.skillCriteriaGender);
@@ -2312,8 +2387,8 @@
       }
 
       const activeStu = st.students.find(s => s.id === AuthAccessModule.activeStudentViewerId) || st.students[0];
-      const gRec = activeStu ? DataModelModule.getStudentRecord(activeStu.id) : DataModelModule.createEmptyRecord();
-      const sRec = activeStu ? DataModelModule.getSkillRecord(activeStu.id) : DataModelModule.createEmptySkillRecord();
+      const gRec = activeStu ? DataModelModule.getEffectiveStudentRecord(activeStu.id) : DataModelModule.createEmptyRecord();
+      const sRec = activeStu ? DataModelModule.getEffectiveSkillRecord(activeStu.id) : DataModelModule.createEmptySkillRecord();
 
       const gCalc = RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
       const sCalc = SkillCalcModule.calculateStudentSkill(sRec, st.skillCriteriaGender);
@@ -2356,8 +2431,8 @@
     renderStudentAccordion(gCalcData, sCalcData) {
       const st = DataModelModule.state;
       const activeStu = st.students.find(s => s.id === AuthAccessModule.activeStudentViewerId) || st.students[0];
-      const gRec = activeStu ? DataModelModule.getStudentRecord(activeStu.id) : DataModelModule.createEmptyRecord();
-      const sRec = activeStu ? DataModelModule.getSkillRecord(activeStu.id) : DataModelModule.createEmptySkillRecord();
+      const gRec = activeStu ? DataModelModule.getEffectiveStudentRecord(activeStu.id) : DataModelModule.createEmptyRecord();
+      const sRec = activeStu ? DataModelModule.getEffectiveSkillRecord(activeStu.id) : DataModelModule.createEmptySkillRecord();
 
       const gCalc = gCalcData || RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
       const sCalc = sCalcData || SkillCalcModule.calculateStudentSkill(sRec, st.skillCriteriaGender);

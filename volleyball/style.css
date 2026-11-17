@@ -2255,12 +2255,12 @@ body {
 
 /* ==========================================================================
    무결점 섹터 정렬: .vb-skill-table-grid
-   헤더와 모든 행이 100% 동일한 그리드 템플릿을 사용하여 절대 어긋나지 않음
+   (기능평가 파트: 경기점수/합산 칼럼 제거 -> 순수 기능평가 7개 칼럼 와이드 배치)
    ========================================================================== */
 .vb-skill-table-grid {
   display: grid;
-  grid-template-columns: 165px 65px 235px 235px 90px 105px 100px 125px minmax(110px, 1fr);
-  gap: 8px;
+  grid-template-columns: 170px 70px 245px 245px 105px 125px minmax(130px, 1fr);
+  gap: 10px;
   align-items: center;
   box-sizing: border-box;
   width: 100%;

@@ -30,9 +30,9 @@ function requestHttps(url, options, postData) {
   });
 }
 
-function broadcastPing(timestamp) {
+function broadcastPing(timestamp, clientId = null) {
   try {
-    const data = JSON.stringify({ event: 'data_updated', timestamp });
+    const data = JSON.stringify({ event: 'data_updated', timestamp, clientId });
     const req = https.request({
       hostname: 'ntfy.sh',
       path: '/' + NTFY_TOPIC,
@@ -193,7 +193,7 @@ module.exports = async function handler(req, res) {
     }
 
     // 다른 기기로 실시간 화면 갱신 브로드캐스트 전송
-    broadcastPing(mergedData.syncedAt);
+    broadcastPing(mergedData.syncedAt, bodyData.clientId || null);
 
     return res.status(200).json({
       success: true,
