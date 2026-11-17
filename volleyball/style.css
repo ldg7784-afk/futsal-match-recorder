@@ -2099,6 +2099,7 @@ body {
   margin: 0;
 }
 
+.vb-gender-criteria-active-tag,
 .vb-male-priority-tag {
   background: linear-gradient(135deg, #1d4ed8, #2563eb);
   color: #ffffff;
@@ -2764,4 +2765,73 @@ body {
   font-size: 0.78rem;
   color: #64748b;
   line-height: 1.5;
+}
+
+
+/* ==========================================================================
+   평가 일자 드롭다운 및 기기 연동 버튼 스타일
+   ========================================================================== */
+.vb-eval-date-select {
+  height: 34px;
+  border-radius: var(--vb-radius-sm);
+  border: 1.5px solid var(--vb-border-strong);
+  background: #ffffff;
+  color: var(--vb-text);
+  font-weight: 800;
+  font-size: 0.88rem;
+  padding: 0 10px;
+  cursor: pointer;
+  box-shadow: var(--vb-shadow-xs);
+  transition: all 0.15s ease;
+}
+
+.vb-eval-date-select:focus {
+  border-color: var(--vb-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+}
+
+.vb-date-status-pill {
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  white-space: nowrap;
+}
+
+.vb-cloud-sync-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  border: 1.5px solid #a7f3d0;
+  color: #065f46;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.vb-cloud-sync-status-pill.syncing {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+  animation: pulse-sync 1.2s infinite alternate;
+}
+
+.vb-cloud-sync-status-pill.error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+@keyframes pulse-sync {
+  0% { opacity: 0.75; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
 }
