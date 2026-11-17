@@ -164,8 +164,8 @@ module.exports = async function handler(req, res) {
       } catch (_) { }
     }
 
-    // 안전 병합 (기존 점수 보존)
-    const mergedData = mergePayloads(existingData, bodyData);
+    // 안전 병합 (forceReset 요청 시 기존 데이터 완전 덮어쓰기 초기화)
+    const mergedData = bodyData.forceReset ? { ...bodyData } : mergePayloads(existingData, bodyData);
     mergedData.syncedAt = new Date().toISOString();
     memoryCache = mergedData;
 

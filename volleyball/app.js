@@ -10,7 +10,7 @@
 (function (global) {
   'use strict';
 
-  const VB_STORAGE_KEY = 'volleyball_pe_performance_v2';
+  const VB_STORAGE_KEY = 'volleyball_pe_performance_v3';
   const VB_AUDIT_KEY = 'volleyball_pe_audit_logs_v2';
   const VB_SYNC_CHANNEL = 'volleyball_pe_sync_bus_v2';
 
@@ -612,12 +612,11 @@
       this.initClassesFromRoster();
       this.loadFromStorage();
 
-      // 평가된 날짜 목록 조회
-      const evaluatedDates = this.getEvaluatedDatesList();
-      if (evaluatedDates.length > 0) {
-        // 만약 현재 설정된 날짜에 기록이 없다면, 가장 최근에 실제로 평가를 진행했던 날짜로 자동 설정!
-        if (!this.hasRecordsOnDate(this.state.evalDate)) {
-          this.state.evalDate = evaluatedDates[0];
+      const curClass = Number(this.state.currentClass || 1);
+      const classDates = this.getEvaluatedDatesList(curClass);
+      if (classDates.length > 0) {
+        if (!this.hasRecordsOnDate(this.state.evalDate, curClass)) {
+          this.state.evalDate = classDates[0];
           if (this.state.dateHistory && this.state.dateHistory[this.state.evalDate]) {
             this.state.records = this.state.dateHistory[this.state.evalDate];
           }
@@ -628,24 +627,35 @@
       } else if (!this.state.evalDate) {
         this.state.evalDate = new Date().toISOString().slice(0, 10);
       }
-      this.loadClass(this.state.currentClass || 1, false);
+      this.loadClass(curClass, false);
     },
 
 
-    // 특정 날짜에 실제 평가 기록이 존재하는지 판별
-    hasRecordsOnDate(dateStr) {
+    // 특정 날짜에 해당 반의 실제 평가 기록(경기수행 또는 기능평가)이 존재하는지 판별
+    hasRecordsOnDate(dateStr, classNum = null) {
       if (!dateStr) return false;
       const d = String(dateStr).trim();
       const st = this.state;
+      const targetClass = classNum !== null ? Number(classNum) : Number(st.currentClass || 1);
+
+      // 해당 반 학생 목록 조회 (ID 및 학번 매핑)
+      const studentsInClass = (st.classes && st.classes[targetClass]) || [];
+      const studentIdSet = new Set();
+      studentsInClass.forEach(s => {
+        studentIdSet.add(s.id);
+        const numOnly = String(s.studentNumber || s.id).replace(/^STU_/, '');
+        studentIdSet.add(numOnly);
+        studentIdSet.add('STU_' + numOnly);
+      });
 
       // 1. 경기수행 기록 검사
       const gMap = (st.dateHistory && st.dateHistory[d]) || (d === st.evalDate ? st.records : null);
       if (gMap) {
-        const hasGame = Object.values(gMap).some(rec => {
+        const hasGame = Object.entries(gMap).some(([sid, rec]) => {
           if (!rec) return false;
-          // 신규 counts 객체 검사
+          if (studentIdSet.size > 0 && !studentIdSet.has(sid)) return false;
+
           if (rec.counts && Object.values(rec.counts).some(v => Number(v) > 0)) return true;
-          // 레거시 v1 구조 검사
           const sSum = (rec.serve?.plus || 0) + (rec.serve?.minus || 0);
           const rSum = (rec.receive?.plus || 0) + (rec.receive?.minus || 0);
           const tSum = (rec.toss?.plus || 0) + (rec.toss?.minus || 0);
@@ -661,8 +671,10 @@
       // 2. 기능평가 기록 검사
       const sMap = (st.dateSkillHistory && st.dateSkillHistory[d]) || (d === st.evalDate ? st.skillRecords : null);
       if (sMap) {
-        const hasSkill = Object.values(sMap).some(rec => {
+        const hasSkill = Object.entries(sMap).some(([sid, rec]) => {
           if (!rec) return false;
+          if (studentIdSet.size > 0 && !studentIdSet.has(sid)) return false;
+
           const a1Valid = rec.attempt1 !== null && rec.attempt1 !== undefined && rec.attempt1 !== '';
           const a2Valid = rec.attempt2 !== null && rec.attempt2 !== undefined && rec.attempt2 !== '';
           const noteValid = rec.note && String(rec.note).trim().length > 0;
@@ -671,33 +683,27 @@
         if (hasSkill) return true;
       }
 
-      // 3. 공식 수행평가 일자(11/16, 11/13, 11/12, 11/10)는 상시 평가일자로 인정
-      if (['2026-11-16', '2026-11-13', '2026-11-12', '2026-11-10'].includes(d)) {
-        return true;
-      }
-
       return false;
     },
 
-    // 실제 평가가 진행된 모든 날짜 목록을 최신순(내림차순)으로 반환
-    getEvaluatedDatesList() {
-      // 모든 교사 공식 평가 일자(11월 17일, 16일, 13일, 12일, 10일) 상시 포함 (절대 누락 금지)
-      const officialDates = ['2026-11-17', '2026-11-16', '2026-11-13', '2026-11-12', '2026-11-10'];
-      const datesSet = new Set(officialDates);
+    // 특정 반에서 실제 평가가 진행된 모든 날짜 목록을 최신순(내림차순)으로 반환
+    getEvaluatedDatesList(classNum = null) {
+      const datesSet = new Set();
       const st = this.state;
+      const targetClass = classNum !== null ? Number(classNum) : Number(st.currentClass || 1);
 
       if (st.dateHistory) {
         Object.keys(st.dateHistory).forEach(d => {
-          if (this.hasRecordsOnDate(d) && d !== '2026-11-15') datesSet.add(d);
+          if (this.hasRecordsOnDate(d, targetClass)) datesSet.add(d);
         });
       }
       if (st.dateSkillHistory) {
         Object.keys(st.dateSkillHistory).forEach(d => {
-          if (this.hasRecordsOnDate(d) && d !== '2026-11-15') datesSet.add(d);
+          if (this.hasRecordsOnDate(d, targetClass)) datesSet.add(d);
         });
       }
 
-      return Array.from(datesSet).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d !== '2026-11-15').sort().reverse();
+      return Array.from(datesSet).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().reverse();
     },
 
     // 기기 간 전체 데이터 내보내기 (JSON 문자열 반환)
@@ -774,11 +780,12 @@
         }
       }
 
-      // 4. 활성 평가 날짜 결정
-      const evalList = this.getEvaluatedDatesList();
+      // 4. 활성 평가 날짜 결정 (해당 반 기준)
+      const curClass = Number(this.state.currentClass || 1);
+      const evalList = this.getEvaluatedDatesList(curClass);
       let activeDate = parsed.evalDate || this.state.evalDate;
-      // 현재 날짜에 기록이 없고 과거 평가 기록이 있다면 최신 평가 기록 날짜를 기본 활성화
-      if (!this.hasRecordsOnDate(activeDate) && evalList.length > 0) {
+      // 현재 날짜에 해당 반의 기록이 없고 과거 평가 기록이 있다면 최신 평가 기록 날짜를 기본 활성화
+      if (!this.hasRecordsOnDate(activeDate, curClass) && evalList.length > 0) {
         activeDate = evalList[0];
       }
       this.state.evalDate = activeDate;
@@ -918,10 +925,16 @@
       const classStudents = this.state.classes[c] || [];
       this.state.students = classStudents;
 
-      this.state.students.forEach(stu => {
-        this.getStudentRecord(stu.id);
-        this.getSkillRecord(stu.id);
-      });
+      // 만약 현재 날짜에 해당 반의 평가 기록이 없고, 해당 반의 평가 기록 날짜가 있다면 그 날짜로 자동 전환!
+      const classDates = this.getEvaluatedDatesList(c);
+      if (!this.hasRecordsOnDate(this.state.evalDate, c) && classDates.length > 0) {
+        this.setEvalDate(classDates[0]);
+      } else {
+        this.state.students.forEach(stu => {
+          this.getStudentRecord(stu.id);
+          this.getSkillRecord(stu.id);
+        });
+      }
 
       if (broadcast) this.saveToStorage();
     },
@@ -1107,30 +1120,11 @@
           this.state.currentClass = Number(parsed.currentClass) || 1;
           this.state.currentMode = parsed.currentMode || 'game';
           this.state.skillCriteriaGender = parsed.skillCriteriaGender || 'male';
-          this.state.evalDate = parsed.evalDate || '2026-11-16';
+          this.state.evalDate = parsed.evalDate || new Date().toISOString().slice(0, 10);
           this.state.dateHistory = parsed.dateHistory || {};
           this.state.dateSkillHistory = parsed.dateSkillHistory || {};
           this.state.records = parsed.records || {};
           this.state.skillRecords = parsed.skillRecords || {};
-
-          // 백업 데이터의 평가 일자(11/10, 11/12, 11/13, 11/16)가 현재 저장소에 없으면 안전 병합
-          if (typeof window !== 'undefined' && window.VOLLEYBALL_BACKUP_DATA) {
-            const bData = window.VOLLEYBALL_BACKUP_DATA;
-            if (bData.dateHistory) {
-              for (const [d, recs] of Object.entries(bData.dateHistory)) {
-                if (!this.state.dateHistory[d]) {
-                  this.state.dateHistory[d] = recs;
-                }
-              }
-            }
-            if (bData.dateSkillHistory) {
-              for (const [d, recs] of Object.entries(bData.dateSkillHistory)) {
-                if (!this.state.dateSkillHistory[d]) {
-                  this.state.dateSkillHistory[d] = recs;
-                }
-              }
-            }
-          }
 
           if (!this.state.dateHistory[this.state.evalDate]) {
             this.state.dateHistory[this.state.evalDate] = this.state.records;
@@ -1694,26 +1688,27 @@
     },
 
     updateEvalDateBadge() {
+      const curClass = Number(DataModelModule.state.currentClass || 1);
       const curDate = DataModelModule.state.evalDate || new Date().toISOString().slice(0, 10);
-      const hasRecords = DataModelModule.hasRecordsOnDate(curDate);
+      const hasRecords = DataModelModule.hasRecordsOnDate(curDate, curClass);
       const formattedDate = formatDateWithDay(curDate);
 
-      // 상단 배지 업데이트 (요일 상시 표시)
+      // 상단 배지 업데이트 (해당 반 표기)
       const badge = document.getElementById('currentEvalDateBadge');
       if (badge) {
-        badge.textContent = `📅 ${formattedDate} ${hasRecords ? '평가 기록' : '신규 진행 중'}`;
+        badge.textContent = `📅 [${curClass}반] ${formattedDate} ${hasRecords ? '📌 평가 완료' : '📝 새 평가 진행'}`;
       }
 
-      // 날짜 선택 드롭다운 갱신 (모든 평가일자 요일과 함께 상시 표시되어 클릭으로 즉시 이동)
+      // 날짜 선택 드롭다운 갱신 (해당 반의 실제 평가 기록 날짜들만 요일과 함께 표시)
       const selectEl = document.getElementById('evalDateSelect');
       if (selectEl) {
-        const evalDates = DataModelModule.getEvaluatedDatesList();
-        const allOptionDates = Array.from(new Set([curDate, ...evalDates])).filter(d => d !== '2026-11-15').sort().reverse();
+        const classEvalDates = DataModelModule.getEvaluatedDatesList(curClass);
+        const allOptionDates = Array.from(new Set([curDate, ...classEvalDates])).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().reverse();
 
         selectEl.innerHTML = allOptionDates.map(d => {
-          const isEvaluated = DataModelModule.hasRecordsOnDate(d);
+          const isEvaluated = DataModelModule.hasRecordsOnDate(d, curClass);
           const label = formatDateWithDay(d);
-          const tag = isEvaluated ? '📌 [기록 있음]' : (d === '2026-11-17' ? '✨ [오늘 평가]' : '📝 [평가 진행]');
+          const tag = isEvaluated ? '📌 [기록 있음]' : '📝 [새 평가일자]';
           return `<option value="${d}" ${d === curDate ? 'selected' : ''}>${label} ${tag}</option>`;
         }).join('');
       }
