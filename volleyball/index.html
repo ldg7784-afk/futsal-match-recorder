@@ -11,7 +11,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117_v14">
+  <link rel="stylesheet" href="style.css?v=20261117_v15">
 </head>
 
 <body>
@@ -402,7 +402,7 @@
           <div class="vb-toolbar-row-primary">
             <div class="vb-toolbar-left">
               <h3 class="vb-card-title">🏆 배구 수행평가 종합 합산 성적표</h3>
-              <span class="vb-count-badge" id="combinedStudentCountBadge">경기 수행점수(5점) + 기능점수(10점) = 총 15점 만점</span>
+              <span class="vb-count-badge" id="combinedStudentCountBadge">경기수행(5점) + 기능평가(10점) = 총 15점 ➔ 30점 만점 수행평가 점수 환산</span>
             </div>
 
             <div class="vb-export-btns-group">
@@ -421,6 +421,21 @@
             </div>
           </div>
         </section>
+
+        <!-- [배구 수행평가 30점 만점 환산 기준 안내 카드] -->
+        <div class="vb-rubric-30-banner">
+          <div class="vb-rubric-30-title">
+            <span>📋</span>
+            <span>배구 수행평가 환산 배점표 (총 합산 점수 ➔ 30점 만점 환산)</span>
+          </div>
+          <div class="vb-rubric-30-scales">
+            <span class="vb-rubric-30-pill scale-30">14점 이상 ➔ <strong>30점</strong></span>
+            <span class="vb-rubric-30-pill scale-25">13점 ~ 12점 ➔ <strong>25점</strong></span>
+            <span class="vb-rubric-30-pill scale-20">11점 ~ 10점 ➔ <strong>20점</strong></span>
+            <span class="vb-rubric-30-pill scale-15">9점 ~ 8점 ➔ <strong>15점</strong></span>
+            <span class="vb-rubric-30-pill scale-10">7점 이하 ➔ <strong>10점</strong></span>
+          </div>
+        </div>
 
         <section class="vb-board-scroll-wrapper">
           <div id="combinedStudentRowsContainer" class="vb-student-board-view mode-horizontal-table"
@@ -555,9 +570,9 @@
 
 
 
-  <script src="roster_data.js?v=20261117_v14"></script>
-  <script src="backup_data.js?v=20261117_v14"></script>
-  <script src="app.js?v=20261117_v14"></script>
+  <script src="roster_data.js?v=20261117_v15"></script>
+  <script src="backup_data.js?v=20261117_v15"></script>
+  <script src="app.js?v=20261117_v15"></script>
 </body>
 
 </html>

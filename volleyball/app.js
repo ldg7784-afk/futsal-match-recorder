@@ -306,14 +306,39 @@
       };
     },
 
+    // 30점 만점 수행평가 환산 배점표 (14점 이상 30점, 13~12점 25점, 11~10점 20점, 9~8점 15점, 7점 이하 10점)
+    FINAL_30_SCALE_TABLE: [
+      { min: 14, max: 999, finalScore: 30, label: '14점 이상' },
+      { min: 12, max: 13, finalScore: 25, label: '13점 ~ 12점' },
+      { min: 10, max: 11, finalScore: 20, label: '11점 ~ 10점' },
+      { min: 8, max: 9, finalScore: 15, label: '9점 ~ 8점' },
+      { min: -999, max: 7, finalScore: 10, label: '7점 이하' }
+    ],
+
+    convertTotalToFinalScore(totalScore) {
+      const score = Number(totalScore) || 0;
+      for (const row of this.FINAL_30_SCALE_TABLE) {
+        if (score >= row.min && score <= row.max) {
+          return {
+            final30Score: row.finalScore,
+            label: row.label
+          };
+        }
+      }
+      return { final30Score: 10, label: '7점 이하' };
+    },
+
     calculateCombinedTotal(gameGradePoint, skillCalc) {
       const gScore = Number(gameGradePoint) || 0;
       const sScore = skillCalc.isEvaluated ? skillCalc.score : 0;
       const total = gScore + sScore;
+      const converted = this.convertTotalToFinalScore(total);
       return {
         gameScore: gScore,
         skillScore: sScore,
         totalScore: total,
+        final30Score: converted.final30Score,
+        final30Label: converted.label,
         isSkillEvaluated: skillCalc.isEvaluated,
         displayTotal: `${total}점`
       };
@@ -1600,9 +1625,9 @@
       const dataRows = [];
       let datesToExport = [];
 
-      // 종합 합산 성적표인 경우: 학생별 모든 날짜의 누적 경기수행 점수 + 기능점수를 단일 종합 레코드로 완벽 출력!
+      // 종합 합산 성적표인 경우: 비고 제거 및 30점 만점 수행평가 점수 포함 단일 종합 레코드 출력!
       if (mode === 'combined') {
-        header = ['학년', '반', '번호', '학번', '성명', '성별', '경기수행(5점)', '누적(+)', '누적(-)', '누적가감점', '기능1차(개)', '기능2차(개)', '기능최고(개)', '기능점수(10점)', '★종합총점(15점)', '평가일자(경기)', '비고'];
+        header = ['학년', '반', '번호', '학번', '성명', '성별', '경기수행(5점)', '누적(+)', '누적(-)', '기능1차(개)', '기능2차(개)', '기능최고(개)', '기능점수(10점)', '합산총점(15점)', '★수행평가점수(30점)', '평가일자(경기)'];
 
         for (let c = 1; c <= 9; c++) {
           if (scope === 'currentClass' && c !== st.currentClass) continue;
@@ -1622,9 +1647,8 @@
             dataRows.push([
               stu.grade || 2, stu.classNum || c, stu.number || '', stu.studentNumber, stu.name,
               genderKo, gCalc.finalGradePoint, gCalc.totalPlusChecks, gCalc.totalMinusChecks,
-              (gCalc.netPointDelta > 0 ? `+${gCalc.netPointDelta}` : gCalc.netPointDelta),
               sCalc.attempt1 ?? '', sCalc.attempt2 ?? '', sCalc.bestCount ?? '',
-              sCalc.score, cCalc.totalScore, datesStr, sRec.note || gRec.note || ''
+              sCalc.score, cCalc.totalScore, cCalc.final30Score, datesStr
             ]);
           });
         }
@@ -2463,17 +2487,19 @@
 
       let headerHtml = `
         <div class="vb-tbl-head-row">
-          <div class="vb-tbl-th" style="width:65px; text-align:center;">번호</div>
-          <div class="vb-tbl-th" style="width:110px;">학번</div>
+          <div class="vb-tbl-th" style="width:60px; text-align:center;">번호</div>
+          <div class="vb-tbl-th" style="width:105px;">학번</div>
           <div class="vb-tbl-th" style="width:115px;">성명</div>
           <div class="vb-tbl-th" style="width:65px; text-align:center;">성별</div>
-          <div class="vb-tbl-th" style="width:165px; text-align:center;">경기수행 (5점)<br><span style="font-size:10px; font-weight:normal; opacity:0.85;">가감점수 누적 (3회당 ±1점)</span></div>
-          <div class="vb-tbl-th" style="width:95px; text-align:center;">기능 1차</div>
-          <div class="vb-tbl-th" style="width:95px; text-align:center;">기능 2차</div>
-          <div class="vb-tbl-th" style="width:105px; text-align:center;">기능 최고</div>
-          <div class="vb-tbl-th" style="width:125px; text-align:center;">기능점수 (10점)</div>
-          <div class="vb-tbl-th" style="width:160px; text-align:center;">🏆 최종합산 (15점)</div>
-          <div class="vb-tbl-th" style="flex:1;">비고</div>
+          <div class="vb-tbl-th" style="width:170px; text-align:center;">경기수행 (5점)<br><span style="font-size:10px; font-weight:normal; opacity:0.85;">누적 3회당 ±1점</span></div>
+          <div class="vb-tbl-th" style="width:90px; text-align:center;">기능 1차</div>
+          <div class="vb-tbl-th" style="width:90px; text-align:center;">기능 2차</div>
+          <div class="vb-tbl-th" style="width:100px; text-align:center;">기능 최고</div>
+          <div class="vb-tbl-th" style="width:120px; text-align:center;">기능점수 (10점)</div>
+          <div class="vb-tbl-th" style="width:135px; text-align:center;">총 합산 (15점)</div>
+          <div class="vb-tbl-th" style="width:175px; text-align:center; background:#1e293b; color:#fbbf24; border-radius:6px 6px 0 0;">
+            🏆 수행평가 점수 (30점)
+          </div>
         </div>
       `;
 
@@ -2492,29 +2518,39 @@
 
         const cumSummaryHtml = `누적 <span style="color:#2563eb; font-weight:800;">플러스 ${gCalc.totalPlusChecks}</span> <span style="color:#dc2626; font-weight:800;">마이너스 ${gCalc.totalMinusChecks}</span>`;
 
+        // 30점 만점 배지 스타일링
+        let badgeColorClass = 'vb-badge-30-10';
+        if (combined.final30Score === 30) badgeColorClass = 'vb-badge-30-top';
+        else if (combined.final30Score === 25) badgeColorClass = 'vb-badge-30-25';
+        else if (combined.final30Score === 20) badgeColorClass = 'vb-badge-30-20';
+        else if (combined.final30Score === 15) badgeColorClass = 'vb-badge-30-15';
+
         return `
           <div class="vb-tbl-row">
-            <div class="vb-tbl-cell" style="width:65px; justify-content:center;"><span class="vb-stu-index-num">${idx + 1}</span></div>
-            <div class="vb-tbl-cell" style="width:110px;"><span class="vb-stu-num-badge">${dispNum}</span></div>
+            <div class="vb-tbl-cell" style="width:60px; justify-content:center;"><span class="vb-stu-index-num">${idx + 1}</span></div>
+            <div class="vb-tbl-cell" style="width:105px;"><span class="vb-stu-num-badge">${dispNum}</span></div>
             <div class="vb-tbl-cell" style="width:115px;"><strong class="vb-stu-name-strong">${dispName}</strong></div>
             <div class="vb-tbl-cell" style="width:65px; justify-content:center;"><span class="vb-gender-badge-btn ${isMale ? 'male' : 'female'}">${isMale ? '남' : '여'}</span></div>
-            <div class="vb-tbl-cell" style="width:165px; flex-direction:column; justify-content:center; align-items:center;">
+            <div class="vb-tbl-cell" style="width:170px; flex-direction:column; justify-content:center; align-items:center;">
               <span class="vb-final-grade-badge grade-${gCalc.finalGradePoint}">${gCalc.finalGradePoint}점</span>
               <span style="font-size:0.75rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2px 8px; margin-top:3px; white-space:nowrap; color:#475569;" title="전체 일자 가감점수 누적: 플러스 ${gCalc.totalPlusChecks}회, 마이너스 ${gCalc.totalMinusChecks}회">
                 ${cumSummaryHtml}
               </span>
             </div>
-            <div class="vb-tbl-cell" style="width:95px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt1 ?? '-'}개</span></div>
-            <div class="vb-tbl-cell" style="width:95px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt2 ?? '-'}개</span></div>
-            <div class="vb-tbl-cell" style="width:105px; justify-content:center;"><span class="vb-best-count-badge has-best">${sCalc.bestDisplay}</span></div>
-            <div class="vb-tbl-cell" style="width:125px; justify-content:center;"><span class="vb-skill-score-badge ${sCalc.score === 10 ? 'grade-10' : ''}">${sCalc.scoreDisplay}</span></div>
-            <div class="vb-tbl-cell" style="width:160px; justify-content:center;">
+            <div class="vb-tbl-cell" style="width:90px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt1 ?? '-'}개</span></div>
+            <div class="vb-tbl-cell" style="width:90px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt2 ?? '-'}개</span></div>
+            <div class="vb-tbl-cell" style="width:100px; justify-content:center;"><span class="vb-best-count-badge has-best">${sCalc.bestDisplay}</span></div>
+            <div class="vb-tbl-cell" style="width:120px; justify-content:center;"><span class="vb-skill-score-badge ${sCalc.score === 10 ? 'grade-10' : ''}">${sCalc.scoreDisplay}</span></div>
+            <div class="vb-tbl-cell" style="width:135px; justify-content:center;">
               <span class="vb-total-score-pill">
                 <strong>${combined.totalScore}</strong> / 15점
               </span>
             </div>
-            <div class="vb-tbl-cell" style="flex:1;">
-              <span style="font-size:0.85rem; color:#64748b;">${sRec.note || gRec.note || '-'}</span>
+            <div class="vb-tbl-cell" style="width:175px; justify-content:center;">
+              <div class="vb-final-30-card ${badgeColorClass}">
+                <span class="final-30-main"><strong>${combined.final30Score}</strong>점</span>
+                <span class="final-30-sub">${combined.final30Label}</span>
+              </div>
             </div>
           </div>
         `;
@@ -2568,7 +2604,7 @@
       }
       if (gameScoreEl) gameScoreEl.textContent = String(gCalc.finalGradePoint);
       if (skillScoreEl) skillScoreEl.textContent = sCalc.isEvaluated ? String(sCalc.score) : '-';
-      if (totalScoreEl) totalScoreEl.textContent = String(combined.totalScore);
+      if (totalScoreEl) totalScoreEl.textContent = `${combined.final30Score}점 (${combined.totalScore}/15점)`;
 
       if (gameDetailBadge) {
         gameDetailBadge.textContent = `기본 5점 ± 가감: ${gCalc.instantCheckDelta >= 0 ? '+' : ''}${gCalc.instantCheckDelta}점 (환산: ${gCalc.finalGradePoint}점)`;
