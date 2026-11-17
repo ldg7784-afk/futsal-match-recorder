@@ -55,80 +55,26 @@ function mergePayloads(existing, incoming) {
   result.classes = incoming.classes || existing.classes || {};
   result.students = incoming.students || existing.students || [];
 
-  // 2. Merge dateHistory safely
+  // 2. Merge dateHistory: incoming date records take precedence (respecting deletions and score resets)
   result.dateHistory = { ...(existing.dateHistory || {}) };
   if (incoming.dateHistory) {
     for (const [date, inRecs] of Object.entries(incoming.dateHistory)) {
       if (!result.dateHistory[date]) {
         result.dateHistory[date] = { ...inRecs };
       } else {
-        const mergedDate = { ...result.dateHistory[date] };
-        for (const [sid, inRec] of Object.entries(inRecs)) {
-          const exRec = mergedDate[sid];
-          if (!exRec) {
-            mergedDate[sid] = inRec;
-          } else {
-            const inHasCounts = inRec.counts && Object.values(inRec.counts).some(v => Number(v) > 0);
-            const inHasLegacy = (inRec.serve?.plus || 0) + (inRec.receive?.plus || 0) + (inRec.toss?.plus || 0) + (inRec.spike?.plus || 0) > 0;
-            const exHasCounts = exRec.counts && Object.values(exRec.counts).some(v => Number(v) > 0);
-            const exHasLegacy = (exRec.serve?.plus || 0) + (exRec.receive?.plus || 0) + (exRec.toss?.plus || 0) + (exRec.spike?.plus || 0) > 0;
-
-            if ((inHasCounts || inHasLegacy) && !(exHasCounts || exHasLegacy)) {
-              mergedDate[sid] = inRec;
-            } else if (!(inHasCounts || inHasLegacy) && (exHasCounts || exHasLegacy)) {
-              mergedDate[sid] = exRec;
-            } else {
-              mergedDate[sid] = { ...exRec, ...inRec };
-              if (exRec.counts && inRec.counts) {
-                mergedDate[sid].counts = { ...exRec.counts };
-                for (const [k, v] of Object.entries(inRec.counts)) {
-                  if (Number(v) > 0 || !mergedDate[sid].counts[k]) mergedDate[sid].counts[k] = v;
-                }
-              }
-            }
-          }
-        }
-        result.dateHistory[date] = mergedDate;
+        result.dateHistory[date] = { ...result.dateHistory[date], ...inRecs };
       }
     }
   }
 
-  // 3. Merge dateSkillHistory safely
+  // 3. Merge dateSkillHistory: incoming date records take precedence (respecting cleared attempts)
   result.dateSkillHistory = { ...(existing.dateSkillHistory || {}) };
   if (incoming.dateSkillHistory) {
     for (const [date, inRecs] of Object.entries(incoming.dateSkillHistory)) {
       if (!result.dateSkillHistory[date]) {
         result.dateSkillHistory[date] = { ...inRecs };
       } else {
-        const mergedDate = { ...result.dateSkillHistory[date] };
-        for (const [sid, inRec] of Object.entries(inRecs)) {
-          const exRec = mergedDate[sid];
-          if (!exRec) {
-            mergedDate[sid] = inRec;
-          } else {
-            const inValid = (inRec.attempt1 !== null && inRec.attempt1 !== undefined && inRec.attempt1 !== '') ||
-                            (inRec.attempt2 !== null && inRec.attempt2 !== undefined && inRec.attempt2 !== '') ||
-                            (inRec.note && String(inRec.note).trim().length > 0);
-            const exValid = (exRec.attempt1 !== null && exRec.attempt1 !== undefined && exRec.attempt1 !== '') ||
-                            (exRec.attempt2 !== null && exRec.attempt2 !== undefined && exRec.attempt2 !== '') ||
-                            (exRec.note && String(exRec.note).trim().length > 0);
-
-            if (inValid && !exValid) {
-              mergedDate[sid] = inRec;
-            } else if (!inValid && exValid) {
-              mergedDate[sid] = exRec;
-            } else {
-              mergedDate[sid] = {
-                ...exRec,
-                ...inRec,
-                attempt1: (inRec.attempt1 !== null && inRec.attempt1 !== undefined) ? inRec.attempt1 : exRec.attempt1,
-                attempt2: (inRec.attempt2 !== null && inRec.attempt2 !== undefined) ? inRec.attempt2 : exRec.attempt2,
-                note: inRec.note || exRec.note || ''
-              };
-            }
-          }
-        }
-        result.dateSkillHistory[date] = mergedDate;
+        result.dateSkillHistory[date] = { ...result.dateSkillHistory[date], ...inRecs };
       }
     }
   }
