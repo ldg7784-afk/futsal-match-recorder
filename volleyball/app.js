@@ -687,21 +687,23 @@
 
     // 실제 평가가 진행된 모든 날짜 목록을 최신순(내림차순)으로 반환
     getEvaluatedDatesList() {
-      // 모든 교사 평가 일자(11월 17일, 16일, 13일, 12일, 10일) 상시 포함 (절대 누락 금지)
-      const datesSet = new Set(['2026-11-17', '2026-11-16', '2026-11-13', '2026-11-12', '2026-11-10']);
+      // 모든 교사 공식 평가 일자(11월 17일, 16일, 13일, 12일, 10일) 상시 포함 (절대 누락 금지)
+      const officialDates = ['2026-11-17', '2026-11-16', '2026-11-13', '2026-11-12', '2026-11-10'];
+      const datesSet = new Set(officialDates);
       const st = this.state;
 
       if (st.dateHistory) {
-        Object.keys(st.dateHistory).forEach(d => datesSet.add(d));
+        Object.keys(st.dateHistory).forEach(d => {
+          if (this.hasRecordsOnDate(d) && d !== '2026-11-15') datesSet.add(d);
+        });
       }
       if (st.dateSkillHistory) {
-        Object.keys(st.dateSkillHistory).forEach(d => datesSet.add(d));
-      }
-      if (st.evalDate) {
-        datesSet.add(st.evalDate);
+        Object.keys(st.dateSkillHistory).forEach(d => {
+          if (this.hasRecordsOnDate(d) && d !== '2026-11-15') datesSet.add(d);
+        });
       }
 
-      return Array.from(datesSet).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().reverse();
+      return Array.from(datesSet).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d !== '2026-11-15').sort().reverse();
     },
 
     // 기기 간 전체 데이터 내보내기 (JSON 문자열 반환)
@@ -1800,7 +1802,7 @@
       const selectEl = document.getElementById('evalDateSelect');
       if (selectEl) {
         const evalDates = DataModelModule.getEvaluatedDatesList();
-        const allOptionDates = Array.from(new Set([curDate, ...evalDates])).sort().reverse();
+        const allOptionDates = Array.from(new Set([curDate, ...evalDates])).filter(d => d !== '2026-11-15').sort().reverse();
 
         selectEl.innerHTML = allOptionDates.map(d => {
           const isEvaluated = DataModelModule.hasRecordsOnDate(d);
