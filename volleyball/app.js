@@ -621,19 +621,18 @@
       this.loadFromStorage();
 
       const curClass = Number(this.state.currentClass || 1);
-      const classDates = this.getEvaluatedDatesList(curClass);
-      if (classDates.length > 0) {
-        if (!this.hasRecordsOnDate(this.state.evalDate, curClass)) {
-          this.state.evalDate = classDates[0];
-          if (this.state.dateHistory && this.state.dateHistory[this.state.evalDate]) {
-            this.state.records = this.state.dateHistory[this.state.evalDate];
-          }
-          if (this.state.dateSkillHistory && this.state.dateSkillHistory[this.state.evalDate]) {
-            this.state.skillRecords = this.state.dateSkillHistory[this.state.evalDate];
-          }
-        }
-      } else if (!this.state.evalDate) {
-        this.state.evalDate = new Date().toISOString().slice(0, 10);
+      // 저장된 evalDate가 유효하지 않을 때만 오늘 또는 이전 기록일자 기본값 설정
+      if (!this.state.evalDate || !/^\d{4}-\d{2}-\d{2}$/.test(this.state.evalDate)) {
+        const classDates = this.getEvaluatedDatesList(curClass);
+        this.state.evalDate = classDates.length > 0 ? classDates[0] : new Date().toISOString().slice(0, 10);
+      }
+
+      // 현재 활성 날짜의 기록을 in-memory records로 로드
+      if (this.state.dateHistory && this.state.dateHistory[this.state.evalDate]) {
+        this.state.records = this.state.dateHistory[this.state.evalDate];
+      }
+      if (this.state.dateSkillHistory && this.state.dateSkillHistory[this.state.evalDate]) {
+        this.state.skillRecords = this.state.dateSkillHistory[this.state.evalDate];
       }
       this.loadClass(curClass, false);
     },
@@ -656,8 +655,8 @@
         studentIdSet.add('STU_' + numOnly);
       });
 
-      // 1. 경기수행 기록 검사
-      const gMap = (st.dateHistory && st.dateHistory[d]) || (d === st.evalDate ? st.records : null);
+      // 1. 경기수행 기록 검사 (현재 작업 중인 evalDate는 실시간 in-memory records 우선 확인)
+      const gMap = (d === st.evalDate && st.records) ? st.records : (st.dateHistory && st.dateHistory[d]);
       if (gMap) {
         const hasGame = Object.entries(gMap).some(([sid, rec]) => {
           if (!rec) return false;
@@ -676,8 +675,8 @@
         if (hasGame) return true;
       }
 
-      // 2. 기능평가 기록 검사
-      const sMap = (st.dateSkillHistory && st.dateSkillHistory[d]) || (d === st.evalDate ? st.skillRecords : null);
+      // 2. 기능평가 기록 검사 (현재 작업 중인 evalDate는 실시간 in-memory skillRecords 우선 확인)
+      const sMap = (d === st.evalDate && st.skillRecords) ? st.skillRecords : (st.dateSkillHistory && st.dateSkillHistory[d]);
       if (sMap) {
         const hasSkill = Object.entries(sMap).some(([sid, rec]) => {
           if (!rec) return false;
@@ -788,19 +787,15 @@
         }
       }
 
-      // 4. 활성 평가 날짜 결정 (해당 반 기준)
-      const curClass = Number(this.state.currentClass || 1);
-      const evalList = this.getEvaluatedDatesList(curClass);
-      let activeDate = parsed.evalDate || this.state.evalDate;
-      // 현재 날짜에 해당 반의 기록이 없고 과거 평가 기록이 있다면 최신 평가 기록 날짜를 기본 활성화
-      if (!this.hasRecordsOnDate(activeDate, curClass) && evalList.length > 0) {
-        activeDate = evalList[0];
+      // 4. 활성 평가 날짜 결정: 교사가 선택하여 작업 중인 날짜를 절대로 이전 날짜로 롤백하지 않음
+      if (!this.state.evalDate || !/^\d{4}-\d{2}-\d{2}$/.test(this.state.evalDate)) {
+        this.state.evalDate = parsed.evalDate || new Date().toISOString().slice(0, 10);
       }
-      this.state.evalDate = activeDate;
+      const activeDate = this.state.evalDate;
 
       // 5. 활성 날짜의 기록 로드 및 동기화
-      this.state.records = this.state.dateHistory[activeDate] || parsed.records || this.state.records || {};
-      this.state.skillRecords = this.state.dateSkillHistory[activeDate] || parsed.skillRecords || this.state.skillRecords || {};
+      this.state.records = (this.state.dateHistory && this.state.dateHistory[activeDate]) || parsed.records || this.state.records || {};
+      this.state.skillRecords = (this.state.dateSkillHistory && this.state.dateSkillHistory[activeDate]) || parsed.skillRecords || this.state.skillRecords || {};
 
       if (shouldSave) {
         this.saveToStorage();
@@ -933,16 +928,11 @@
       const classStudents = this.state.classes[c] || [];
       this.state.students = classStudents;
 
-      // 만약 현재 날짜에 해당 반의 평가 기록이 없고, 해당 반의 평가 기록 날짜가 있다면 그 날짜로 자동 전환!
-      const classDates = this.getEvaluatedDatesList(c);
-      if (!this.hasRecordsOnDate(this.state.evalDate, c) && classDates.length > 0) {
-        this.setEvalDate(classDates[0]);
-      } else {
-        this.state.students.forEach(stu => {
-          this.getStudentRecord(stu.id);
-          this.getSkillRecord(stu.id);
-        });
-      }
+      // 교사가 작업 중인 evalDate를 100% 유지하며 해당 반 학생들의 레코드 준비
+      this.state.students.forEach(stu => {
+        this.getStudentRecord(stu.id);
+        this.getSkillRecord(stu.id);
+      });
 
       if (broadcast) this.saveToStorage();
     },
@@ -952,17 +942,22 @@
       const cleanDate = String(newDate).trim();
       const prevDate = this.state.evalDate || cleanDate;
 
+      // 이전 날짜 데이터 안전하게 보관 (깊은 복사로 메모리 공유 원천 차단)
       if (!this.state.dateHistory) this.state.dateHistory = {};
-      this.state.dateHistory[prevDate] = Object.assign({}, this.state.dateHistory[prevDate] || {}, this.state.records);
+      if (this.state.records) {
+        this.state.dateHistory[prevDate] = JSON.parse(JSON.stringify(this.state.records));
+      }
 
       if (!this.state.dateSkillHistory) this.state.dateSkillHistory = {};
-      this.state.dateSkillHistory[prevDate] = Object.assign({}, this.state.dateSkillHistory[prevDate] || {}, this.state.skillRecords);
+      if (this.state.skillRecords) {
+        this.state.dateSkillHistory[prevDate] = JSON.parse(JSON.stringify(this.state.skillRecords));
+      }
 
       this.state.evalDate = cleanDate;
 
-      // 새 날짜의 경기수행 기록 로드
+      // 새 날짜의 경기수행 기록 로드 (기존 기록 있으면 깊은 복사, 없으면 0점 신규 생성)
       if (this.state.dateHistory[cleanDate]) {
-        this.state.records = this.state.dateHistory[cleanDate];
+        this.state.records = JSON.parse(JSON.stringify(this.state.dateHistory[cleanDate]));
       } else {
         const freshRecords = {};
         for (let c = 1; c <= 9; c++) {
@@ -971,12 +966,12 @@
           });
         }
         this.state.records = freshRecords;
-        this.state.dateHistory[cleanDate] = freshRecords;
+        this.state.dateHistory[cleanDate] = JSON.parse(JSON.stringify(freshRecords));
       }
 
       // 새 날짜의 기능평가 기록 로드
       if (this.state.dateSkillHistory[cleanDate]) {
-        this.state.skillRecords = this.state.dateSkillHistory[cleanDate];
+        this.state.skillRecords = JSON.parse(JSON.stringify(this.state.dateSkillHistory[cleanDate]));
       } else {
         const freshSkillRecords = {};
         for (let c = 1; c <= 9; c++) {
@@ -985,7 +980,7 @@
           });
         }
         this.state.skillRecords = freshSkillRecords;
-        this.state.dateSkillHistory[cleanDate] = freshSkillRecords;
+        this.state.dateSkillHistory[cleanDate] = JSON.parse(JSON.stringify(freshSkillRecords));
       }
 
       // 전체 학생들의 레코드 정규화 및 변종 동기화
@@ -1220,10 +1215,14 @@
     saveToStorage() {
       const curDate = this.state.evalDate || new Date().toISOString().slice(0, 10);
       if (!this.state.dateHistory) this.state.dateHistory = {};
-      this.state.dateHistory[curDate] = Object.assign({}, this.state.dateHistory[curDate] || {}, this.state.records);
+      if (this.state.records) {
+        this.state.dateHistory[curDate] = JSON.parse(JSON.stringify(this.state.records));
+      }
 
       if (!this.state.dateSkillHistory) this.state.dateSkillHistory = {};
-      this.state.dateSkillHistory[curDate] = Object.assign({}, this.state.dateSkillHistory[curDate] || {}, this.state.skillRecords);
+      if (this.state.skillRecords) {
+        this.state.dateSkillHistory[curDate] = JSON.parse(JSON.stringify(this.state.skillRecords));
+      }
 
       const payload = {
         classes: this.state.classes,

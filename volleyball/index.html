@@ -11,7 +11,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117_v10">
+  <link rel="stylesheet" href="style.css?v=20261117_v11">
 </head>
 
 <body>
@@ -94,13 +94,16 @@
         <div class="vb-common-meta-row">
           <!-- 평가 일자 (내가 평가한 날짜만 요일과 함께 선택) -->
           <div class="vb-eval-date-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <label for="evalDateSelect" class="vb-date-label" style="font-weight: 800; font-size: 0.9rem;">📅 평가 일자</label>
+            <label for="evalDateSelect" class="vb-date-label" style="font-weight: 800; font-size: 0.9rem;">📅 평가
+              일자</label>
             <select id="evalDateSelect" class="vb-eval-date-select" title="평가한 날짜 선택 (요일 포함)">
               <!-- 평가 기록이 있는 날짜들만 요일과 함께 동적 생성 -->
             </select>
             <input type="date" id="evalDateInput" class="vb-input vb-input-sm vb-date-input hidden" title="새 날짜 선택">
-            <button type="button" id="addNewDateBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="새 평가일 추가">➕ 새 날짜</button>
-            <button type="button" id="setTodayDateBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="오늘 날짜로 전환">오늘</button>
+            <button type="button" id="addNewDateBtn" class="vb-btn vb-btn-outline vb-btn-sm" title="새 평가일 추가">➕ 새
+              날짜</button>
+            <button type="button" id="setTodayDateBtn" class="vb-btn vb-btn-outline vb-btn-sm"
+              title="오늘 날짜로 전환">오늘</button>
             <span class="vb-date-status-pill" id="currentEvalDateBadge">📅 2026-11-13 (금) 평가 기록</span>
           </div>
 
@@ -552,9 +555,9 @@
 
 
 
-  <script src="roster_data.js?v=20261117_v10"></script>
-  <script src="backup_data.js?v=20261117_v10"></script>
-  <script src="app.js?v=20261117_v10"></script>
+  <script src="roster_data.js?v=20261117_v11"></script>
+  <script src="backup_data.js?v=20261117_v11"></script>
+  <script src="app.js?v=20261117_v11"></script>
 </body>
 
 </html>
