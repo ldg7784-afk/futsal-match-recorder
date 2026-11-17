@@ -949,60 +949,176 @@
       return rec;
     },
 
-    // 학생의 유효한 경기수행 기록 조회 (현재 날짜에 평가가 없으면 최근 평가된 날짜의 기록 자동 연동!)
-    getEffectiveStudentRecord(studentId = '') {
-      const active = this.getStudentRecord(studentId);
+    // 학생의 모든 평가일자 경기수행 가감점수 및 체크 횟수를 누적 종합 집계 (3단위 가감 누적 반영)
+    getCumulativeStudentRecord(studentId = '') {
       const rawId = String(studentId).trim();
       const numOnly = rawId.replace(/^STU_/, '');
       const withPrefix = 'STU_' + numOnly;
 
-      const hasActiveScores = active && (
-        (active.counts && Object.values(active.counts).some(v => Number(v) > 0)) ||
-        (active.history && active.history.length > 0) ||
-        (active.note && String(active.note).trim().length > 0)
-      );
-      if (hasActiveScores) return active;
+      const st = this.state;
+      const allDates = new Set([
+        ...Object.keys(st.dateHistory || {}),
+        st.evalDate
+      ]);
 
-      // 현재 날짜에 기록이 없다면 dateHistory의 모든 날짜(최신순)에서 평가된 기록 탐색
-      const dates = Object.keys(this.state.dateHistory || {}).sort().reverse();
-      for (const d of dates) {
-        const rec = this.state.dateHistory[d]?.[withPrefix] || this.state.dateHistory[d]?.[numOnly];
-        if (rec) {
-          const hasScores = (rec.counts && Object.values(rec.counts).some(v => Number(v) > 0)) ||
-                            (rec.history && rec.history.length > 0) ||
-                            (rec.note && String(rec.note).trim().length > 0);
-          if (hasScores) return rec;
+      const cumulative = {
+        studentId: withPrefix,
+        counts: {
+          toss_plus: 0,
+          spike_plus: 0,
+          receive_plus: 0,
+          move_plus: 0,
+          toss_minus: 0,
+          spike_minus: 0,
+          receive_minus: 0,
+          move_minus: 0
+        },
+        history: [],
+        datesEvaluated: [],
+        notes: [],
+        note: '',
+        updatedAt: '',
+        hasAnyEvaluation: false
+      };
+
+      const sortedDates = Array.from(allDates).filter(Boolean).sort();
+      for (const d of sortedDates) {
+        // 현재 선택된 evalDate인 경우 메모리 상의 st.records 최신본 우선 참조
+        const dayMap = (d === st.evalDate && st.records) ? st.records : (st.dateHistory && st.dateHistory[d]);
+        if (!dayMap) continue;
+
+        const rec = dayMap[withPrefix] || dayMap[numOnly];
+        if (!rec) continue;
+
+        let hasDayActivity = false;
+
+        // 1. counts 누적 (플러스 및 마이너스 요인 카운트)
+        if (rec.counts && typeof rec.counts === 'object') {
+          for (const [k, v] of Object.entries(rec.counts)) {
+            const num = Number(v) || 0;
+            if (num > 0) {
+              cumulative.counts[k] = (cumulative.counts[k] || 0) + num;
+              hasDayActivity = true;
+            }
+          }
+        }
+
+        // 2. 레거시 포맷 호환 누적 (serve.plus, receive.plus 등)
+        const legacyMap = {
+          'serve.plus': 'toss_plus',
+          'toss.plus': 'toss_plus',
+          'spike.plus': 'spike_plus',
+          'receive.plus': 'receive_plus',
+          'move.plus': 'move_plus',
+          'serve.minus': 'toss_minus',
+          'toss.minus': 'toss_minus',
+          'spike.minus': 'spike_minus',
+          'receive.minus': 'receive_minus',
+          'move.minus': 'move_minus'
+        };
+        for (const [legKey, newKey] of Object.entries(legacyMap)) {
+          const [cat, sub] = legKey.split('.');
+          if (rec[cat] && Number(rec[cat][sub]) > 0) {
+            const val = Number(rec[cat][sub]);
+            cumulative.counts[newKey] = (cumulative.counts[newKey] || 0) + val;
+            hasDayActivity = true;
+          }
+        }
+
+        // 3. history 배열 누적
+        if (Array.isArray(rec.history) && rec.history.length > 0) {
+          cumulative.history.push(...rec.history);
+          hasDayActivity = true;
+        }
+
+        // 4. 비고 메모 수집
+        if (rec.note && String(rec.note).trim().length > 0) {
+          const n = String(rec.note).trim();
+          if (!cumulative.notes.includes(n)) {
+            cumulative.notes.push(n);
+          }
+        }
+
+        if (rec.updatedAt && (!cumulative.updatedAt || rec.updatedAt > cumulative.updatedAt)) {
+          cumulative.updatedAt = rec.updatedAt;
+        }
+
+        if (hasDayActivity) {
+          cumulative.hasAnyEvaluation = true;
+          cumulative.datesEvaluated.push(d);
         }
       }
-      return active || this.createEmptyRecord(studentId);
+
+      cumulative.note = cumulative.notes.join(', ');
+      return cumulative;
     },
 
-    // 학생의 유효한 기능평가 기록 조회 (현재 날짜에 시기가 없으면 최근 평가된 날짜의 기록 자동 연동!)
+    // 학생의 단일/최근 유효한 경기수행 기록 조회 (하위 호환)
+    getEffectiveStudentRecord(studentId = '') {
+      return this.getCumulativeStudentRecord(studentId);
+    },
+
+    // 학생의 유효한 기능평가 기록 조회 (모든 평가일자 중 최고 시기 및 기록 스마트 병합!)
     getEffectiveSkillRecord(studentId = '') {
-      const active = this.getSkillRecord(studentId);
       const rawId = String(studentId).trim();
       const numOnly = rawId.replace(/^STU_/, '');
       const withPrefix = 'STU_' + numOnly;
 
-      const hasActiveScores = active && (
-        (active.attempt1 !== null && active.attempt1 !== undefined && active.attempt1 !== '') ||
-        (active.attempt2 !== null && active.attempt2 !== undefined && active.attempt2 !== '') ||
-        (active.note && String(active.note).trim().length > 0)
-      );
-      if (hasActiveScores) return active;
+      const st = this.state;
+      const allDates = new Set([
+        ...Object.keys(st.dateSkillHistory || {}),
+        st.evalDate
+      ]);
 
-      // 현재 날짜에 기록이 없다면 dateSkillHistory의 모든 날짜(최신순)에서 평가된 기록 탐색
-      const dates = Object.keys(this.state.dateSkillHistory || {}).sort().reverse();
-      for (const d of dates) {
-        const rec = this.state.dateSkillHistory[d]?.[withPrefix] || this.state.dateSkillHistory[d]?.[numOnly];
-        if (rec) {
-          const hasScores = (rec.attempt1 !== null && rec.attempt1 !== undefined && rec.attempt1 !== '') ||
-                            (rec.attempt2 !== null && rec.attempt2 !== undefined && rec.attempt2 !== '') ||
-                            (rec.note && String(rec.note).trim().length > 0);
-          if (hasScores) return rec;
+      let bestAttempt1 = null;
+      let bestAttempt2 = null;
+      let gender = null;
+      const notes = [];
+      let latestUpdated = '';
+
+      const sortedDates = Array.from(allDates).filter(Boolean).sort();
+      for (const d of sortedDates) {
+        const dayMap = (d === st.evalDate && st.skillRecords) ? st.skillRecords : (st.dateSkillHistory && st.dateSkillHistory[d]);
+        if (!dayMap) continue;
+
+        const rec = dayMap[withPrefix] || dayMap[numOnly];
+        if (!rec) continue;
+
+        if (rec.gender) gender = rec.gender;
+
+        if (rec.attempt1 !== null && rec.attempt1 !== undefined && rec.attempt1 !== '') {
+          const val = Number(rec.attempt1);
+          if (!isNaN(val)) {
+            bestAttempt1 = bestAttempt1 === null ? val : Math.max(bestAttempt1, val);
+          }
+        }
+
+        if (rec.attempt2 !== null && rec.attempt2 !== undefined && rec.attempt2 !== '') {
+          const val = Number(rec.attempt2);
+          if (!isNaN(val)) {
+            bestAttempt2 = bestAttempt2 === null ? val : Math.max(bestAttempt2, val);
+          }
+        }
+
+        if (rec.note && String(rec.note).trim().length > 0) {
+          const n = String(rec.note).trim();
+          if (!notes.includes(n)) notes.push(n);
+        }
+
+        if (rec.updatedAt && (!latestUpdated || rec.updatedAt > latestUpdated)) {
+          latestUpdated = rec.updatedAt;
         }
       }
-      return active || this.createEmptySkillRecord(studentId);
+
+      const active = this.getSkillRecord(studentId);
+      return {
+        studentId: withPrefix,
+        attempt1: bestAttempt1 !== null ? bestAttempt1 : active?.attempt1 ?? null,
+        attempt2: bestAttempt2 !== null ? bestAttempt2 : active?.attempt2 ?? null,
+        gender: gender || active?.gender || 'male',
+        note: notes.join(', ') || active?.note || '',
+        updatedAt: latestUpdated || active?.updatedAt || ''
+      };
     },
 
     loadClass(classNum, broadcast = true) {
@@ -1484,6 +1600,38 @@
       const dataRows = [];
       let datesToExport = [];
 
+      // 종합 합산 성적표인 경우: 학생별 모든 날짜의 누적 경기수행 점수 + 기능점수를 단일 종합 레코드로 완벽 출력!
+      if (mode === 'combined') {
+        header = ['학년', '반', '번호', '학번', '성명', '성별', '경기수행(5점)', '누적(+)', '누적(-)', '누적가감점', '기능1차(개)', '기능2차(개)', '기능최고(개)', '기능점수(10점)', '★종합총점(15점)', '평가일자(경기)', '비고'];
+
+        for (let c = 1; c <= 9; c++) {
+          if (scope === 'currentClass' && c !== st.currentClass) continue;
+          const classStudents = st.classes[c] || [];
+
+          classStudents.forEach(stu => {
+            const gRec = DataModelModule.getCumulativeStudentRecord(stu.id);
+            const sRec = DataModelModule.getEffectiveSkillRecord(stu.id);
+
+            const gCalc = RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
+            const sCalc = SkillCalcModule.calculateStudentSkill(sRec, st.skillCriteriaGender);
+            const cCalc = SkillCalcModule.calculateCombinedTotal(gCalc.finalGradePoint, sCalc);
+
+            const genderKo = sRec.gender === 'female' ? '여' : '남';
+            const datesStr = (gRec.datesEvaluated && gRec.datesEvaluated.length > 0) ? gRec.datesEvaluated.join(', ') : '-';
+
+            dataRows.push([
+              stu.grade || 2, stu.classNum || c, stu.number || '', stu.studentNumber, stu.name,
+              genderKo, gCalc.finalGradePoint, gCalc.totalPlusChecks, gCalc.totalMinusChecks,
+              (gCalc.netPointDelta > 0 ? `+${gCalc.netPointDelta}` : gCalc.netPointDelta),
+              sCalc.attempt1 ?? '', sCalc.attempt2 ?? '', sCalc.bestCount ?? '',
+              sCalc.score, cCalc.totalScore, datesStr, sRec.note || gRec.note || ''
+            ]);
+          });
+        }
+
+        return { header, dataRows, datesCount: Object.keys(st.dateHistory || {}).length, totalCount: dataRows.length };
+      }
+
       if (scope === 'allDates') {
         const set = new Set([...Object.keys(st.dateHistory || {}), ...Object.keys(st.dateSkillHistory || {}), curDate]);
         datesToExport = Array.from(set).sort();
@@ -1518,12 +1666,6 @@
               dataRows.push([
                 d, stu.grade || 2, stu.classNum || c, stu.number || '', stu.studentNumber, stu.name,
                 gCalc.instantCheckDelta, gCalc.rawScore, gCalc.finalGradePoint, gRec.note || ''
-              ]);
-            } else {
-              dataRows.push([
-                d, stu.grade || 2, stu.classNum || c, stu.number || '', stu.studentNumber, stu.name,
-                genderKo, gCalc.finalGradePoint, sCalc.attempt1 ?? '', sCalc.attempt2 ?? '', sCalc.bestCount ?? '',
-                sCalc.score, cCalc.totalScore, sRec.note || gRec.note || ''
               ]);
             }
           });
@@ -2045,8 +2187,16 @@
                 <span class="vb-converted-score-badge">${calc.rawScore}점</span>
               </div>
 
-              <div class="vb-tbl-cell col-eval-score">
+              <div class="vb-tbl-cell col-eval-score" style="flex-direction:column; justify-content:center; align-items:center;">
                 <span class="vb-final-grade-badge grade-${calc.finalGradePoint}">${calc.finalGradePoint}점</span>
+                ${(() => {
+                  const cumRec = DataModelModule.getCumulativeStudentRecord(stu.id);
+                  if (cumRec && cumRec.datesEvaluated && cumRec.datesEvaluated.length > 1) {
+                    const cumCalc = RubricCalcModule.calculateStudentPerformance(cumRec.counts, st.ruleEvery3);
+                    return `<span style="font-size:0.7rem; color:#4338ca; background:#eef2ff; border:1px solid #c7d2fe; border-radius:4px; padding:1px 5px; margin-top:2px; font-weight:700; white-space:nowrap;" title="전체 ${cumRec.datesEvaluated.length}회 평가일자 가감점수 누적 종합">누적 ${cumCalc.finalGradePoint}점</span>`;
+                  }
+                  return '';
+                })()}
               </div>
 
               <div class="vb-tbl-cell col-note">
@@ -2313,23 +2463,23 @@
 
       let headerHtml = `
         <div class="vb-tbl-head-row">
-          <div class="vb-tbl-th" style="width:70px; text-align:center;">번호</div>
+          <div class="vb-tbl-th" style="width:65px; text-align:center;">번호</div>
           <div class="vb-tbl-th" style="width:110px;">학번</div>
-          <div class="vb-tbl-th" style="width:120px;">성명</div>
-          <div class="vb-tbl-th" style="width:70px; text-align:center;">성별</div>
-          <div class="vb-tbl-th" style="width:130px; text-align:center;">경기수행 (5점)</div>
-          <div class="vb-tbl-th" style="width:100px; text-align:center;">기능 1차</div>
-          <div class="vb-tbl-th" style="width:100px; text-align:center;">기능 2차</div>
-          <div class="vb-tbl-th" style="width:110px; text-align:center;">기능 최고</div>
-          <div class="vb-tbl-th" style="width:130px; text-align:center;">기능점수 (10점)</div>
-          <div class="vb-tbl-th" style="width:170px; text-align:center;">🏆 최종합산 (15점)</div>
+          <div class="vb-tbl-th" style="width:115px;">성명</div>
+          <div class="vb-tbl-th" style="width:65px; text-align:center;">성별</div>
+          <div class="vb-tbl-th" style="width:165px; text-align:center;">경기수행 (5점)<br><span style="font-size:10px; font-weight:normal; opacity:0.85;">가감점수 누적 (3회당 ±1점)</span></div>
+          <div class="vb-tbl-th" style="width:95px; text-align:center;">기능 1차</div>
+          <div class="vb-tbl-th" style="width:95px; text-align:center;">기능 2차</div>
+          <div class="vb-tbl-th" style="width:105px; text-align:center;">기능 최고</div>
+          <div class="vb-tbl-th" style="width:125px; text-align:center;">기능점수 (10점)</div>
+          <div class="vb-tbl-th" style="width:160px; text-align:center;">🏆 최종합산 (15점)</div>
           <div class="vb-tbl-th" style="flex:1;">비고</div>
         </div>
       `;
 
       let rowsHtml = st.students.map((stu, idx) => {
-        // 경기수행과 기능평가 점수를 실시간 상시 자동 연동 (다른 날짜에 각각 평가했더라도 자동 종합!)
-        const gRec = DataModelModule.getEffectiveStudentRecord(stu.id);
+        // 경기수행 평가점수를 전 날짜 누적 가감으로 완벽 집계 (3단위 가감 누적 반영)
+        const gRec = DataModelModule.getCumulativeStudentRecord(stu.id);
         const sRec = DataModelModule.getEffectiveSkillRecord(stu.id);
 
         const gCalc = RubricCalcModule.calculateStudentPerformance(gRec.counts, st.ruleEvery3);
@@ -2340,18 +2490,26 @@
         const dispName = PrivacyGuardModule.formatStudentName(stu.name);
         const isMale = sRec.gender !== 'female';
 
+        const cumDeltaText = gCalc.netPointDelta > 0 ? `+${gCalc.netPointDelta}점` : (gCalc.netPointDelta < 0 ? `${gCalc.netPointDelta}점` : '0점');
+        const cumSummaryText = `누적 ${gCalc.totalPlusChecks}+ / ${gCalc.totalMinusChecks}- (${gCalc.netChecks >= 0 ? '+' : ''}${gCalc.netChecks}회 ➔ ${cumDeltaText})`;
+
         return `
           <div class="vb-tbl-row">
-            <div class="vb-tbl-cell" style="width:70px; justify-content:center;"><span class="vb-stu-index-num">${idx + 1}</span></div>
+            <div class="vb-tbl-cell" style="width:65px; justify-content:center;"><span class="vb-stu-index-num">${idx + 1}</span></div>
             <div class="vb-tbl-cell" style="width:110px;"><span class="vb-stu-num-badge">${dispNum}</span></div>
-            <div class="vb-tbl-cell" style="width:120px;"><strong class="vb-stu-name-strong">${dispName}</strong></div>
-            <div class="vb-tbl-cell" style="width:70px; justify-content:center;"><span class="vb-gender-badge-btn ${isMale ? 'male' : 'female'}">${isMale ? '남' : '여'}</span></div>
-            <div class="vb-tbl-cell" style="width:130px; justify-content:center;"><span class="vb-final-grade-badge grade-${gCalc.finalGradePoint}">${gCalc.finalGradePoint}점</span></div>
-            <div class="vb-tbl-cell" style="width:100px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt1 ?? '-'}개</span></div>
-            <div class="vb-tbl-cell" style="width:100px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt2 ?? '-'}개</span></div>
-            <div class="vb-tbl-cell" style="width:110px; justify-content:center;"><span class="vb-best-count-badge has-best">${sCalc.bestDisplay}</span></div>
-            <div class="vb-tbl-cell" style="width:130px; justify-content:center;"><span class="vb-skill-score-badge ${sCalc.score === 10 ? 'grade-10' : ''}">${sCalc.scoreDisplay}</span></div>
-            <div class="vb-tbl-cell" style="width:170px; justify-content:center;">
+            <div class="vb-tbl-cell" style="width:115px;"><strong class="vb-stu-name-strong">${dispName}</strong></div>
+            <div class="vb-tbl-cell" style="width:65px; justify-content:center;"><span class="vb-gender-badge-btn ${isMale ? 'male' : 'female'}">${isMale ? '남' : '여'}</span></div>
+            <div class="vb-tbl-cell" style="width:165px; flex-direction:column; justify-content:center; align-items:center;">
+              <span class="vb-final-grade-badge grade-${gCalc.finalGradePoint}">${gCalc.finalGradePoint}점</span>
+              <span style="font-size:0.75rem; color:#4338ca; font-weight:700; background:#eef2ff; border:1px solid #c7d2fe; border-radius:6px; padding:1px 6px; margin-top:3px; white-space:nowrap;" title="전체 일자 가감점수 누적: 플러스 ${gCalc.totalPlusChecks}회, 마이너스 ${gCalc.totalMinusChecks}회">
+                ${cumSummaryText}
+              </span>
+            </div>
+            <div class="vb-tbl-cell" style="width:95px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt1 ?? '-'}개</span></div>
+            <div class="vb-tbl-cell" style="width:95px; justify-content:center;"><span class="vb-best-count-badge">${sCalc.attempt2 ?? '-'}개</span></div>
+            <div class="vb-tbl-cell" style="width:105px; justify-content:center;"><span class="vb-best-count-badge has-best">${sCalc.bestDisplay}</span></div>
+            <div class="vb-tbl-cell" style="width:125px; justify-content:center;"><span class="vb-skill-score-badge ${sCalc.score === 10 ? 'grade-10' : ''}">${sCalc.scoreDisplay}</span></div>
+            <div class="vb-tbl-cell" style="width:160px; justify-content:center;">
               <span class="vb-total-score-pill">
                 <strong>${combined.totalScore}</strong> / 15점
               </span>
@@ -2446,9 +2604,12 @@
           id: 'ACC_ATTACK',
           badge: '1. 경기 수행평가',
           title: '1. 경기 수행 능력 세부 내역 (공격 · 수비 루브릭)',
-          rightSummary: `경기 점수: ${gCalc.finalGradePoint}점`,
+          rightSummary: `경기 점수: ${gCalc.finalGradePoint}점 (누적 종합)`,
           bodyHtml: `
             <p><strong>루브릭 기준</strong>: 기본 5점에서 시작하여 공격/수비 요소 3회마다 +1점씩 가산, 실책 3회마다 -1점씩 감점되어 최종 5점 만점으로 환산됩니다.</p>
+            <p style="margin-top:6px; color:#4338ca; font-weight:600;">
+              ✨ 전체 평가일자 누적 가감 집계: 공격/수비 성공 ${gCalc.totalPlusChecks}회 · 실책 ${gCalc.totalMinusChecks}회 (순 가감 ${gCalc.netChecks >= 0 ? '+' : ''}${gCalc.netChecks}회 ➔ 3회당 환산 ${gCalc.netPointDelta >= 0 ? '+' : ''}${gCalc.netPointDelta}점 ➔ 최종 경기점수 <strong>${gCalc.finalGradePoint}점</strong>)
+            </p>
           `
         },
         {
